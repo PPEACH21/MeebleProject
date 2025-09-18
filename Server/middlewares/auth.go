@@ -9,16 +9,12 @@ import (
 
 
 func GetJwt() fiber.Handler{
-	return jwtware.New(jwtware.Config{
-		SigningKey: jwtware.SigningKey{Key: []byte("JWT_SECRET")},
-	})
-}
-
-
-func GeteventEnv(c *fiber.Ctx)error{
-	secret := os.Getenv("SECRET")
-	if secret == ""{
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
 		secret = "defaultsecret"
 	}
-	return c.JSON(fiber.Map{"SECRET": secret,})
+	
+	return jwtware.New(jwtware.Config{
+		SigningKey: jwtware.SigningKey{Key: []byte(secret)},
+	})
 }
