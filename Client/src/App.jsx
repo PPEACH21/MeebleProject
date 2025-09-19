@@ -1,11 +1,11 @@
 import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css';
-import Home from './component/Home';
+import MenuStore from './page/MenuStore';
 
 function App() {
   return (
     <div>
-      <Home/>
+      <MenuStore/>
     </div>
   )
 }
