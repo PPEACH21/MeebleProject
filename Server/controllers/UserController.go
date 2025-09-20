@@ -27,12 +27,14 @@ func GetShop(c *fiber.Ctx) error {
 			log.Println("error convert:", err)
 			continue
 		}
-		shop = append(shop,models.Shop{
-			Rate: u.Rate,
+		shop = append(shop, models.Shop{
+			Rate:        u.Rate,
 			Description: u.Description,
-			Name: u.Name,
-			Type: u.Type,
-			Status:u.Status,
+			Name:        u.Name,
+			Type:        u.Type,
+			Status:      u.Status,
+			Latitude:    u.Latitude,
+			Longitude:   u.Longitude,
 		})
 	}
 	return c.Status(fiber.StatusOK).JSON(shop)
