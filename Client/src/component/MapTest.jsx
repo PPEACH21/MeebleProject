@@ -9,8 +9,8 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
 import "leaflet-geosearch/dist/geosearch.css";
+import axios from "axios";
 
-// custom marker
 const markerIcon = new L.Icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png",
   iconSize: [25, 41],
@@ -18,20 +18,15 @@ const markerIcon = new L.Icon({
   popupAnchor: [1, -34],
 });
 
-// Marker ที่วางด้วยการคลิก
 function LocationMarker({ position, setPosition }) {
   useMapEvents({
     click(e) {
       setPosition(e.latlng);
     },
   });
-
-  return position ? (
-    <Marker position={position} icon={markerIcon} draggable={true} />
-  ) : null;
+  return position ? <Marker position={position} icon={markerIcon} draggable /> : null;
 }
 
-// กล่องค้นหา Leaflet GeoSearch
 function SearchBox({ setPosition }) {
   const map = useMapEvents({});
   const provider = new OpenStreetMapProvider();
@@ -59,30 +54,40 @@ function SearchBox({ setPosition }) {
 export default function MapTest() {
   const [picked, setPicked] = useState(null);
 
-  const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setPicked({
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-          });
-        },
-        (err) => {
-          alert("ไม่สามารถดึงพิกัดจากเครื่องได้: " + err.message);
-        }
-      );
-    } else {
-      alert("Browser ของคุณไม่รองรับการหาพิกัด (Geolocation)");
+  const saveLocation = async () => {
+    if (!picked) {
+      alert("กรุณาเลือกตำแหน่งก่อน");
+      return;
+    }
+
+    try {
+      const res = await axios.put("http://localhost:8080/setLocation/shop02", {
+        latitude: picked.lat,
+        longitude: picked.lng,
+      });
+
+      alert("บันทึกเรียบร้อย: " + JSON.stringify(res.data));
+    } catch (err) {
+      if (err.response) {
+        // error จาก server (เช่น 404, 500)
+        alert(
+          `Server error (${err.response.status}): ${JSON.stringify(err.response.data)}`
+        );
+      } else if (err.request) {
+        // ไม่ได้รับ response (เช่น CORS, server ไม่ตอบ)
+        alert("ไม่สามารถติดต่อ backend ได้");
+      } else {
+        // error อื่น ๆ
+        alert("Error: " + err.message);
+      }
     }
   };
 
   return (
-    <div style={{ width: "75vw", height: "75vh"}}>
-      {/* แผนที่ด้านซ้าย */}
-      <div style={{ width: "50%", height: "100%" }}>
+    <div style={{ width: "100%", height: "75vh" }}>
+      <div style={{ width: "100%", height: "90%" }}>
         <MapContainer
-          center={picked || [13.7563, 100.5018]} // ถ้าไม่มี picked ใช้กรุงเทพ
+          center={picked || [13.7563, 100.5018]}
           zoom={12}
           style={{ height: "100%", width: "100%" }}
         >
@@ -95,6 +100,9 @@ export default function MapTest() {
         </MapContainer>
       </div>
 
+      <div style={{ textAlign: "center", marginTop: "10px" }}>
+        <button onClick={saveLocation}>บันทึกตำแหน่ง</button>
+      </div>
     </div>
   );
 }
