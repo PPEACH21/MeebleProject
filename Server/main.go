@@ -17,7 +17,10 @@ func main(){
 	config.InitFirebase()
 	defer config.Client.Close()
 
-	app.Use(cors.New())
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "http://localhost:5173",
+		AllowCredentials: true,
+	}))
 	app.Post("/createaccount",service.CreateUser)
 	app.Post("/login",service.Login)
 	
