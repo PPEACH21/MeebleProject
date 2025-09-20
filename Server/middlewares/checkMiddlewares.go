@@ -17,9 +17,9 @@ func CheckMiddleware(c *fiber.Ctx) error {
 
 	claims := user.Claims.(jwt.MapClaims)
 	fmt.Println(claims)
-	// if claims["role"] != "admin" {
-	// 	return fiber.ErrUnauthorized
-	// }
+	if claims["role"] != "user" {
+		return fiber.ErrUnauthorized
+	}
 
 	start := time.Now().In(time.FixedZone("UTC+7", 7*60*60))
 	fmt.Printf("LOG : PATH= %s, Method= %s, Time=%s\n",c.OriginalURL(), c.Method(), start,)

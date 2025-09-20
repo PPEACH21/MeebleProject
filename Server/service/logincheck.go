@@ -1,4 +1,4 @@
-package middlewares
+package service
 
 import (
 	"fmt"
@@ -38,8 +38,8 @@ func Login(c *fiber.Ctx)error{
     token := jwt.New(jwt.SigningMethodHS256)
     claims := token.Claims.(jwt.MapClaims)
     claims["email"] = user.Email
-    claims["role"] = "admin"
-    claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+    claims["role"] = "user"
+    claims["exp"] = time.Now().Add(time.Minute * 20).Unix()
 
     t, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
     if err != nil {

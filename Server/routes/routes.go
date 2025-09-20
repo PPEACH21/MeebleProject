@@ -1,12 +1,11 @@
 package routes
 
 import (
+	"github.com/PPEACH21/MebleBackend-Web/controllers"
 	"github.com/gofiber/fiber/v2"
 )
 
 func Routes(app *fiber.App){
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello from BACKEND!")
-	})
+	app.Get("/getShop",controllers.GetShop)
 
 }
