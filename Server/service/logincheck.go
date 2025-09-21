@@ -51,10 +51,10 @@ func Login(c *fiber.Ctx)error{
 	c.Cookie(&fiber.Cookie{
 		Name:     "token",
 		Value:    t,
-		Expires:  time.Now().Add(time.Hour * 1),
-		HTTPOnly: true,    
-		Secure:   false,
-		SameSite: "Strict",
+		Expires:  time.Now().Add(time.Minute * 5),
+		HTTPOnly: false,    
+		// Secure:   false,
+		// SameSite: "Strict",
 	})
 
 	return c.JSON(fiber.Map{
