@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"cloud.google.com/go/firestore"
 	"github.com/PPEACH21/MebleBackend-Web/config"
 	"github.com/PPEACH21/MebleBackend-Web/models"
 	"github.com/gofiber/fiber/v2"
@@ -35,26 +34,30 @@ func Login(c *fiber.Ctx)error{
     }
 
     fmt.Println("Login Valid Correct!")
-    token := jwt.New(jwt.SigningMethodHS256)
-    claims := token.Claims.(jwt.MapClaims)
-    claims["email"] = user.Email
-    claims["role"] = "user"
-    claims["exp"] = time.Now().Add(time.Minute * 20).Unix()
 
-    t, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-    if err != nil {
-      return c.SendStatus(fiber.StatusInternalServerError)
-    }
-    
-    _,err = docs.Ref.Update(config.Ctx,[]firestore.Update{
-        {Path: "token", Value: t},
+    claims := jwt.MapClaims{
+		"email": member.Email,
+		"role":   "user",
+		"exp":    time.Now().Add(time.Minute * 5).Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	secret := os.Getenv("JWT_SECRET")
+	t, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	c.Cookie(&fiber.Cookie{
+		Name:     "token",
+		Value:    t,
+		Expires:  time.Now().Add(time.Hour * 1),
+		HTTPOnly: true,    
+		Secure:   false,
+		SameSite: "Strict",
 	})
-    if err != nil{
-        return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
-    }
 
 	return c.JSON(fiber.Map{
-		"message" : "Login success",
-		"token": t,
+		"message": "login success",
 	})
 }
