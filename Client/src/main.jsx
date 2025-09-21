@@ -7,6 +7,7 @@ import MapPickerButton from './component/MapPickerButton.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <MapPickerButton />
+      <App />
+       <MapPickerButton />
   </StrictMode>
 )

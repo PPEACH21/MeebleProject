@@ -1,14 +1,13 @@
 import Button from 'react-bootstrap/Button';
-import { m } from '../paraglide/messages.js'
-import axios from 'axios'
+import axios from '../api/axios.jsx';
 import { useState ,useEffect} from 'react';
 
 const MenuStore = () => {
     const [data, setData] =  useState([]);
     const getshop = async ()=>{
         try {
-            const res = await axios.get("http://127.0.0.1:8080/getShop")
-            console.log("API Response:", res.data)   // ตรวจสอบก่อน
+            const res = await axios.get("/getShop",{ withCredentials: true })
+            // console.log("API Response:", res.data)  
             setData(res.data)
         } catch (err) {
             console.error("Error fetching shops:", err)
