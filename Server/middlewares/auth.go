@@ -8,13 +8,16 @@ import (
 )
 
 
-func GetJwt() fiber.Handler{
-	secret := os.Getenv("JWT_SECRET")
-	if secret == "" {
-		secret = "defaultsecret"
-	}
-	
+func ProtectedCookie() fiber.Handler {
 	return jwtware.New(jwtware.Config{
-		SigningKey: jwtware.SigningKey{Key: []byte(secret)},
+		SigningKey:   jwtware.SigningKey{Key: []byte(os.Getenv("JWT_SECRET"))},
+		TokenLookup:  "cookie:token",
+		ErrorHandler: jwtError,
+	})
+}
+
+func jwtError(c *fiber.Ctx, err error) error {
+	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+		"error": "Unauthorized",
 	})
 }
