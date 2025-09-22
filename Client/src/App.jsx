@@ -7,6 +7,7 @@ import HomePage from './page/Home';
 
 import { AuthContext, ProtectedLayout  } from './context/ProtectRoute';
 import { useState } from 'react';
+import MapPickerButton from './component/MapPickerButton';
 
 function App() {
   const [auth,setAuth]= useState({});
@@ -15,13 +16,14 @@ function App() {
       <BrowserRouter>
         <AuthContext .Provider value={{auth,setAuth}}>
           <Routes>
-            <Route path='/login' element={<LoginPage/>}/>
+              <Route path='/login' element={<LoginPage/>}/>
 
               <Route path='/' element={<HomePage/>}/>
 
               <Route element={<ProtectedLayout />}>
                 <Route path="/home" element={<MenuStore />}/>
                 <Route path="/*"/>
+                <Route path="/mappick"element={<MapPickerButton/>}/>
               </Route>
           </Routes>
         </AuthContext.Provider>
