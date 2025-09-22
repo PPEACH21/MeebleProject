@@ -7,7 +7,7 @@ const MenuStore = () => {
     const getshop = async ()=>{
         try {
             const res = await axios.get("/getShop",{ withCredentials: true })
-            // console.log("API Response:", res.data)  
+            console.log("API Response:", res.data)  
             setData(res.data)
         } catch (err) {
             console.error("Error fetching shops:", err)

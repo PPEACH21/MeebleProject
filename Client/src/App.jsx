@@ -1,4 +1,3 @@
-import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import MenuStore from './page/MenuStore';
 import { BrowserRouter,Routes,Route } from 'react-router-dom';
@@ -16,9 +15,8 @@ function App() {
       <BrowserRouter>
         <AuthContext .Provider value={{auth,setAuth}}>
           <Routes>
-              <Route path='/login' element={<LoginPage/>}/>
-
               <Route path='/' element={<HomePage/>}/>
+              <Route path='/login' element={<LoginPage/>}/>
 
               <Route element={<ProtectedLayout />}>
                 <Route path="/home" element={<MenuStore />}/>

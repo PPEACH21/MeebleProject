@@ -1,6 +1,7 @@
 import { useState} from "react";
 import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
+import "./Login.css"
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -36,31 +37,35 @@ const LoginPage = () => {
   };
 
   return (
-    <section>
-      <h1>Login</h1>
-      <form onSubmit={handleSubmit}>
-        <label>Email:</label>
-        <input
-          type="text"
-          autoComplete="off"
-          onChange={(e) => setEmail(e.target.value)}
-          value={email}
-          required
-        />
+    <div className="d-flex justify-content-center align-items-center min-vh-100">
+    <div className="sectionlogin p-5 rounded-5">
+      <h1 className="text-center mb-4">Login</h1>
+      <form onSubmit={handleSubmit}  className=" d-flex flex-column">
+            <label >Email:</label>
+            <input
+              type="text"
+              autoComplete="off"
+              onChange={(e) => setEmail(e.target.value)}
+              value={email}
+              required
+            />
+          
 
-        <label>Password:</label>
-        <input
-          type="password"
-          onChange={(e) => setPassword(e.target.value)}
-          value={password}
-          required
-        />
+          <label>Password:</label>
+          <input
+            type="password"
+            onChange={(e) => setPassword(e.target.value)}
+            value={password}
+            required
+            />
+            {errMsg && <p style={{ color: "red" }}>{errMsg}</p>}
 
-        <button type="submit">Sign In</button>
+
+          <button type="submit" className="btn btn-primary w-75 mt-5 container">Sign In</button>
       </form>
 
-      {errMsg && <p style={{ color: "red" }}>{errMsg}</p>}
-    </section>
+    </div>
+    </div>
   );
 };
 
