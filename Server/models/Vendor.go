@@ -18,7 +18,7 @@ type Menu = struct {
 	Name        string  `json:"name" firestore:"name"`
 	Price       float32 `json:"price" firestore:"price"`
 	Description string  `json:"description" firestore:"description"`
-	Image       string  `json:"img" firestore:"img"`
+	Image       string  `json:"image" firestore:"image"`
 }
 
 type finance_date = struct {
