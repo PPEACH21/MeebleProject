@@ -10,6 +10,6 @@ import ShowMenu from './component/showMenu.jsx'
 import ShowImageExample from './component/ShowImageExample.jsx'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AddMenu />
+      <App />
   </StrictMode>
 )

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/PPEACH21/MebleBackend-Web/config"
+	"github.com/PPEACH21/MebleBackend-Web/middlewares"
 	"github.com/PPEACH21/MebleBackend-Web/routes"
 	"github.com/PPEACH21/MebleBackend-Web/service"
 	"github.com/gofiber/fiber/v2"
@@ -24,11 +25,8 @@ func main(){
 	app.Post("/createaccount",service.CreateUser)
 	app.Post("/login",service.Login)
 	
-	// app.Use(middlewares.GetJwt())
-	// app.Use(middlewares.CheckMiddleware)
+	app.Use(middlewares.ProtectedCookie())
 		routes.Routes(app)
-
-	
 		
 	app.Listen(":8080")
 }
