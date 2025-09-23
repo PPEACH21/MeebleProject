@@ -20,7 +20,10 @@ func Login(c *fiber.Ctx)error{
 
 	docs,err := config.Client.Collection("User").Where("email", "==", user.Email).Limit(1).Documents(config.Ctx).Next()
 	if err != nil {
-        return c.Status(fiber.StatusNotFound).SendString("Email Not Found")
+		docs, err = config.Client.Collection("User").Where("username", "==", user.Username).Limit(1).Documents(config.Ctx).Next()
+		if err != nil {
+			return c.Status(fiber.StatusNotFound).SendString("Email or Username Not Found")
+		}
     }
 
 	var member models.User

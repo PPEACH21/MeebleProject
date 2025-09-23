@@ -39,5 +39,6 @@
   "order": "Order",
   "reserve": "Reserve",
   "coordinates": "Coordinates",
-  "view": "View"
+  "view": "View",
+  "or": "or"
 }

@@ -32,7 +32,7 @@ const HomePage= () =>{
             <div className="section">
                 <h1 className="display-4 mb-3 fw-bold">{m.project_description06()}</h1>
                 <h2>{m.project_description07()}</h2>
-                <button className="btn mt-5 w-25  custom-btn">{m.register()}</button>
+                <Link to="/register" className="btn mt-5 w-25 custom-btn">{m.register()}</Link>
             </div>
             <button onClick={()=>{return(getLocale()==="en"?setLocale("th"):setLocale("en"))}}>Change Language</button>
         </>

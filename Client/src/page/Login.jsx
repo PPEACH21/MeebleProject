@@ -1,26 +1,36 @@
-import { useState} from "react";
+import { useEffect, useState} from "react";
 import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import "./Login.css"
+import Cookies from 'js-cookie';
+import { m } from "../paraglide/messages";
 
 const LoginPage = () => {
-  const [email, setEmail] = useState("");
+  const [userkey, setUserkey]=useState("");
   const [password, setPassword] = useState("");
   const [errMsg, setErrMsg] = useState("");
   const navigate = useNavigate(); 
 
+  useEffect(()=>{
+    const token = Cookies.get("token");
+    console.log("token =", token);
+    if(token) {
+      navigate("/home");
+    }
+  },[navigate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("/login", { email, password }, {
+      const res = await axios.post("/login", { email:userkey,username:userkey, password }, {
         headers: { "Content-Type": "application/json" },
         withCredentials: true,
       });
 
       console.log("login Success")
-      setEmail("");
+      setUserkey("");
       setPassword("");
-      navigate("/home")
+      navigate("/home",{ replace: true })
 
     } catch (err) {
       if (!err?.response) {
@@ -41,17 +51,17 @@ const LoginPage = () => {
     <div className="sectionlogin p-5 rounded-5">
       <h1 className="text-center mb-4">Login</h1>
       <form onSubmit={handleSubmit}  className=" d-flex flex-column">
-            <label >Email:</label>
+            <label>{m.username()} {m.or()} {m.email()}</label>
             <input
               type="text"
               autoComplete="off"
-              onChange={(e) => setEmail(e.target.value)}
-              value={email}
+              onChange={(e) => setUserkey(e.target.value)}
+              value={userkey}
               required
             />
           
 
-          <label>Password:</label>
+          <label>{m.password()}</label>
           <input
             type="password"
             onChange={(e) => setPassword(e.target.value)}

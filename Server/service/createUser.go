@@ -13,10 +13,15 @@ func CreateUser(c *fiber.Ctx) error {
 	if err := c.BodyParser(user) ; err!=nil{
         return  c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
-	
+
 	_,err := config.Client.Collection("User").Where("email","==",user.Email).Limit(1).Documents(config.Ctx).Next()
 	if err == nil{
 		return c.Status(fiber.StatusBadRequest).SendString("email has already")
+	}
+
+	_,err = config.Client.Collection("User").Where("username","==",user.Username).Limit(1).Documents(config.Ctx).Next()
+	if err == nil{
+		return c.Status(fiber.StatusAlreadyReported).SendString("Username have been Already")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
@@ -28,6 +33,7 @@ func CreateUser(c *fiber.Ctx) error {
 
 	_, _, err = config.Client.Collection("User").Add(config.Ctx,map[string]interface{}{
 		"email":     user.Email,
+		"username": 	user.Username,
 		"password":   user.Password,
 		"token":  user.Token,
 		"createdat": firestore.ServerTimestamp,
