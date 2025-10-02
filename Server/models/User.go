@@ -1,12 +1,14 @@
 package models
+
 import "time"
 
 type User = struct {
-	Usename string	`json:"username firestore:username"`
-	Cost 	string	`json:"cost firestore:cost"`
 	Email     string    `json:"email" firestore:"email"`
+	Username string	`json:"username" firestore:"username"`
 	Password  string    `json:"password" firestore:"password"`
-	Token     string    `json:"token" firestore:"token"`
+	OTP_Verify string `json:"otp_verify" firestore:"otp_verify"`
+	Verified 	bool	`json:"verified" firestore:"verified"`
+	Cost 	int	`json:"cost" firestore:"cost"`
 	CreatedAt time.Time `json:"createdAt" firestore:"createdAt"`
 }
 
