@@ -11,6 +11,7 @@ import (
 	"github.com/PPEACH21/MebleBackend-Web/config"
 	"github.com/PPEACH21/MebleBackend-Web/models"
 	"github.com/gofiber/fiber/v2"
+	"google.golang.org/genproto/googleapis/type/latlng"
 )
 
 func SetLocation(c *fiber.Ctx) error {
@@ -33,16 +34,17 @@ func SetLocation(c *fiber.Ctx) error {
 	}
 
 	_, err = data.Update(config.Ctx, []firestore.Update{
-		{Path: "latitude", Value: datanew.Latitude},
-		{Path: "longitude", Value: datanew.Longitude},
+		{
+			Path: "address", 
+			Value: &latlng.LatLng{Latitude: datanew.Address.Latitude, Longitude: datanew.Address.Longitude},
+		},
 	})
 	if err != nil {
 		return c.Status(500).SendString("Firestore update error")
 	}
 
 	return c.JSON(fiber.Map{
-		"latitude":  datanew.Latitude,
-		"longitude": datanew.Longitude,
+		"address": &latlng.LatLng{Latitude: datanew.Address.Latitude, Longitude: datanew.Address.Longitude},
 	})
 }
 

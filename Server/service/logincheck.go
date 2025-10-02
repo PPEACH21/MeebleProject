@@ -18,14 +18,14 @@ func Login(c *fiber.Ctx)error{
         return  c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 
-	docs,err := config.Client.Collection("User").Where("email", "==", user.Email).Limit(1).Documents(config.Ctx).Next()
+	docs,err := config.User.Where("email", "==", user.Email).Limit(1).Documents(config.Ctx).Next()
 	if err != nil {
-		docs, err = config.Client.Collection("User").Where("username", "==", user.Username).Limit(1).Documents(config.Ctx).Next()
+		docs, err = config.Client.Collection("users").Where("username", "==", user.Username).Limit(1).Documents(config.Ctx).Next()
 		if err != nil {
 			return c.Status(fiber.StatusNotFound).SendString("Email or Username Not Found")
 		}
     }
-
+	
 	var member models.User
     if err := docs.DataTo(&member); err != nil {
         return c.Status(fiber.StatusInternalServerError).SendString("Error parsing user data")
@@ -37,11 +37,11 @@ func Login(c *fiber.Ctx)error{
     }
 
     fmt.Println("Login Valid Correct!")
-
     claims := jwt.MapClaims{
-		"email": member.Email,
+		"user_id":docs.Ref.ID,
+		"username": member.Username,
 		"role":   "user",
-		"exp":    time.Now().Add(time.Minute * 5).Unix(),
+		"exp":    time.Now().Add(time.Minute * 20).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -61,6 +61,9 @@ func Login(c *fiber.Ctx)error{
 	})
 
 	return c.JSON(fiber.Map{
+		"user_id": docs.Ref.ID,
+		"username" : member.Username,
+		"role" : "user",
 		"message": "login success",
 	})
 }

@@ -10,6 +10,8 @@ import (
 )
 
 var Client *firestore.Client
+var User *firestore.CollectionRef
+var Shops *firestore.CollectionRef
 var Ctx = context.Background()
 
 func InitFirebase(){
@@ -24,4 +26,9 @@ func InitFirebase(){
 	if err != nil {
 		log.Fatalf("error initializing firestore: %v", err)
 	}
+
+	
+	User = Client.Collection("users")
+	Shops = Client.Collection("shops")
 }
+
