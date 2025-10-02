@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/PPEACH21/MebleBackend-Web/config"
 	"github.com/PPEACH21/MebleBackend-Web/middlewares"
 	"github.com/PPEACH21/MebleBackend-Web/routes"
@@ -19,8 +21,14 @@ func main(){
 	config.InitFirebase()
 	defer config.Client.Close()
 	
+	config.ConnectMailer(
+		os.Getenv("MAILER_HOST"),
+		os.Getenv("MAILER_USERNAME"),
+		os.Getenv("MAILER_PASSWORD"),
+	)
+
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:5173",
+		AllowOrigins: os.Getenv("FRONTEND_URL"),
 		AllowCredentials: true,
 	}))
 
@@ -35,6 +43,5 @@ func main(){
 	
 	app.Use(middlewares.ProtectedCookie())
 		routes.Routes(app)
-		
 	app.Listen(":8080")
 }
