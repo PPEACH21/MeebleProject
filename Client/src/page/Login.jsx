@@ -1,15 +1,17 @@
-import { useEffect, useState} from "react";
+import { useEffect, useState,useContext} from "react";
 import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import "./Login.css"
 import Cookies from 'js-cookie';
 import { m } from "../paraglide/messages";
+import { AuthContext } from "../context/ProtectRoute";
 
 const LoginPage = () => {
   const [userkey, setUserkey]=useState("");
   const [password, setPassword] = useState("");
   const [errMsg, setErrMsg] = useState("");
   const navigate = useNavigate(); 
+  const { login } = useContext(AuthContext);
 
   useEffect(()=>{
     const token = Cookies.get("token");
@@ -26,8 +28,16 @@ const LoginPage = () => {
         headers: { "Content-Type": "application/json" },
         withCredentials: true,
       });
-
       console.log("login Success")
+
+      const userData = {
+        email: res.data.email,
+        username: res.data.username,
+        role: res.data.role,
+      };
+      login(userData);
+  
+      
       setUserkey("");
       setPassword("");
       navigate("/home",{ replace: true })

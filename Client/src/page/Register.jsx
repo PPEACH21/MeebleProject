@@ -37,7 +37,7 @@ const Register = () => {
       setPassword("");
       setConfirmPassword("");
       setErrMsg("");
-      navigate("/login",{replace:true})
+      navigate("/verifyemail",{replace:true})
     } catch (err) {
       if (!err?.response) {
         console.log(err.message, err.code)
@@ -54,46 +54,46 @@ const Register = () => {
 
   return (
     <div className="d-flex justify-content-center align-items-center min-vh-100">
-    <div className="sectionregister p-5 rounded-5">
-      <h1 className="text-center mb-4">Register</h1>
-      <form onSubmit={handleSubmit}  className=" d-flex flex-column">
-            <label>{m.email()}</label>
-            <input
-              type="email"
-              onChange={(e) => setEmail(e.target.value)}
-              value={email}
-              required
-            />
-            <label>{m.username()}</label>
-            <input
-              type="text"
-              onChange={(e) => setUsername(e.target.value)}
-              value={username}
-              required
-            />
-            <label>{m.password()}</label>
+      <div className="sectionregister p-5 rounded-5">
+        <h1 className="text-center mb-4">Register</h1>
+        
+        <form onSubmit={handleSubmit}  className=" d-flex flex-column">
+              <label>{m.email()}</label>
+              <input
+                type="email"
+                onChange={(e) => setEmail(e.target.value)}
+                value={email}
+                required
+              />
+              <label>{m.username()}</label>
+              <input
+                type="text"
+                onChange={(e) => setUsername(e.target.value)}
+                value={username}
+                required
+              />
+              <label>{m.password()}</label>
+              <input
+                type="password"
+                onChange={(e) => setPassword(e.target.value)}
+                value={password}
+                
+                required
+              />
+          
+            <label>{m.confrimpassword()}</label>
             <input
               type="password"
-              onChange={(e) => setPassword(e.target.value)}
-              value={password}
-              
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              value={confirmPassword}
               required
-            />
-        
-          <label>{m.confrimpassword()}</label>
-          <input
-            type="password"
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            value={confirmPassword}
-            required
-            />
-            {errMsg && <p style={{ color: "red" }}>{errMsg}</p>}
+              />
+              {errMsg && <p style={{ color: "red" }}>{errMsg}</p>}
 
-            <label className="fs-6 text-end">{m.confrimpassword()}</label>
-          <button type="submit" className="btn btn-primary w-75 mt-2 container">{m.register()}</button>
-      </form>
-
-    </div>
+              <label className="fs-6 text-end">{m.confrimpassword()}</label>
+            <button type="submit" className="btn btn-primary w-75 mt-2 container">{m.register()}</button>
+        </form>
+      </div>
     </div>
   );
 };
