@@ -41,12 +41,8 @@ const LoginPage = () => {
       login(userData);
       setUserkey("");
       setPassword("");
-
-      if(userData.verified){
-        navigate("/home",{ replace: true })
-      }else{
-        navigate("/verifyemail",{ replace: true })
-      }
+      navigate("/home",{ replace: true })
+      
 
     } catch (err) {
       if (!err?.response) {
