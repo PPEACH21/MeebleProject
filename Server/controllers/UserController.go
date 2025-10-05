@@ -1,8 +1,10 @@
 package controllers
 
 import (
+	"fmt"
 	"log"
 
+	"cloud.google.com/go/firestore"
 	"github.com/PPEACH21/MebleBackend-Web/config"
 	"github.com/PPEACH21/MebleBackend-Web/models"
 	"github.com/gofiber/fiber/v2"
@@ -35,4 +37,29 @@ func GetShop(c *fiber.Ctx) error {
 		})
 	}
 	return c.Status(fiber.StatusOK).JSON(shop)
+}
+
+func VerifiedUser(c *fiber.Ctx) error {
+	userId := c.Params("id")
+
+	fmt.Println("User: ",userId)
+
+	data := config.User.Doc(userId)
+	docRef,err := data.Get(config.Ctx)
+	if err != nil{
+		return c.Status(fiber.StatusBadRequest).SendString("Not user ID")
+	}
+	
+	_,err = docRef.Ref.Update(config.Ctx,[]firestore.Update{
+		{
+			Path: "verified",
+			Value: true,
+		},
+	})
+	if err!=nil{
+		return c.Status(fiber.StatusBadRequest).SendString("Update data Error")
+	}
+
+
+	return c.Status(fiber.StatusOK).JSON(data)
 }

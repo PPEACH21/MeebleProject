@@ -39,6 +39,7 @@ func Login(c *fiber.Ctx)error{
     fmt.Println("Login Valid Correct!")
     claims := jwt.MapClaims{
 		"user_id":docs.Ref.ID,
+		"email": member.Email,
 		"username": member.Username,
 		"verified": member.Verified,
 		"role":   "user",
@@ -63,6 +64,7 @@ func Login(c *fiber.Ctx)error{
 
 	return c.JSON(fiber.Map{
 		"user_id": docs.Ref.ID,
+		"email": member.Email,
 		"username" : member.Username,
 		"role" : "user",
 		"verified": member.Verified,

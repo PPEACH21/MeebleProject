@@ -18,3 +18,8 @@ type Select = struct {
 	Count string `json:"count firestore:count"`
 	Cost string `json:"cost firestore:cost"`
 }
+type Request struct {
+	Username string `json: "username"`
+	Email string `json:"email"`
+	Otp   string `json:"otp"`
+}
