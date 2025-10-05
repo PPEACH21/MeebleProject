@@ -22,6 +22,8 @@ func Profile(c *fiber.Ctx) error {
     claims := user.Claims.(jwt.MapClaims)
 
     return c.JSON(fiber.Map{
+		"email": claims["email"],
+		"verified": claims["verified"],
 		"user_id": claims["user_id"],  
         "username": claims["username"],
         "role": claims["role"],

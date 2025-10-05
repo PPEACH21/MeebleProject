@@ -33,6 +33,7 @@ const LoginPage = () => {
 
       const userData = {
         user_id: res.data.user_id,
+        email: res.data.email,
         username: res.data.username,
         verified: res.data.verified,
         role: res.data.role,
