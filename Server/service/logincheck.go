@@ -40,6 +40,7 @@ func Login(c *fiber.Ctx)error{
     claims := jwt.MapClaims{
 		"user_id":docs.Ref.ID,
 		"username": member.Username,
+		"verified": member.Verified,
 		"role":   "user",
 		"exp":    time.Now().Add(time.Minute * 20).Unix(),
 	}
@@ -64,6 +65,7 @@ func Login(c *fiber.Ctx)error{
 		"user_id": docs.Ref.ID,
 		"username" : member.Username,
 		"role" : "user",
+		"verified": member.Verified,
 		"message": "login success",
 	})
 }

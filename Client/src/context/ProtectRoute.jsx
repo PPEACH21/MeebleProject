@@ -1,49 +1,54 @@
-import { createContext, useEffect, useState } from "react"
+import { createContext, useContext, useEffect, useState } from "react"
 import { Navigate , useLocation,Outlet } from "react-router-dom";
-import Cookies from 'js-cookie';
 import axios from "../api/axios";
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({children})=>{
   const [auth,setAuth]=useState(null);
-
+  const [loading, setLoading] = useState(true); 
+  
   useEffect(() => {
     const getid = async () => {
-      try {
+      try{
         const res = await axios.get("/profile", { withCredentials: true });
         console.log("API Response:", res.data);
         setAuth(res.data);
-      } catch (err) {
-        console.error("Error fetching profile:", err);
+      }catch{
+        setAuth(null);
+      }finally{
+        setLoading(false);
       }
     };
     getid();
   }, []);
-  
+
   const login=(userData) => {
     setAuth(userData)
     console.log(userData)
   };
-
 
   const logout=()=>{
     setAuth(null);
   };
 
   return (
-    <AuthContext.Provider value={{ auth, login, logout }}>
+    <AuthContext.Provider value={{ auth ,setAuth, login, logout ,loading}}>
       {children}
     </AuthContext.Provider>
   );
 }
 
 export const ProtectRoute =({ children })=>{
-    const token = Cookies.get("token"); 
+  console.log("ProtectRoute",auth)
+    const {auth,loading} = useContext(AuthContext);
     const location = useLocation();
-    
-    console.log('cookie now =', token);
-    if(!token) {
+
+    if (loading) {
+      return <div>Loading...</div>;
+    }
+    if (!auth) {
+      console.log("NO Auth",auth)
          return <Navigate to="/" replace state={{ from: location }} />;
     }
     return children

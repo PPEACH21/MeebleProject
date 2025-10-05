@@ -2,24 +2,25 @@ import { useEffect, useState,useContext} from "react";
 import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import "./Login.css"
-import Cookies from 'js-cookie';
 import { m } from "../paraglide/messages";
 import { AuthContext } from "../context/ProtectRoute";
+import VerifyEmail from "./VerifyEmail";
 
 const LoginPage = () => {
   const [userkey, setUserkey]=useState("");
   const [password, setPassword] = useState("");
   const [errMsg, setErrMsg] = useState("");
   const navigate = useNavigate(); 
-  const { login } = useContext(AuthContext);
+  const { auth,login } = useContext(AuthContext);
 
   useEffect(()=>{
-    const token = Cookies.get("token");
-    console.log("token =", token);
-    if(token) {
-      navigate("/home");
+    console.log("LoginPage Auth:",auth);
+    if(auth && auth.verified){
+      navigate('/home', { replace: true });
+    }else if(auth && !auth.verified){
+      navigate('/verifyemail', {replace: true});
     }
-  },[navigate]);
+  }, [auth,navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,16 +32,21 @@ const LoginPage = () => {
       console.log("login Success")
 
       const userData = {
-        email: res.data.email,
+        user_id: res.data.user_id,
         username: res.data.username,
+        verified: res.data.verified,
         role: res.data.role,
       };
-      login(userData);
-  
       
+      login(userData);
       setUserkey("");
       setPassword("");
-      navigate("/home",{ replace: true })
+
+      if(userData.verified){
+        navigate("/home",{ replace: true })
+      }else{
+        navigate("/verifyemail",{ replace: true })
+      }
 
     } catch (err) {
       if (!err?.response) {
