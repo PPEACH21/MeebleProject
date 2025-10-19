@@ -19,10 +19,10 @@ function App() {
 
               <Route element={<ProtectedLayout />}>
                 <Route path='/verifyemail' element={<VerifyEmail/>}/>
-                <Route path="/home" element={<MenuStore />}/>
+                <Route path="/home" element={<StorePage />}/>
                 <Route path="/mappick"element={<MapPickerButton/>}/>
                 <Route path="/*"element={<LoginPage/>}/>
-                <Route path="/store"element={<StorePage/>}/>
+                <Route path="/menu"element={<MenuStore/>}/>
               </Route>
           </Routes>
       </BrowserRouter>
