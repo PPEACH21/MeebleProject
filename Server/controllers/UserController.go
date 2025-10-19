@@ -22,19 +22,13 @@ func GetShop(c *fiber.Ctx) error {
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 		}
+
 		var u models.Shop
 		if err := doc.DataTo(&u); err != nil {
 			log.Println("error convert:", err)
 			continue
 		}
-		shop = append(shop, models.Shop{
-			Rate:        u.Rate,
-			Description: u.Description,
-			Shop_name:   u.Shop_name,
-			Type:        u.Type,
-			Status:      u.Status,
-			Address:  	u.Address,
-		})
+		shop = append(shop, u)
 	}
 	return c.Status(fiber.StatusOK).JSON(shop)
 }
@@ -62,4 +56,22 @@ func VerifiedUser(c *fiber.Ctx) error {
 
 
 	return c.Status(fiber.StatusOK).JSON(data)
+}
+
+
+func UserProfile(c *fiber.Ctx)error{
+	userID := c.Params("id")
+	fmt.Println("User: ",userID)
+
+	data:= config.User.Doc(userID)
+	docRef,err := data.Get(config.Ctx)
+	if err != nil{
+		return c.Status(fiber.StatusBadRequest).SendString("Not user ID")
+	}
+
+	userData := docRef.Data()
+	if userData == nil {
+		return c.Status(fiber.StatusNotFound).SendString("User not found")
+	}
+	return c.Status(fiber.StatusOK).JSON(userData);
 }
