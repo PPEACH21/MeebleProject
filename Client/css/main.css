@@ -1,0 +1,10 @@
+@import url("components/buttons.css");
+@import url("components/nav.css");
+
+html body{
+    margin: 0px;
+    padding: 0px;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}

@@ -1,4 +1,3 @@
-import 'bootstrap/dist/css/bootstrap.min.css';
 import MenuStore from './page/MenuStore';
 import { BrowserRouter,Routes,Route } from 'react-router-dom';
 import LoginPage from './page/Login';

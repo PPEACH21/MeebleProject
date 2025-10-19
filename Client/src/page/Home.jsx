@@ -11,7 +11,7 @@ const HomePage= () =>{
                     <p className="display-6 fw-light ms-2 w-50 fontcolor">{m.project_description01()}</p>
 
                     <div className="row mt-15  justify-content-evenly">
-                        <Link to="/login" className="btn col p-3 mx-5 custom-btn">{m.login()}</Link>
+                        <Link to="/login" className="btn">{m.login()}</Link>
 
                         <Link to="/register" className="btn p-3 col mx-5" style={{backgroundColor:"#FFA467", color:"#fff" ,fontWeight:"bold"}}>{m.register()}</Link>
                     </div>
