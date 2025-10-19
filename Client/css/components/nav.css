@@ -1,6 +1,7 @@
 .navHomePage {
   background-color: #ffa360;
-  height: 100px;
+  height: 1%;
+  direction: relative;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -12,32 +13,30 @@
 .nav {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  max-width: 1200px;
+  width: 90%;
   margin: 0 auto;
 }
 
 .nav img {
-  height: 100px;
+  height: 70px;
   aspect-ratio: 1;
   object-fit: cover;
   display: block;
   border-radius: 10px;
-  margin-left: -270px;
 }
 
 .navMenu {
   display: flex;
   flex-direction: row;
+  justify-content: end;
   align-items: center;
-  gap: 270px;
-  margin-right: -170px;
+  width: 50%;
+  gap: 10%;
 }
 
 .navMenu h1 {
-  font-size: 22px;
-  font-weight: bold;
+  font-size: 20px;
+  font-weight:500;
   margin: 0;
   cursor: pointer;
   transition: color 0.2s ease;
@@ -124,15 +123,13 @@
 
 .navHorizon .shop {
   width: 100%;
-  height: 100%; /* ให้กินพื้นที่ที่เหลือจาก nav และ filter */
-  overflow-y: auto; /* ✅ เลื่อนเฉพาะตรงนี้ */
-  overflow-x: hidden; /* ปิดเลื่อนแนวนอน */
-  padding-right: 10px; /* กัน scrollbar ชิดขอบ */
+  height: 100%; 
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 10px;
   box-sizing: border-box;
   scrollbar-width: none;
-  
 }
-
 
 .shop .card-grid {
   display: flex;
@@ -142,24 +139,38 @@
   padding: 20px;
 }
 
+.card-grid .position {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+  gap: 25px;
+  /* padding: 20px; */
+}
+
+.card-grid .position2 {
+  display: flex;
+  flex-direction: row;
+  gap: 100px;
+  /* padding: 20px; */
+}
+
 .card-grid .card {
+  flex-direction: row;
   background-color: #F2F2F2;
   border: 1px solid #eee;
   border-radius: 16px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
   padding: 14px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
+  gap: 5px;
+  height: auto;
+  width: 70%;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  height: 150px;
-  width: 75%;
 }
 
 .card .image {
-  width: 15%;
-  height: 100%;
+  width: 250px;
+  height: 150px;
+  border-radius: 10px;
   background-color: red;
-  margin: 0 5px 0 5px;
 }

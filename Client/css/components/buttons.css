@@ -13,11 +13,15 @@
 }
 
 .foodBtn{
-  background-color: #F2F2F2;
+  background-color: #FFA467;
   height: 60px;
   width: 80%;
   border-radius: 80px;
   border-color: #FFA467;
   font-size: 20px;
   margin-bottom: 20px;
+}
+
+.foodBtn:hover {
+  background-color: #ff8a2b;
 }

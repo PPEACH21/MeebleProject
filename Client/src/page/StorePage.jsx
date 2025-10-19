@@ -1,19 +1,37 @@
+import { useState,useEffect } from "react";
+import axios from "../api/axios";
+import Navbar from "../component/Nav";
+
 const StorePage = () => {
+  const [data, setData] =  useState([]);
+  const [datashow, setDataShow] =  useState([]);
+  const [search,setSearch] = useState("");
+
+  const getshop = async ()=>{
+      try {
+          const res = await axios.get("/Shop",{ withCredentials: true })
+          console.log("API Response:", res.data)  
+          setData(res.data)
+          setDataShow(res.data)
+      } catch (err) {
+          console.error("Error fetching shops:", err)
+      }
+  }
+
+  const SearchSubmit =()=>{
+    const filter = data.filter((item)=>item.shop_name.toLowerCase().includes(search.toLowerCase()))
+    setDataShow(filter);
+    // console.log(`filterSet`)
+    // console.log(filter)
+  }
+
+  useEffect (()=>{
+      getshop()
+  },[])
+
   return (
     <>
-      <nav className="navHomePage">
-        <div className="nav">
-          <img
-            src="https://i.ibb.co/MyMPRx3P/Chat-GPT-Image-Sep-23-2025-10-01-38-PM.jpg"
-            alt="Logo"
-          />
-          <div className="navMenu">
-            <h1>cost</h1>
-            <h1>history</h1>
-            <h1>username</h1>
-          </div>
-        </div>
-      </nav>
+      <Navbar/>
       <div className="mainLayout">
         <div className="navVertical">
           <h1>Menu Type</h1>
@@ -22,33 +40,65 @@ const StorePage = () => {
           <button className="foodBtn">ตามสั่ง</button>
           <button className="foodBtn">ตามสั่ง</button>
         </div>
+
         {/*ฝั่งขวา*/}
         <div className="navHorizon">
           <div className="search">
             <h1>Select Store</h1>
-            <input type="text" placeholder="Search..." />
-            <button>
+            <input 
+              type="text" 
+              placeholder="Search..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <button onClick={SearchSubmit}>
               <i class="fa fa-search"></i>
             </button>
           </div>
           <div className="filter"></div>
           <div className="shop">
-            <div className="card-grid">
-              <div className="card">
-                <div className="image"></div>
-              </div>
-              <div className="card">
-                <div className="image"></div>
-              </div>
-              <div className="card">
-                <div className="image"></div>
-              </div>
-              <div className="card">
-                <div className="image"></div>
-              </div>
-              <div className="card">
-                <div className="image"></div>
-              </div>
+             <div className="card-grid">
+              {datashow.map((item, index) => (
+                <div className="card" key={index} style={{margin:"10px", padding:"10px"}}>
+                  <div className="position">
+                      <div className="image"> </div>
+
+                      <div>
+                        <div className="position">
+                          <div>
+                            <h2 style={{margin:-2}}>{item.shop_name}</h2>
+                            <div className="position2">
+                              <div>
+                                <p><b>Rate:</b> {item.rate}</p>
+                                <p><b>Price:</b> </p>
+                                <p><b>Distance:</b> </p>
+                              </div>
+                              <div>
+                                <p style={{
+                                  WebkitLineClamp: 2,
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "pre-wrap",
+                                  maxWidth: "240px"
+                                }}
+                                >
+                                <b>Description:</b> {item.description}
+                                </p>
+                                <p><b>Status:</b> {item.status ? "Open" : "Close"}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{display:"flex",flexDirection:'column',gap:'20px', width:'20%'}}>
+                        <button className="btn">reserve</button>
+                        <button className="btn">order</button>
+                      </div>
+                  </div>
+                </div>
+
+                ))}
             </div>
           </div>
         </div>

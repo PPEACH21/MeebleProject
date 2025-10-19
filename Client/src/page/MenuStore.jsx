@@ -3,13 +3,13 @@ import Modal from "react-bootstrap/Modal";
 import axios from "../api/axios.jsx";
 import { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/ProtectRoute.jsx";
-
+import Navbar from '../component/Nav.jsx';
 const MenuStore = () => {
   const { auth } = useContext(AuthContext);
   const [data, setData] = useState([]);
   const [dataUser, setDatauser] = useState([]);
   const [showMap, setShowMap] = useState(false);
-
+  
   // 🗺 ตัวอย่างพิกัด (กรุงเทพฯ)
   const lat = 13.736717;
   const lng = 100.523186;
@@ -43,6 +43,7 @@ const MenuStore = () => {
 
   return (
     <>
+      <Navbar/>
       <div className="box">
         <div className="left">
           <div className="storeBox">
@@ -86,6 +87,7 @@ const MenuStore = () => {
 
         <div className="right">
           <div className="menu">
+
             {data.map((item, index) => (
               <div
                 className="menuBox"
