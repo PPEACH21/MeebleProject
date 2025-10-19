@@ -51,9 +51,9 @@ export const ProtectRoute =({ children })=>{
     console.log("NO Auth",auth)
     return <Navigate to="/" replace state={{ from: location }} />;
   }
-  if(!auth.verified && location.pathname !== "/verifyemail"){
-    return <Navigate to="/verifyemail" replace state={{ from: location }} />;
-  }
+  // if(!auth.verified && location.pathname !== "/verifyemail"){
+  //   return <Navigate to="/verifyemail" replace state={{ from: location }} />;
+  // }
   return children
 }
 

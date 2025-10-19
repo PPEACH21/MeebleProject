@@ -7,6 +7,7 @@ import { ProtectedLayout  } from './context/ProtectRoute';
 import MapPickerButton from './component/MapPickerButton';
 import Register from './page/Register';
 import VerifyEmail from './page/VerifyEmail';
+import StorePage from './page/StorePage';
 
 function App() {
   return(
@@ -21,6 +22,7 @@ function App() {
                 <Route path="/home" element={<MenuStore />}/>
                 <Route path="/mappick"element={<MapPickerButton/>}/>
                 <Route path="/*"element={<LoginPage/>}/>
+                <Route path="/store"element={<StorePage/>}/>
               </Route>
           </Routes>
       </BrowserRouter>
