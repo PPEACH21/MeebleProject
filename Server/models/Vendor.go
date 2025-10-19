@@ -8,7 +8,7 @@ import (
 
 type Shop = struct {
 	Address *latlng.LatLng `json:"address" firestore:"address"`
-	Create_at time.Time `json:"create_at" firestore:"create_at"`
+	Create_at time.Time `json:"createAt" firestore:"createAt"`
 	Description string `json:"description" firestore:"description"`
 	Order_active bool `json:"order_active" firestore:"order_active"`
 	Rate float32 `json:"rate" firestore:"rate"`
@@ -16,6 +16,7 @@ type Shop = struct {
 	Shop_name string `json:"shop_name" firestore:"shop_name"`
 	Status bool `json:"status" firestore:"status"`
 	Type string `json:"type" firestore:"type"`
+	Vendor_id string `json:"vendor_id" firestore:"vendor_ref"`
 }
 
 
