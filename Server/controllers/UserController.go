@@ -28,6 +28,14 @@ func GetShop(c *fiber.Ctx) error {
 			log.Println("error convert:", err)
 			continue
 		}
+		
+		if u.Vendor_ref != nil {
+			u.Vendor_id = u.Vendor_ref.ID
+		} else {
+			u.Vendor_id = ""
+		}
+
+		// u.Vendor_id = doc.Ref.ID 
 		shop = append(shop, u)
 	}
 	return c.Status(fiber.StatusOK).JSON(shop)

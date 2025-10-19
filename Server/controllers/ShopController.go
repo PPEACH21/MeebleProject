@@ -24,7 +24,7 @@ func CreateShop(c *fiber.Ctx)error{
 
 	var vendorRef *firestore.DocumentRef
 	if shop.Vendor_id != ""{
-		vendorRef = config.User.Doc(shop.Vendor_id)
+		vendorRef = config.Vendor.Doc(shop.Vendor_id)
 	} else {
 		vendorRef = nil
 	}

@@ -1,12 +1,13 @@
 import { useState,useEffect } from "react";
 import axios from "../api/axios";
 import Navbar from "../component/Nav";
-
+import { useNavigate } from "react-router-dom";
 const StorePage = () => {
   const [data, setData] =  useState([]);
   const [datashow, setDataShow] =  useState([]);
   const [search,setSearch] = useState("");
 
+  const navigate = useNavigate(); 
   const getshop = async ()=>{
       try {
           const res = await axios.get("/Shop",{ withCredentials: true })
@@ -24,6 +25,12 @@ const StorePage = () => {
     // console.log(`filterSet`)
     // console.log(filter)
   }
+
+  const handleSelectShop = (shop) => {
+    // alert(`ร้านที่เลือก: ${shop.shop_name}\nVendor ID: ${shop.vendor_id}`);
+    
+    navigate(`/menu/${shop.vendor_id}`)
+  };
 
   useEffect (()=>{
       getshop()
@@ -85,6 +92,7 @@ const StorePage = () => {
                                 <b>Description:</b> {item.description}
                                 </p>
                                 <p><b>Status:</b> {item.status ? "Open" : "Close"}</p>
+                                <p><b>vendor:</b> {item.vendor_id}</p>
                               </div>
                             </div>
                           </div>
@@ -92,7 +100,7 @@ const StorePage = () => {
                       </div>
 
                       <div style={{display:"flex",flexDirection:'column',gap:'20px', width:'20%'}}>
-                        <button className="btn">reserve</button>
+                        <button className="btn" onClick={()=>handleSelectShop(item)}>reserve</button>
                         <button className="btn">order</button>
                       </div>
                   </div>

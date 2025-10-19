@@ -22,7 +22,7 @@ function App() {
                 <Route path="/home" element={<StorePage />}/>
                 <Route path="/mappick"element={<MapPickerButton/>}/>
                 <Route path="/*"element={<LoginPage/>}/>
-                <Route path="/menu"element={<MenuStore/>}/>
+                <Route path="/menu/:id"element={<MenuStore/>}/>
               </Route>
           </Routes>
       </BrowserRouter>

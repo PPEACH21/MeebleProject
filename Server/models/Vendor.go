@@ -3,6 +3,7 @@ package models
 import (
 	"time"
 
+	"cloud.google.com/go/firestore"
 	"google.golang.org/genproto/googleapis/type/latlng"
 )
 
@@ -16,7 +17,8 @@ type Shop = struct {
 	Shop_name string `json:"shop_name" firestore:"shop_name"`
 	Status bool `json:"status" firestore:"status"`
 	Type string `json:"type" firestore:"type"`
-	Vendor_id string `json:"vendor_id" firestore:"vendor_ref"`
+	Vendor_ref     *firestore.DocumentRef `json:"-" firestore:"vendor_id"`
+	Vendor_id      string                `json:"vendor_id" firestore:"-"`
 }
 
 
