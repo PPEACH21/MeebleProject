@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react"
 import { AuthContext } from "../context/ProtectRoute";
-import './VerifyEmail.css'
+import "../../css/pages/VerifyEmail.css"
 import OTPInput from "../component/OTPInput";
 
 const VerifyEmail=()=>{

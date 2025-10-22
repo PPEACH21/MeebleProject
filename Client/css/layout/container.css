@@ -1,124 +1,36 @@
 .container {
   flex-direction: column;
-  background-color: white;
   flex: auto;
-  max-height: 100vh;
+  height: 100vh;
+  margin-top: 0;
 }
 
-.menu {
-  margin-top: 20px;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 10px;
-
-  .menuBox {
-    background-color: #ffa360;
-    text-align: center;
-    padding: 20px;
-    box-sizing: border-box;
-  }
-}
-
-.left {
-  width: 30%;
-  height: 85vh;
+.columnset{
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* เริ่มจากบนลงล่าง */
-  align-items: center; /* ✅ ทุกกล่องอยู่ตรงกลางแนวนอน */
-  background-color: #fceade;
-  padding-top: 20px;
-  box-sizing: border-box;
-
-  .storeBox {
-    width: 65%;
-    background-color: #f2f2f2;
-    border-radius: 15px;
-    padding: 20px;
-    box-sizing: border-box;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 10px;
-
-    img {
-      width: 250px;
-      height: auto;
-      border-radius: 10px;
-      object-fit: cover;
-      margin-bottom: 10px;
-    }
-
-    h1 {
-      font-size: 22px;
-      color: #333;
-      margin: 5px 0;
-      align-self: flex-start;
-
-      &:first-of-type {
-        font-size: 28px;
-        font-weight: bold;
-        color: #000;
-      }
-
-      &:nth-of-type(2) {
-        color: #ffaa00;
-      }
-
-      &:nth-of-type(3),
-      &:nth-of-type(4) {
-        font-size: 18px;
-        color: #555;
-      }
-    }
-  }
-
-  .mapBox {
-    margin-top: 20px;
-    width: 65%;
-    background-color: #f2f2f2;
-    border-radius: 15px;
-    padding: 20px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    align-items: center; /* ✅ จัดตรงกลาง */
-    text-align: center;
-    gap: 15px;
-
-    h1 {
-      font-size: 24px;
-      color: #333;
-    }
-
-    /* ✅ แมพขนาดเล็กตรงกลาง */
-    .miniMap {
-      width: 100%;
-      max-width: 420px;
-      height: 200px;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid #ccc;
-
-      iframe {
-        width: 100%;
-        height: 100%;
-        border: 0;
-        display: block;
-      }
-    }
-  }
 }
 
-.right {
-  width: 70%;
-  height: 100%;
-}
-
-.box {
+.rowset{
   display: flex;
+  flex-direction: row;
+}
+
+.setcenter{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   height: 100vh;
+}
+
+
+
+.box{
+    display: flex;
+    flex-direction:column;
+    justify-content: center;
+    align-items: center;
+    background-color: #FCEADE;
+    border-radius: 30px;
+    padding: 40px;
 }
