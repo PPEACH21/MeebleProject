@@ -35,7 +35,7 @@ func SetLocation(c *fiber.Ctx) error {
 
 	_, err = data.Update(config.Ctx, []firestore.Update{
 		{
-			Path: "address", 
+			Path:  "address",
 			Value: &latlng.LatLng{Latitude: datanew.Address.Latitude, Longitude: datanew.Address.Longitude},
 		},
 	})
@@ -65,8 +65,8 @@ func saveFile(c *fiber.Ctx, file *multipart.FileHeader) (string, error) {
 func AddMenu(c *fiber.Ctx) error {
 	ctx := context.Background()
 
-	vendorId := "foLSIgqAeG6qrH29kdo0"
-	data := config.Client.Collection("vendor").
+	vendorId := "fGencyRIvBlWcX9DXWBo"
+	data := config.Client.Collection("vendors").
 		Doc(vendorId).
 		Collection("menu")
 
@@ -98,30 +98,44 @@ func AddMenu(c *fiber.Ctx) error {
 }
 
 func GetMenus(c *fiber.Ctx) error {
-	ctx := context.Background()
+	// กำหนด timeout กันแฮงค์
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-	vendorId := "foLSIgqAeG6qrH29kdo0"
-	data := config.Client.Collection("vendor").
-		Doc(vendorId).
-		Collection("menu")
+	// รับ vendor_id จาก path: /vendors/:vendor_id/menu
+	vendorId := c.Params("vendor_id")
+	if vendorId == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"error":   "missing vendor_id",
+		})
+	}
+
+	// vendors/{vendorId}/menu
+	col := config.Client.Collection("vendors").Doc(vendorId).Collection("menu")
 
 	// อ่านเอกสารทั้งหมด
-	docs, err := data.Documents(ctx).GetAll()
+	docs, err := col.Documents(ctx).GetAll()
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "ดึงข้อมูลไม่สำเร็จ"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"error":   "ดึงข้อมูลไม่สำเร็จ",
+		})
 	}
 
-	// แปลงเป็น slice ของ Menu
-	menus := []models.Menu{}
-	for _, doc := range docs {
+	// map -> []models.Menu (ตาม struct ที่ให้มา)
+	menus := make([]models.Menu, 0, len(docs))
+	for _, d := range docs {
 		var m models.Menu
-		if err := doc.DataTo(&m); err == nil {
-			menus = append(menus, m)
+		if err := d.DataTo(&m); err != nil {
+			continue // ข้ามเอกสารที่แปลงไม่ได้
 		}
+		menus = append(menus, m)
 	}
 
-	return c.JSON(fiber.Map{
-		"success": true,
-		"menus":   menus,
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"success":   true,
+		"vendor_id": vendorId,
+		"menus":     menus, // []Menu ที่ประกอบด้วย Name, Price, Description, Image
 	})
 }

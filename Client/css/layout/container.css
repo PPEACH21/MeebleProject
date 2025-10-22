@@ -4,6 +4,9 @@
   flex: auto;
   max-height: 100vh;
 }
+body {
+  overflow: hidden;
+}
 
 .menu {
   margin-top: 20px;
@@ -27,12 +30,12 @@
   flex-direction: column;
   justify-content: flex-start; /* เริ่มจากบนลงล่าง */
   align-items: center; /* ✅ ทุกกล่องอยู่ตรงกลางแนวนอน */
-  background-color: #fceade;
   padding-top: 20px;
   box-sizing: border-box;
 
   .storeBox {
     width: 65%;
+    max-width: 400px;
     background-color: #f2f2f2;
     border-radius: 15px;
     padding: 20px;
@@ -40,40 +43,57 @@
 
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 10px;
+    align-items: center; /* ✅ รูปอยู่กลางแนวนอน */
+    text-align: left; /* ✅ ข้อความภายในจะชิดซ้าย */
+    gap: 12px;
+  }
 
-    img {
-      width: 250px;
-      height: auto;
-      border-radius: 10px;
-      object-fit: cover;
-      margin-bottom: 10px;
-    }
+  /* รูปอยู่ตรงกลาง */
+  .storeBox img {
+    width: 100%;
+    max-width: 250px;
+    height: auto;
+    border-radius: 12px;
+    object-fit: cover;
+    margin-bottom: 10px;
+    display: block;
+  }
 
-    h1 {
-      font-size: 22px;
-      color: #333;
-      margin: 5px 0;
-      align-self: flex-start;
+  /* ส่วนข้อความชิดซ้าย */
+  .storeText {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* ✅ ชิดซ้ายจริง */
+    text-align: left;
+  }
 
-      &:first-of-type {
-        font-size: 28px;
-        font-weight: bold;
-        color: #000;
-      }
+  .storeTitle {
+    font-size: 22px;
+    font-weight: 700;
+    color: #111;
+    margin: 4px 0;
+  }
 
-      &:nth-of-type(2) {
-        color: #ffaa00;
-      }
+  .storeRate {
+    font-size: 16px;
+    color: #ffaa00;
+    margin-bottom: 8px;
+  }
 
-      &:nth-of-type(3),
-      &:nth-of-type(4) {
-        font-size: 18px;
-        color: #555;
-      }
-    }
+  .storeSubtitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 4px;
+  }
+
+  .storeDesc {
+    font-size: 13.5px;
+    color: #444;
+    line-height: 1.5;
+    text-align: left;
+    margin: 0;
   }
 
   .mapBox {
@@ -115,7 +135,39 @@
 
 .right {
   width: 70%;
-  height: 100%;
+  height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* ไม่เลื่อนทั้งคอลัมน์ */
+}
+.menuScroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 6px;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.menuScroll::-webkit-scrollbar {
+  width: 10px;
+}
+.menuScroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #ffa360, #ffb680);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+.menuScroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ff9630, #ffba60);
+  transform: scaleX(1.1);
+}
+/* ===== สำหรับ Firefox ===== */
+.menuScroll {
+  scrollbar-width: thin; /* บาง */
+  scrollbar-color: #ffa360 transparent; /* thumb + track */
 }
 
 .box {
