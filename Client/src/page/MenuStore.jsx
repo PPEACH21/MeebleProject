@@ -84,7 +84,7 @@ const MenuStore = () => {
   }, [vendorId]);
 
   // helper แสดงสถานะเปิดปิด
-  const renderStatus = (s) => (s ? "Open" : "Close");
+  // const renderStatus = (s) => (s ? "Open" : "Close");
 
   return (
     <>
