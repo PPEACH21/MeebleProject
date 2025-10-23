@@ -19,4 +19,9 @@ func Routes(app *fiber.App) {
 	app.Get("/vendors/:vendor_id/menu", controllers.GetMenus)
 	app.Post("/sendotp", service.OTPvertify())
 
+	//
+	app.Get("/api/cart", controllers.GetCart)
+	app.Post("/api/cart/add", controllers.AddToCart)
+	app.Post("/api/cart/checkout", controllers.CheckoutCart)
+
 }

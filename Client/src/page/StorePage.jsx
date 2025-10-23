@@ -101,7 +101,7 @@ const StorePage = () => {
                                 <b>Description:</b> {item.description}
                               </p>
                               <p><b>Status:</b> {item.status ? "Open" : "Close"}</p>
-                              <p><b>vendor:</b> {item.vendor_id}</p>
+                              {/*<p><b>vendor:</b> {item.vendor_id}</p>*/}
                             </div>
                           </div>
                         </div>
