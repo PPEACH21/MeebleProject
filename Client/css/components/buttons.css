@@ -1,16 +1,32 @@
-.btn {
-  background-color: #ffa467;
-  color: white;
-  border: none;
-  border-radius: 8px;
+.btn,.btn1{
+  display: flex;                /* ✅ ใช้ flex ในปุ่ม */
+  align-items: center;          /* ✅ จัดกลางแนวตั้ง */
+  justify-content: center;      /* ✅ จัดกลางแนวนอน */
+  text-align: center;
+
+  font-weight:bold;
+  border-radius: 20px;
   padding: 10px 20px;
   cursor: pointer;
   transition: 0.3s;
 }
 
+.btn {
+  background-color: #ffa467;
+  color: white;
+  border: none;
+}
+.btn1 {
+  background-color: #fff;
+  color: #ffa467;
+  border: 2px solid #ff8a2b;
+}
+
 .btn:hover {
   background-color: #ff8a2b;
 }
+
+
 
 .foodBtn{
   background-color: #FFA467;
@@ -23,5 +39,12 @@
 }
 
 .foodBtn:hover {
+  background-color: #ff8a2b;
+}
+
+
+
+.btn1:hover {
+  color: #fff;
   background-color: #ff8a2b;
 }

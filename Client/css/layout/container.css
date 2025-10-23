@@ -1,31 +1,24 @@
 .container {
   flex-direction: column;
-  background-color: white;
   flex: auto;
-  max-height: 100vh;
+  height: 100vh;
+  margin-top: 0;
 }
 body {
   overflow: hidden;
 }
 
-.menu {
-  margin-top: 20px;
+.columnset{
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 10px;
-
-  .menuBox {
-    background-color: #ffa360;
-    text-align: center;
-    padding: 20px;
-    box-sizing: border-box;
-  }
+  flex-direction: column;
 }
 
-.left {
-  width: 30%;
-  height: 85vh;
+.rowset{
+  display: flex;
+  flex-direction: row;
+}
+
+.setcenter{
   display: flex;
   flex-direction: column;
   justify-content: flex-start; /* เริ่มจากบนลงล่าง */
@@ -96,13 +89,7 @@ body {
     margin: 0;
   }
 
-  .mapBox {
-    margin-top: 20px;
-    width: 65%;
-    background-color: #f2f2f2;
-    border-radius: 15px;
-    padding: 20px;
-    box-sizing: border-box;
+.box{
     display: flex;
     flex-direction: column;
     align-items: center; /* ✅ จัดตรงกลาง */

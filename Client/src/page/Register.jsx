@@ -2,7 +2,6 @@ import { useState} from "react";
 import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import { m } from "../paraglide/messages";
-import "./Register.css"
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -53,46 +52,57 @@ const Register = () => {
   };
 
   return (
-    <div className="d-flex justify-content-center align-items-center min-vh-100">
-      <div className="sectionregister p-5 rounded-5">
-        <h1 className="text-center mb-4">Register</h1>
-        
-        <form onSubmit={handleSubmit}  className=" d-flex flex-column">
-              <label>{m.email()}</label>
-              <input
-                type="email"
-                onChange={(e) => setEmail(e.target.value)}
-                value={email}
-                required
-              />
-              <label>{m.username()}</label>
-              <input
-                type="text"
-                onChange={(e) => setUsername(e.target.value)}
-                value={username}
-                required
-              />
-              <label>{m.password()}</label>
-              <input
-                type="password"
-                onChange={(e) => setPassword(e.target.value)}
-                value={password}
-                
-                required
-              />
-          
-            <label>{m.confrimpassword()}</label>
-            <input
-              type="password"
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              value={confirmPassword}
-              required
-              />
-              {errMsg && <p style={{ color: "red" }}>{errMsg}</p>}
+    <div className="contrainer bg-image2">
+      <div className="setcenter ">
+        <div className="box">
 
-              <label className="fs-6 text-end">{m.confrimpassword()}</label>
-            <button type="submit" className="btn btn-primary w-75 mt-2 container">{m.register()}</button>
+        <h1 style={{marginTop:0}} >Register</h1>
+        
+        <form className="columnset" style={{gap:10}} onSubmit={handleSubmit}>
+          <label>{m.email()}</label>
+          <input
+            className="textInput"
+            type="email"
+            onChange={(e) => setEmail(e.target.value)}
+            value={email}
+            required
+          />
+          <label>{m.username()}</label>
+          <input
+            className="textInput"
+            type="text"
+            onChange={(e) => setUsername(e.target.value)}
+            value={username}
+            required
+          />
+          <label>{m.password()}</label>
+          <input
+            className="textInput"
+            type="password"
+            onChange={(e) => setPassword(e.target.value)}
+            value={password}
+            
+            required
+          />
+      
+          <label>{m.confrimpassword()}</label>
+          <input
+            className="textInput" 
+            type="password"
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            value={confirmPassword}
+            required
+            />
+            {errMsg && <p style={{ color: "red" }}>{errMsg}</p>}
+
+          <button type="submit" className="btn" style={{marginTop:20}}>{m.register()}</button>
+          
+          <div className="rowset" style={{fontSize:12,alignItems:'center',justifyContent:'center'}} >
+            <p style={{margin:0,paddingRight:3}}>{m.have_account()}</p>
+            <a style={{color:"blue", textDecoration: 'none'}} href="/login">{m.Signin()}</a>
+          </div>
         </form>
+        </div>
       </div>
     </div>
   );

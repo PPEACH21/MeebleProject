@@ -1,10 +1,8 @@
 import { useEffect, useState,useContext} from "react";
 import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
-import "./Login.css"
 import { m } from "../paraglide/messages";
 import { AuthContext } from "../context/ProtectRoute";
-import VerifyEmail from "./VerifyEmail";
 
 const LoginPage = () => {
   const [userkey, setUserkey]=useState("");
@@ -60,34 +58,45 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="d-flex justify-content-center align-items-center min-vh-100">
-    <div className="sectionlogin p-5 rounded-5">
-      <h1 className="text-center mb-4">Login</h1>
-      <form onSubmit={handleSubmit}  className=" d-flex flex-column">
+    <div className="contrainer bg-image2">
+      <div className="setcenter" >
+        <div className="box">
+          <h1 style={{marginTop:0}}>Login</h1>
+          <form className="columnset" style={{gap:10}} onSubmit={handleSubmit}>
             <label>{m.username()} {m.or()} {m.email()}</label>
             <input
+              className="textInput"
               type="text"
               autoComplete="off"
               onChange={(e) => setUserkey(e.target.value)}
               value={userkey}
               required
             />
-          
+            
+            <label>{m.password()}</label>
+            <div>
+              <input
+                className="textInput"
+                type="password"
+                onChange={(e) => setPassword(e.target.value)}
+                value={password}
+                required
+              />
+              <div style={{marginTop:7,fontSize:13, textAlign:'end'}}>
+                <a style={{color:"blue", textDecoration: 'none'}} href="/home">{m.forgot_password()}</a>
+              </div>
+            </div>
+              {errMsg && <p style={{ color: "red" }}>{errMsg}</p>}
 
-          <label>{m.password()}</label>
-          <input
-            type="password"
-            onChange={(e) => setPassword(e.target.value)}
-            value={password}
-            required
-            />
-            {errMsg && <p style={{ color: "red" }}>{errMsg}</p>}
 
-
-          <button type="submit" className="btn btn-primary w-75 mt-5 container">Sign In</button>
-      </form>
-
-    </div>
+            <button type="submit" className="btn">{m.Signin()}</button>
+              <div className="rowset" style={{fontSize:12,alignItems:'center',justifyContent:'center'}} >
+                <p style={{margin:0,paddingRight:3}}>{m.dont_have_account()}</p>
+                <a style={{color:"blue", textDecoration: 'none'}} href="/register">{m.Signup()}</a>
+              </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };
