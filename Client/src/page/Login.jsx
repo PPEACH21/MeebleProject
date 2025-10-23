@@ -83,7 +83,7 @@ const LoginPage = () => {
                 required
               />
               <div style={{marginTop:7,fontSize:13, textAlign:'end'}}>
-                <a style={{color:"blue", textDecoration: 'none'}} href="/home">{m.forgot_password()}</a>
+                <a style={{color:"blue", textDecoration: 'none'}} href="/forgotpass">{m.forgot_password()}</a>
               </div>
             </div>
               {errMsg && <p style={{ color: "red" }}>{errMsg}</p>}

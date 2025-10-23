@@ -4,18 +4,38 @@ import "../../css/pages/VerifyEmail.css"
 import { AuthContext } from "../context/ProtectRoute";
 import {  useNavigate } from "react-router-dom";
 
-export const OTPInput = () =>{
+export const OTPInput=(email) =>{
     const {auth,setAuth} = useContext(AuthContext);
     const [otp,setOTP]= useState(new Array(6).fill(""));
     const navigate= useNavigate(); 
     const inputRef = useRef([])
+
     useEffect (()=>{
-        SendOTP(randomNumber, auth);
+        if(auth){
+            SendOTP(randomNumber, auth);
+        }else{
+            SendOTPRepassword(randomNumber,email);
+        }
         if(inputRef.current[0]){
             inputRef.current[0].focus();
         }
     },[])
     
+    const SendOTPRepassword = async (email)=>{
+        try {
+            const res = await axios.post(
+            "/sendotp_repassword",
+            { 
+                email: email,   
+                otp: otp.toString()
+            }
+            );
+            console.log("✅ OTP sent successfully:", res.data);
+        } catch (err) {
+            console.error("❌ Error sending OTP:", err);
+        }
+    }
+
     const SendOTP = async (otp) => {
         try {
             const res = await axios.post(
@@ -49,6 +69,7 @@ export const OTPInput = () =>{
             inputRef.current[index + 1].focus();
         }
     }
+
     const handleClick=(index)=>{
         inputRef.current[index].setSelectionRange(1, 1);
     }
@@ -66,16 +87,20 @@ export const OTPInput = () =>{
         
         if(otpCode==randomNumber){
             try {
-                const updatadata = await axios.put(`/verifiedEmail/${auth.user_id}`,{},
-                    {
-                        headers: { "Content-Type": "application/json" },
-                        withCredentials: true,
-                    }
-                )
-
-                console.log("✅ OTP sent successfully:",updatadata);
-                
-                navigate("/home")
+                if(auth){
+                    const updatadata = await axios.put(`/verifiedEmail/${auth.user_id}`,{},
+                        {
+                            headers: { "Content-Type": "application/json" },
+                            withCredentials: true,
+                        }
+                    )
+    
+                    console.log("✅ OTP sent successfully:",updatadata);
+                    
+                    navigate("/home")
+                }else{
+                    navigate.replace("/changepasse")
+                }
             } catch (err) {
                 console.error("❌ Error sending OTP:", err);
             }
@@ -121,7 +146,7 @@ export const OTPInput = () =>{
                     e.preventDefault();
                     reRandomNumber();
                 }}
-                >Resend OTP ({randomNumber})
+                >Resend OTP
                 </a>
             </div>
             <div style={{ marginTop: "10px" }}>
