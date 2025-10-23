@@ -23,7 +23,10 @@
   height: 100vh;
 }
 
-
+.setcenterNF{
+  display: flex;
+  justify-content: center;
+}
 
 .box{
     display: flex;

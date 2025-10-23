@@ -26,7 +26,10 @@
   background-color: #ff8a2b;
 }
 
-
+.filter .btn1 {
+  border-radius: 10px;
+  height: 5vh;
+}
 
 .foodBtn{
   background-color: #FFA467;

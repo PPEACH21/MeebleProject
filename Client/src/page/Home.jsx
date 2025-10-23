@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom"
 import {m} from '../paraglide/messages.js'
-import { getLocale, setLocale } from "../paraglide/runtime.js"
 const HomePage= () =>{
     return(
         <div className="container">
