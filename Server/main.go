@@ -40,7 +40,9 @@ func main(){
 
 	app.Post("/createaccount",service.CreateUser)
 	app.Post("/login",service.Login)
-	
+	app.Post("/sendotp_repassword", service.OTPrepassword())
+	app.Post("/checkEmail", service.CheckEmail)
+
 	app.Use(middlewares.ProtectedCookie())
 		routes.Routes(app)
 	app.Listen(":8080")

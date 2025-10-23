@@ -8,6 +8,7 @@ import MapPickerButton from './component/MapPickerButton';
 import Register from './page/Register';
 import VerifyEmail from './page/VerifyEmail';
 import StorePage from './page/StorePage';
+import Forgotpassword from './page/Forgotpassword';
 
 function App() {
   return(
@@ -16,7 +17,8 @@ function App() {
               <Route path='/register' element={<Register/>}/>
               <Route path='/login' element={<LoginPage/>}/>
               <Route path='/' element={<HomePage/>}/>
-
+              <Route path='/forgotpass' element={<Forgotpassword/>}/>
+              
               <Route element={<ProtectedLayout />}>
                 <Route path='/verifyemail' element={<VerifyEmail/>}/>
                 <Route path="/home" element={<StorePage />}/>
