@@ -85,9 +85,8 @@ const LoginPage = () => {
               <div style={{marginTop:7,fontSize:13, textAlign:'end'}}>
                 <a style={{color:"blue", textDecoration: 'none'}} href="/forgotpass">{m.forgot_password()}</a>
               </div>
+              <p style={{ color: "red",textAlign:'center' }}>{errMsg}</p>
             </div>
-              {errMsg && <p style={{ color: "red" }}>{errMsg}</p>}
-
 
             <button type="submit" className="btn">{m.Signin()}</button>
               <div className="rowset" style={{fontSize:12,alignItems:'center',justifyContent:'center'}} >

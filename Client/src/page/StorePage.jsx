@@ -2,11 +2,41 @@ import { useState, useEffect } from "react";
 import axios from "../api/axios";
 import Navbar from "../component/Nav";
 import { useNavigate } from "react-router-dom";
-
+import SidebarType from "../component/SidebarType.jsx";
+import { m } from "../paraglide/messages.js";
+import StoreCard from "../component/StoreCard.jsx";
 const StorePage = () => {
   const [data, setData] = useState([]);
   const [datashow, setDataShow] = useState([]);
   const [search, setSearch] = useState("");
+
+  const [type, setType] = useState([
+    {
+      name: "Appetizer",
+      active: false,
+    },
+    {
+      name: "Beverage",
+      active: false,
+    },
+    {
+      name: "Fast food",
+      active: false,
+    },
+    {
+      name: "Main course",
+      active: false,
+    },
+    {
+      name: "Dessert",
+      active: false,
+    },
+  ]);
+
+  const [shopOpen, setshopOpen] = useState(false);
+  const [rate, setRate] = useState(false);
+  const [near, setNear] = useState(false);
+  const [favorites, setFavorites] = useState(false);
   const navigate = useNavigate();
 
   const getshop = async () => {
@@ -19,37 +49,65 @@ const StorePage = () => {
     }
   };
 
-  const SearchSubmit = () => {
-    const filter = data.filter((item) =>
-      item.shop_name.toLowerCase().includes(search.toLowerCase())
-    );
-    setDataShow(filter);
-  };
-
-  const handleSelectShop = (shop) => {
-    console.log("navigate with vendor:", shop.vendor_id);
-    navigate(`/menu/${shop.vendor_id}`, {state: {shop}});
-  };
-
   useEffect(() => {
     getshop();
   }, []);
 
+  useEffect(() => {
+    const activeType = type.find((t) => t.active)?.name || "";
+    filterData(search, activeType);
+  }, [shopOpen, rate, near, favorites, type]);
+
+  const filterData = (searchValue, selectedType) => {
+    let filtered = data;
+
+    if (selectedType) {
+      filtered = filtered.filter(
+        (shop) => shop.type?.toLowerCase() === selectedType.toLowerCase()
+      );
+    }
+
+    if (searchValue) {
+      filtered = filtered.filter((shop) =>
+        shop.shop_name.toLowerCase().includes(searchValue.toLowerCase())
+      );
+    }
+
+    if (shopOpen) {
+      filtered = filtered.filter((shop) => shop.status === true);
+    }
+
+    if (rate) {
+      filtered = [...filtered].sort((a, b) => b.rate - a.rate);
+    }
+    setDataShow(filtered);
+  };
+
+  const handleTypeClick = (index) => {
+    const newType = type.map((item, i) => ({
+      ...item,
+      active: i === index ? !item.active : false,
+    }));
+    setType(newType);
+
+    const activeType = newType.find((t) => t.active)?.name || "";
+    filterData(search, activeType);
+  };
+
+  const SearchSubmit = () => {
+    const activeType = type.find((t) => t.active)?.name || "";
+    filterData(search, activeType);
+  };
+
   return (
-    <>
+    <div>
       <Navbar />
       <div className="mainLayout">
-        <div className="navVertical">
-          <h1>Menu Type</h1>
-          <button className="foodBtn">ตามสั่ง</button>
-          <button className="foodBtn">ตามสั่ง</button>
-          <button className="foodBtn">ตามสั่ง</button>
-          <button className="foodBtn">ตามสั่ง</button>
-        </div>
+        <SidebarType type={type} TypeClick={handleTypeClick} />
 
         <div className="navHorizon">
           <div className="search">
-            <h1>Select Store</h1>
+            <h1>{m.choose_restaurant()}</h1>
             <input
               type="text"
               placeholder="Search..."
@@ -57,70 +115,79 @@ const StorePage = () => {
               onChange={(e) => setSearch(e.target.value)}
             />
             <button onClick={SearchSubmit}>
-              <i class="fa fa-search"></i>
+              <i className="fa fa-search"></i>
             </button>
           </div>
 
-          <div className="filter"></div>
+          <div className="setcenterNF">
+            <div className="filter">
+              <div
+                className="rowset"
+                style={{
+                  display: "flex",
+                  justifyContent: "space-evenly",
+                  alignItems: "center",
+                }}
+              >
+                <p>{m.sort()}</p>
 
-          <div className="shop">
-            <div className="card-grid">
-              {datashow.map((item, index) => (
-                <div className="card" key={index} style={{ margin: "10px", padding: "10px" }}>
-                  <div className="position">
-                      <img width="250px" height="150px" 
-                          style={{objectFit: "cover",borderRadius:"10px",}}
-                          src="https://static.vecteezy.com/system/resources/previews/022/059/000/non_2x/no-image-available-icon-vector.jpg"
-                      />
-                      <div>
-                        <div className="position">
-                          <div>
-                            <h2 style={{
-                                margin:-2,
-                                WebkitLineClamp: 1,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap", 
-                                maxWidth: "240px"
-                            }}>{item.shop_name}</h2>
-                            <div className="position2">
-                              <div>
-                                <p><b>Rate:</b> {item.rate}</p>
-                                <p><b>Price:</b> </p>
-                                <p><b>Distance:</b> </p>
-                              </div>
-                              <div>
-                                <p style={{
-                                  WebkitLineClamp: 2,
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "pre-wrap",
-                                  maxWidth: "240px",
-                                }}
-                              >
-                                <b>Description:</b> {item.description}
-                              </p>
-                              <p><b>Status:</b> {item.status ? "Open" : "Close"}</p>
-                              {/*<p><b>vendor:</b> {item.vendor_id}</p>*/}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                <button
+                  className="btn1"
+                  onClick={() => setshopOpen(!shopOpen)}
+                  style={{
+                    backgroundColor: shopOpen ? "#FFA467" : "#fff",
+                    color: shopOpen ? "#fff" : "#FFA467",
+                  }}
+                >
+                  {m.open()}
+                </button>
 
-                    <div style={{ display: "flex", flexDirection: "column", gap: "20px", width: "20%" }}>
-                      <button className="btn" onClick={() => handleSelectShop(item)}>reserve</button>
-                      <button className="btn">order</button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                <button
+                  className="btn1"
+                  onClick={() => setRate(!rate)}
+                  style={{
+                    backgroundColor: rate ? "#FFA467" : "#fff",
+                    color: rate ? "#fff" : "#FFA467",
+                  }}
+                >
+                  {m.popular()}
+                </button>
+
+                <button
+                  className="btn1"
+                  onClick={() => setNear(!near)}
+                  style={{
+                    backgroundColor: near ? "#FFA467" : "#fff",
+                    color: near ? "#fff" : "#FFA467",
+                  }}
+                >
+                  {m.near()}
+                </button>
+
+                <button
+                  className="btn1"
+                  onClick={() => setFavorites(!favorites)}
+                  style={{
+                    backgroundColor: favorites ? "#FFA467" : "#fff",
+                    color: favorites ? "#fff" : "#FFA467",
+                  }}
+                >
+                  {m.favorites()}
+                </button>
+
+                <button className="btn1" style={{ width: "30%" }}>
+                  {m.pirce()} V
+                </button>
+              </div>
             </div>
           </div>
 
+          <div className="shop">
+            <StoreCard datashow={datashow} />
+          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

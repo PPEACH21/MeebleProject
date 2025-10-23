@@ -2,6 +2,7 @@
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/ProtectRoute";
 import axios from "../api/axios";
+import '../../css/pages/StorePage.css'
 
 const Navbar = () => {
   const { auth } = useContext(AuthContext);
