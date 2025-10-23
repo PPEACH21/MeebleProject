@@ -68,12 +68,21 @@ const StorePage = () => {
               {datashow.map((item, index) => (
                 <div className="card" key={index} style={{margin:"10px", padding:"10px"}}>
                   <div className="position">
-                      <div className="image"> </div>
-
+                      <img width="250px" height="150px" 
+                          style={{objectFit: "cover",borderRadius:"10px",}}
+                          src="https://static.vecteezy.com/system/resources/previews/022/059/000/non_2x/no-image-available-icon-vector.jpg"
+                      />
                       <div>
                         <div className="position">
                           <div>
-                            <h2 style={{margin:-2}}>{item.shop_name}</h2>
+                            <h2 style={{
+                                margin:-2,
+                                WebkitLineClamp: 1,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap", 
+                                maxWidth: "240px"
+                            }}>{item.shop_name}</h2>
                             <div className="position2">
                               <div>
                                 <p><b>Rate:</b> {item.rate}</p>
