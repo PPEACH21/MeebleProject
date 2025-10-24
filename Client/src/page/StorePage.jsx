@@ -1,10 +1,9 @@
   import { useState, useEffect } from "react";
   import axios from "../api/axios";
-  import Navbar from "../component/Nav";
-  import { useNavigate } from "react-router-dom";
+  import Navbar from "../component/Nav";  
   import SidebarType from "../component/SidebarType.jsx";
   import {m} from '../paraglide/messages.js'
-import StoreCard from "../component/StoreCard.jsx";
+  import StoreCard from "../component/StoreCard.jsx";
   const StorePage = () => {
     const [data, setData] = useState([]);
     const [datashow, setDataShow] = useState([]);
@@ -37,7 +36,7 @@ import StoreCard from "../component/StoreCard.jsx";
     const [rate,setRate] = useState(false)
     const [near,setNear] = useState(false)
     const [favorites,setFavorites] = useState(false)
-    const navigate = useNavigate();
+
 
     const getshop = async () => {
       try {

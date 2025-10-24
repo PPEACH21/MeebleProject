@@ -9,6 +9,8 @@ import Register from './page/Register';
 import VerifyEmail from './page/VerifyEmail';
 import StorePage from './page/StorePage';
 import Forgotpassword from './page/Forgotpassword';
+import Cart from './page/Cart';
+import History from './page/History';
 
 function App() {
   return(
@@ -25,6 +27,8 @@ function App() {
                 <Route path="/mappick"element={<MapPickerButton/>}/>
                 <Route path="/*"element={<LoginPage/>}/>
                 <Route path="/menu/:id"element={<MenuStore/>}/>
+                <Route path="/cart"element={<Cart/>}/>
+                <Route path="/history"element={<History/>}/>
               </Route>
           </Routes>
       </BrowserRouter>

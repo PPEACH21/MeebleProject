@@ -30,18 +30,18 @@
   flex-direction: row;
   justify-content: end;
   align-items: center;
-  width: 50%;
+  width: 30%;
   gap: 10%;
 }
 
-.navMenu h1 {
-  font-size: 20px;
-  font-weight:500;
-  margin: 0;
-  cursor: pointer;
-  transition: color 0.2s ease;
+.fontcolor{
+  font-size: 18px;
+  font-weight: bold;
+  color: #f2f2f2;
+  transition: transform 0.2s ease, color 0.2s ease;
 }
 
-.navMenu h1:hover {
-  color: white;
+.fontcolor:hover{
+  color: black;
+  transform: scale(1.1);
 }
