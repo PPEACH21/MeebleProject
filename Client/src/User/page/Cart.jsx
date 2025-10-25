@@ -1,10 +1,10 @@
 import { useContext, useEffect, useMemo, useState, useCallback } from "react";
-import axios from "../api/axios";
+import axios from "@/api/axios";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
-import { AuthContext } from "../context/ProtectRoute";
+import { AuthContext } from "@/context/ProtectRoute";
 import { useNavigate, useLocation } from "react-router-dom";
-import "../../css/pages/CartPage.css";
+import "@css/pages/CartPage.css";
 
 const currency = (n) =>
   (Number(n) || 0).toLocaleString("th-TH", {

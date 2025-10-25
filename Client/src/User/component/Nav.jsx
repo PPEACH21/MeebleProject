@@ -1,12 +1,12 @@
 // src/component/Nav.jsx
 import { useContext, useEffect, useState } from "react";
-import { AuthContext } from "../context/ProtectRoute";
-import axios from "../api/axios";
+import { AuthContext } from "@/context/ProtectRoute";
+import axios from "@/api/axios";
 import { FaRegUserCircle, FaHistory } from "react-icons/fa";
 import { TiShoppingCart } from "react-icons/ti";
 import { useNavigate } from "react-router-dom";
 
-import "../../css/pages/StorePage.css";
+import "@/../css/pages/StorePage.css";
 
 const Navbar = () => {
   const { auth } = useContext(AuthContext);

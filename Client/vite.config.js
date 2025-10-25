@@ -5,4 +5,12 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [paraglideVitePlugin({ project: './project.inlang', outdir: './src/paraglide' }),react()],
+  
+  resolve: {
+    alias: {
+      "@": "/src",
+      "@css":"/css",
+    },
+  }
 })
+

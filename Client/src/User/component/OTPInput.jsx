@@ -1,7 +1,7 @@
 import { useState,useRef,useEffect, useContext } from "react";
-import axios from "../api/axios";
-import "../../css/pages/VerifyEmail.css"
-import { AuthContext } from "../context/ProtectRoute";
+import axios from "@/api/axios";
+import "@css/pages/VerifyEmail.css"
+import { AuthContext } from "@/context/ProtectRoute";
 import {  useNavigate } from "react-router-dom";
 
 export const OTPInput=(email) =>{

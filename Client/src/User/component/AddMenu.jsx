@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import axios from "@/api/axios";
 
 export default function MenuManager() {
   const [open, setOpen] = useState(false);
@@ -14,7 +14,7 @@ export default function MenuManager() {
   // โหลดเมนูทั้งหมดจาก backend
   const fetchMenus = async () => {
     try {
-      const res = await axios.get("http://localhost:8080/menus");
+      const res = await axios.get("/menus");
       setMenus(res.data.menus);
     } catch (err) {
       console.error("Error fetching menus:", err);

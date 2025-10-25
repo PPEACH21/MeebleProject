@@ -9,7 +9,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
 import "leaflet-geosearch/dist/geosearch.css";
-import axios from "axios";
+import axios from "@/api/axios";
 
 const markerIcon = new L.Icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png",
@@ -61,7 +61,7 @@ export default function MapTest() {
     }
 
     try {
-      const res = await axios.put("http://localhost:8080/setLocation/shop02", {
+      const res = await axios.put("/shop02", {
         latitude: picked.lat,
         longitude: picked.lng,
       });

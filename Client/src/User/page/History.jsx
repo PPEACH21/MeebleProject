@@ -1,6 +1,6 @@
 import Navbar from "../component/Nav";
 import { useContext } from "react";
-import { AuthContext } from "../context/ProtectRoute";
+import { AuthContext } from "@/context/ProtectRoute";
 const History=()=>{
     const {auth} = useContext(AuthContext);
 

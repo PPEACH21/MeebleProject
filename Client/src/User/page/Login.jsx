@@ -1,8 +1,8 @@
 import { useEffect, useState,useContext} from "react";
-import axios from "../api/axios";
+import axios from "@/api/axios";
 import { useNavigate } from "react-router-dom";
-import { m } from "../paraglide/messages";
-import { AuthContext } from "../context/ProtectRoute";
+import { m } from "@/paraglide/messages";
+import { AuthContext } from "@/context/ProtectRoute";
 
 const LoginPage = () => {
   const [userkey, setUserkey]=useState("");

@@ -1,8 +1,8 @@
 
 import { useState } from "react";
-import { m } from "../paraglide/messages";
+import { m } from "@/paraglide/messages";
 import OTPInput from "../component/OTPInput";
-import axios from "../api/axios";
+import axios from "@/api/axios";
 
 const Forgotpassword = ()=>{
     const [email,setEmail] = useState('');

@@ -1,16 +1,16 @@
-import MenuStore from './page/MenuStore';
+import MenuStore from './User/page/MenuStore';
 import { BrowserRouter,Routes,Route } from 'react-router-dom';
-import LoginPage from './page/Login';
-import HomePage from './page/Home';
+import LoginPage from './User/page/Login';
+import HomePage from './User/page/Home';
 
 import { ProtectedLayout  } from './context/ProtectRoute';
-import MapPickerButton from './component/MapPickerButton';
-import Register from './page/Register';
-import VerifyEmail from './page/VerifyEmail';
-import StorePage from './page/StorePage';
-import Forgotpassword from './page/Forgotpassword';
-import Cart from './page/Cart';
-import History from './page/History';
+import MapPickerButton from './User/component/MapPickerButton';
+import Register from './User/page/Register';
+import VerifyEmail from './User/page/VerifyEmail';
+import StorePage from './User/page/StorePage';
+import Forgotpassword from './User/page/Forgotpassword';
+import Cart from './User/page/Cart';
+import History from './User/page/History';
 
 function App() {
   return(
