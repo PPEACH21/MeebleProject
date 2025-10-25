@@ -6,8 +6,6 @@ import { FaRegUserCircle, FaHistory } from "react-icons/fa";
 import { TiShoppingCart } from "react-icons/ti";
 import { useNavigate } from "react-router-dom";
 
-import "@/../css/pages/StorePage.css";
-
 const Navbar = () => {
   const { auth } = useContext(AuthContext);
 

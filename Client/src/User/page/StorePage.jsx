@@ -4,6 +4,8 @@
   import SidebarType from "../component/SidebarType.jsx";
   import {m} from '@/paraglide/messages.js'
   import StoreCard from "../component/StoreCard.jsx";
+  import '@css/pages/StorePage.css'
+
   const StorePage = () => {
     const [data, setData] = useState([]);
     const [datashow, setDataShow] = useState([]);

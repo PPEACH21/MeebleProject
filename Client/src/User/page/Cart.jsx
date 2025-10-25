@@ -22,8 +22,8 @@ export default function Cart() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const vendorIdFromState = location.state?.vendorId; // มาจากหน้า MenuStore ตอน navigate เข้ามา
-  const shopFromState = location.state?.shop;
+  const vendorIdFromState = location.state?.vendorId;
+  const shopFromState = location.state?.shop; 
 
   // ปรับ mapping ให้ตรงกับระบบของคุณ
   const userId = auth?.user_id || auth?.uid || "";
@@ -55,14 +55,11 @@ export default function Cart() {
     if (vid) {
       navigate(`/menu/${vid}`, { state: { shop: shopFromState } });
     } else {
-      navigate("/"); // ไม่มีข้อมูลจริงๆ ค่อยกลับหน้าแรก
+      navigate("/home"); // ไม่มีข้อมูลจริงๆ ค่อยกลับหน้าแรก
     }
   }, [currentVendorShop.vendorId, shopFromState, navigate]);
 
-  const canCheckout = useMemo(
-    () => (cart.items?.length || 0) > 0 && toNum(cart.total) > 0,
-    [cart]
-  );
+  const canCheckout = useMemo(() => (cart.items?.length || 0) > 0 && cart.total > 0,[cart]);
 
   // ✅ ใช้เส้นทาง /api/cart ให้ตรงกับ Backend ของคุณ
   const apiGetCart = useCallback(
@@ -80,7 +77,7 @@ export default function Cart() {
   );
 
   const fetchCart = useCallback(async () => {
-    if (!customerId) {
+    if(!customerId) {
       setLoading(false);
       return Swal.fire(
         "ไม่มีข้อมูลผู้ใช้",
@@ -100,6 +97,7 @@ export default function Cart() {
       const serverTotal = toNum(data.total);
       const safeTotal = serverTotal > 0 ? serverTotal : recomputeTotal(items);
       setCart({ ...data, items, total: safeTotal });
+      console.log (`cart :`,items)
     } catch (e) {
       console.error("GET /api/cart error:", e?.response?.data || e.message);
       Swal.fire(
@@ -141,6 +139,19 @@ export default function Cart() {
     }
   };
 
+  const UpdatacartStatus =async()=>{
+    for (const item of cart.items) {
+      
+      await apiUpdateQty({
+        vendorId: currentVendorShop.vendorId,
+        shopId: currentVendorShop.shopId,
+        customerId,
+        menuId: item.id,
+        qty: item.qty,
+      });
+    }
+  }
+
   const removeItem = async (menuId) => {
     const ok = await Swal.fire({
       title: "ลบสินค้านี้ออกจากตะกร้า?",
@@ -164,6 +175,8 @@ export default function Cart() {
       );
     }
 
+    UpdatacartStatus();
+    
     const ok = await Swal.fire({
       title: "ยืนยันการสั่งซื้อ",
       html: `<div style="text-align:left">ยอดรวม: <b>${currency(
@@ -232,7 +245,17 @@ export default function Cart() {
                     <div className="qtyBox">
                       <button
                         className="qtyBtn"
-                        onClick={() => updateQty(it.id, toNum(it.qty) - 1)}
+                         onClick={() => {
+                          setCart(prev =>{
+                            const items = prev.items.map(item =>
+                              
+                              item.id === it.id
+                              ? { ...item, qty: item.qty - 1 }
+                              : item
+                            ) .filter(item => item.qty > 0)
+                            return { ...prev, items, total: recomputeTotal(items) };
+                          })
+                        }}
                       >
                         −
                       </button>
@@ -241,11 +264,21 @@ export default function Cart() {
                         type="number"
                         min={0}
                         value={toNum(it.qty)}
-                        onChange={(e) => updateQty(it.id, e.target.value)}
                       />
                       <button
                         className="qtyBtn"
-                        onClick={() => updateQty(it.id, toNum(it.qty) + 1)}
+                        onClick={() => {
+                          setCart(prev =>{
+                            const items = prev.items.map(item =>
+                              
+                              item.id === it.id
+                              ? { ...item, qty: item.qty + 1 }
+                              : item
+                            ) .filter(item => item.qty > 0)
+
+                            return { ...prev, items, total: recomputeTotal(items) };
+                          })
+                        }}
                       >
                         +
                       </button>
@@ -272,7 +305,10 @@ export default function Cart() {
               <strong>{currency(cart.total)}</strong>
             </div>
             <div className="actions">
-              <button className="btn ghost" onClick={goBackToVendor}>
+              <button className="btn ghost" onClick={async () => {
+                await UpdatacartStatus();
+                goBackToVendor();
+              } }>
                 เลือกซื้อสินค้าต่อ
               </button>
               <button
