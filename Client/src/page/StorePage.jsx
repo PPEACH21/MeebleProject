@@ -1,41 +1,42 @@
-import { useState, useEffect } from "react";
-import axios from "../api/axios";
-import Navbar from "../component/Nav";
-import SidebarType from "../component/SidebarType.jsx";
-import { m } from "../paraglide/messages.js";
-import StoreCard from "../component/StoreCard.jsx";
-const StorePage = () => {
-  const [data, setData] = useState([]);
-  const [datashow, setDataShow] = useState([]);
-  const [search, setSearch] = useState("");
+  import { useState, useEffect } from "react";
+  import axios from "../api/axios";
+  import Navbar from "../component/Nav";  
+  import SidebarType from "../component/SidebarType.jsx";
+  import {m} from '../paraglide/messages.js'
+  import StoreCard from "../component/StoreCard.jsx";
+  const StorePage = () => {
+    const [data, setData] = useState([]);
+    const [datashow, setDataShow] = useState([]);
+    const [search, setSearch] = useState("");
+    
+    const [type,setType]= useState([
+      {
+        name:"Appetizer",
+        active:false,
+      },
+      {
+        name:"Beverage",
+        active:false,
+      },
+      {
+        name:"Fast food",
+        active:false,
+      },
+      {
+        name:"Main course",
+        active:false,
+      },
+      {
+        name:"Dessert",
+        active:false,
+      },
+    ])
 
-  const [type, setType] = useState([
-    {
-      name: "Appetizer",
-      active: false,
-    },
-    {
-      name: "Beverage",
-      active: false,
-    },
-    {
-      name: "Fast food",
-      active: false,
-    },
-    {
-      name: "Main course",
-      active: false,
-    },
-    {
-      name: "Dessert",
-      active: false,
-    },
-  ]);
+    const [shopOpen,setshopOpen] = useState(false)
+    const [rate,setRate] = useState(false)
+    const [near,setNear] = useState(false)
+    const [favorites,setFavorites] = useState(false)
 
-  const [shopOpen, setshopOpen] = useState(false);
-  const [rate, setRate] = useState(false);
-  const [near, setNear] = useState(false);
-  const [favorites, setFavorites] = useState(false);
 
   const getshop = async () => {
     try {

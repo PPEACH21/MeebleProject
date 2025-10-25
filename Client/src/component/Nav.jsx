@@ -2,60 +2,60 @@
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/ProtectRoute";
 import axios from "../api/axios";
+import { FaRegUserCircle,FaHistory  } from "react-icons/fa";
+import { TiShoppingCart } from "react-icons/ti";
+import { useNavigate } from "react-router-dom";
+
 import '../../css/pages/StorePage.css'
 
-const Navbar = () => {
-  const { auth } = useContext(AuthContext);
+const Navbar =()=>{
+    const {auth} = useContext(AuthContext);
+    
+    const getuserID= async()=>{
+        try{
+            const res = await axios.get(`/user/${auth.user_id}`,{withCredentials: true})
+            setDatauser(res.data)
+            console.log("API Response:", res.data)  
 
-  const [dataUser, setDataUser] = useState(null);
-  const [cartCost, setCartCost] = useState(0);
-
-  const getUserAndCart = async () => {
-    try {
-      // 1) ดึง user จาก user_id (doc id)
-      const resUser = await axios.get(`/user/${auth.user_id}`, {
-        withCredentials: true,
-      });
-      const user = resUser.data || {};
-      setDataUser(user);
-
-      // 2) ดึง cart ด้วย customerId = username
-      if (user.username) {
-        const resCart = await axios.get(
-          `/api/cart?customerId=${encodeURIComponent(user.username)}`,
-          { withCredentials: true }
-        );
-        const cart = resCart?.data || {};
-        setCartCost(Number(cart.total || 0));
-      } else {
-        setCartCost(0);
-      }
-    } catch (err) {
-      console.error("Navbar load error:", err);
-      setCartCost(0);
+        }catch (err) {
+            console.error("Error fetching user:", err)
+        }
     }
-  };
+    const [dataUser, setDatauser] =  useState([]);
+    
+    const navigate = useNavigate();
 
-  useEffect(() => {
-    if (auth?.user_id) getUserAndCart();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth?.user_id]);
+    useEffect (()=>{
+        getuserID()
+    },[])
 
-  return (
-    <nav className="navHomePage">
-      <div className="nav">
-        <img
-          src="https://i.ibb.co/MyMPRx3P/Chat-GPT-Image-Sep-23-2025-10-01-38-PM.jpg"
-          alt="Logo"
-        />
-        <div className="navMenu">
-          <h1>cost : {cartCost.toFixed(2)}</h1>
-          <h1>history</h1>
-          <h1>username : {dataUser?.username || "-"}</h1>
-        </div>
-      </div>
-    </nav>
-  );
-};
-
-export default Navbar;
+    return(
+        <nav className="navHomePage">
+            <div className="nav">
+                <div className="rowset" style={{alignItems:'center',fontWeight:'bold',color:'#fff',fontSize:'20px'}}>
+                    <img
+                        src="https://i.ibb.co/MyMPRx3P/Chat-GPT-Image-Sep-23-2025-10-01-38-PM.jpg"
+                        alt="Logo"
+                    />
+                    <p>MEEBLE PROJECT</p>
+                </div>
+                <div className="navMenu">   
+                    <div className="rowset fontcolor">
+                        <p>Coin:{dataUser.Cost}.-</p>
+                    </div>
+                    <div className="fontcolor">
+                        <FaHistory size={25} onClick={()=>navigate("/history")}/>
+                    </div>
+                    <div className="fontcolor">
+                        <TiShoppingCart size={35} onClick={()=>navigate("/cart")}/>
+                    </div>
+                    <div className="rowset fontcolor" style={{gap:10,alignItems:'center'}}>
+                        <FaRegUserCircle size={28}/>
+                        <p>{dataUser.username}</p>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    )
+}
+export default Navbar
