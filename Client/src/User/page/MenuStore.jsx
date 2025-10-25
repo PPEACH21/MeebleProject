@@ -1,11 +1,11 @@
 // src/pages/MenuStore.jsx
-import axios from "../api/axios";
+import axios from "@/api/axios";
 import { useState, useEffect, useContext } from "react";
 import Navbar from "../component/Nav.jsx";
 import { useParams, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
-import { AuthContext } from "../context/ProtectRoute";
+import { AuthContext } from "@/context/ProtectRoute";
 
 // --- helpers ---
 const normalizeVendor = (v) =>

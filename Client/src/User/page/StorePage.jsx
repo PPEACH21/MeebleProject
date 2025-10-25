@@ -1,8 +1,8 @@
   import { useState, useEffect } from "react";
-  import axios from "../api/axios";
+  import axios from "@/api/axios";
   import Navbar from "../component/Nav";  
   import SidebarType from "../component/SidebarType.jsx";
-  import {m} from '../paraglide/messages.js'
+  import {m} from '@/paraglide/messages.js'
   import StoreCard from "../component/StoreCard.jsx";
   const StorePage = () => {
     const [data, setData] = useState([]);

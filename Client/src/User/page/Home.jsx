@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import {m} from '../paraglide/messages.js'
+import {m} from '@/paraglide/messages.js'
 const HomePage= () =>{
     return(
         <div className="container">
