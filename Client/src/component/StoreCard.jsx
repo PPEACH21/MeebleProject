@@ -1,4 +1,7 @@
+import { useNavigate } from "react-router-dom";
+
 const StoreCard = ({datashow})=>{
+    const navigate = useNavigate();
     const handleSelectShop = (shop) => {
         console.log("navigate with vendor:", shop.vendor_id);
         navigate(`/menu/${shop.vendor_id}`, {state: {shop}});

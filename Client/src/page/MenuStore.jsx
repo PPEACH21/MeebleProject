@@ -93,6 +93,21 @@ const MenuStore = () => {
     fetchMenus(vendorId);
   }, [vendorId]);
 
+  useEffect(() => {
+    // 🔒 ปิดการเลื่อนของทั้งหน้า เมื่อเข้า MenuStore
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    const prevBodyOverflow = document.body.style.overflow;
+
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+
+    // ✅ คืนค่ากลับตอนออกจากหน้านี้
+    return () => {
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      document.body.style.overflow = prevBodyOverflow;
+    };
+  }, []);
+
   const handleOrder = async (item) => {
     const { value: qty } = await Swal.fire({
       title: `ใส่จำนวน\n${item.name}`,
