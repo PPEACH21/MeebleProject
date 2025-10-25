@@ -23,5 +23,6 @@ func Routes(app *fiber.App) {
 	app.Get("/api/cart", controllers.GetCart)
 	app.Post("/api/cart/add", controllers.AddToCart)
 	app.Post("/api/cart/checkout", controllers.CheckoutCart)
+	app.Patch("/api/cart/qty", controllers.UpdateCartQty)
 
 }
