@@ -27,8 +27,7 @@
   display: flex;
   justify-content: center;
 }
-
-.box{
+.boxLogin{
     display: flex;
     flex-direction:column;
     justify-content: center;
@@ -37,3 +36,35 @@
     border-radius: 30px;
     padding: 40px;
 }
+.box {
+  display: flex;
+  justify-content: flex-start; /* ชิดซ้าย */
+  align-items: flex-start;
+  flex-direction: row;
+  padding: 20px;
+  background-color: #fff8f3;
+  min-height: 100vh;
+}
+
+.left {
+  flex: 1; /* ✅ กำหนดให้ยืดอัตโนมัติ */
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 15px;
+}
+
+.right {
+  flex: 2;
+  width: 100%;
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 15px;
+  box-sizing: border-box;
+}
+

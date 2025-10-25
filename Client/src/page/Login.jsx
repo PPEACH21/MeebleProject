@@ -60,7 +60,7 @@ const LoginPage = () => {
   return (
     <div className="contrainer bg-image2">
       <div className="setcenter" >
-        <div className="box">
+        <div className="boxLogin">
           <h1 style={{marginTop:0}}>Login</h1>
           <form className="columnset" style={{gap:10}} onSubmit={handleSubmit}>
             <label>{m.username()} {m.or()} {m.email()}</label>

@@ -1,27 +1,36 @@
-import Button from "react-bootstrap/Button";
+// src/pages/MenuStore.jsx
 import axios from "../api/axios";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import Navbar from "../component/Nav.jsx";
 import { useParams, useLocation } from "react-router-dom";
+import Swal from "sweetalert2";
+import "sweetalert2/dist/sweetalert2.min.css";
+import { AuthContext } from "../context/ProtectRoute";
+
+// --- helpers ---
+const normalizeVendor = (v) =>
+  (v || "").replace(/^\/?vendors\//, "").replace(/^\//, "");
+const getShopId = (shop) =>
+  shop?.id || shop?.ID || shop?.shop_id || shop?.shopId || "Shop01";
 
 const MenuStore = () => {
-  const { id: vendorId } = useParams(); // รับจาก /menu/:id
+  const { auth } = useContext(AuthContext); // ✅ ดึงข้อมูลผู้ใช้
+
+  const { id: rawVendorId } = useParams();
+  const vendorId = normalizeVendor(rawVendorId);
+
   const location = useLocation();
   const shopFromState = location.state?.shop || null;
 
-  // ---- state ----
-  const [shop, setShop] = useState(shopFromState); // ข้อมูลร้าน
-  const [menus, setMenus] = useState([]); // เมนู
-  const [lat, setLat] = useState(13.736717); // ค่าเริ่มต้น (กทม.)
+  const [shop, setShop] = useState(
+    shopFromState ? { ...shopFromState, id: getShopId(shopFromState) } : null
+  );
+  const [menus, setMenus] = useState([]);
+  const [lat, setLat] = useState(13.736717);
   const [lng, setLng] = useState(100.523186);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
-  // Firestore บางร้านเก็บ vendor_id เป็น path: "/vendors/<id>"
-  const normalize = (v) =>
-    (v || "").replace(/^\/?vendors\//, "").replace(/^\//, "");
-
-  // ถ้ามี shop มาจาก state → ตั้งค่า lat/lng ทันที
   useEffect(() => {
     if (shopFromState?.address?.latitude && shopFromState?.address?.longitude) {
       setLat(shopFromState.address.latitude);
@@ -30,25 +39,27 @@ const MenuStore = () => {
   }, [shopFromState]);
 
   const fetchShopIfNeeded = async (vid) => {
-    if (shop) return; // มีจาก state แล้วข้าม
+    if (shop) return;
     try {
       const res = await axios.get("/Shop", { withCredentials: true });
       const list = Array.isArray(res.data) ? res.data : [];
-      const found = list.find((s) => normalize(s.vendor_id) === vid);
+      const found = list.find((s) => normalizeVendor(s.vendor_id) === vid);
       if (found) {
-        setShop(found);
-        // ดึงพิกัดถ้ามี (Firestore GeoPoint)
-        const gp = found.address;
+        const withId = {
+          ...found,
+          id: found.id || found.ID || found.shop_id || found.shopId || "Shop01",
+        };
+        setShop(withId);
+
+        const gp = withId.address;
         if (
           gp &&
           typeof gp.latitude === "number" &&
-          typeof gp.longitude === "number"
+          typeof gp.longitude === "number" &&
+          !(gp.latitude === 0 && gp.longitude === 0)
         ) {
-          // กันกรณี 0,0 (ยังไม่ตั้งพิกัด)
-          if (!(gp.latitude === 0 && gp.longitude === 0)) {
-            setLat(gp.latitude);
-            setLng(gp.longitude);
-          }
+          setLat(gp.latitude);
+          setLng(gp.longitude);
         }
       }
     } catch (e) {
@@ -78,13 +89,81 @@ const MenuStore = () => {
       setLoading(false);
       return;
     }
-    // โหลดข้อมูลร้าน (ถ้ายังไม่มี) และโหลดเมนูคู่กัน
     fetchShopIfNeeded(vendorId);
     fetchMenus(vendorId);
   }, [vendorId]);
 
-  // helper แสดงสถานะเปิดปิด
-  // const renderStatus = (s) => (s ? "Open" : "Close");
+  useEffect(() => {
+    // 🔒 ปิดการเลื่อนของทั้งหน้า เมื่อเข้า MenuStore
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    const prevBodyOverflow = document.body.style.overflow;
+
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+
+    // ✅ คืนค่ากลับตอนออกจากหน้านี้
+    return () => {
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      document.body.style.overflow = prevBodyOverflow;
+    };
+  }, []);
+
+  const handleOrder = async (item) => {
+    const { value: qty } = await Swal.fire({
+      title: `ใส่จำนวน\n${item.name}`,
+      input: "number",
+      inputValue: 1,
+      inputAttributes: { min: 1, step: 1 },
+      confirmButtonText: "เพิ่มใส่ตะกร้า",
+      cancelButtonText: "ยกเลิก",
+      showCancelButton: true,
+    });
+    if (!qty) return;
+
+    const menuId = item.id || item.ID || item.menuId || item.menu_id || "";
+    if (!menuId) {
+      Swal.fire("ข้อมูลไม่ครบ", "เมนูนี้ไม่มี ID (menuId)", "error");
+      return;
+    }
+
+    // ✅ ใช้ username เป็น customerId
+    const customerId = auth?.username || "";
+    if (!customerId) {
+      Swal.fire("ยังไม่ล็อกอิน", "ไม่พบ username กรุณาล็อกอินก่อน", "error");
+      return;
+    }
+
+    // optional
+    const shopId = getShopId(shop);
+
+    const payload = {
+      customerId, // ✅ ใช้ username เป็น customerId
+      userId: auth.user_id, // ✅ ใช้ user_id จริง (document id ใน Firestore)
+      qty: Number(qty),
+      item: {
+        menuId,
+        name: item.name,
+        price: Number(item.price),
+        image: item.image || "",
+        description: item.description || "",
+      },
+      vendorId,
+      shopId,
+    };
+
+    try {
+      await axios.post("/api/cart/add", payload, { withCredentials: true });
+      Swal.fire("สำเร็จ", "เพิ่มลงตะกร้าแล้ว", "success");
+    } catch (e) {
+      console.error("add to cart error:", e?.response?.data || e);
+      const msg =
+        e?.response?.data?.error ||
+        e?.response?.data?.msg ||
+        e?.message ||
+        "เพิ่มลงตะกร้าไม่สำเร็จ";
+      Swal.fire("ผิดพลาด", String(msg), "error");
+    }
+  };
 
   return (
     <>
@@ -102,7 +181,6 @@ const MenuStore = () => {
             <div className="storeText">
               <h2 className="storeTitle">{shop?.shop_name || "Store"}</h2>
               <h3 className="storeRate">⭐ ดาว {shop?.rate ?? "-"}/5</h3>
-
               <h4 className="storeSubtitle">คำอธิบายร้าน</h4>
               <p className="storeDesc">
                 {shop?.description || "No description available"}
@@ -120,7 +198,7 @@ const MenuStore = () => {
                 title="mini-map"
               />
             </div>
-            <Button
+            <button
               className="openMapBtn"
               onClick={() =>
                 window.open(
@@ -128,10 +206,10 @@ const MenuStore = () => {
                   "_blank"
                 )
               }
+              style={btnPrimary}
             >
               Open in Map
-            </Button>
-            {/* ถ้าอยากแจ้งเตือนเมื่อพิกัดยังเป็น 0,0 */}
+            </button>
             {lat === 0 && lng === 0 && (
               <div style={{ color: "#b45309", marginTop: 8 }}>
                 พิกัดยังไม่ถูกตั้งค่า (0,0) — โปรดอัปเดตในระบบผู้ขาย
@@ -155,11 +233,14 @@ const MenuStore = () => {
                 !err &&
                 menus.map((item, index) => (
                   <div
-                    key={index}
+                    key={item.id || index}
                     className="menuBox"
                     style={{ margin: "10px", padding: "10px" }}
                   >
-                    <Button style={{ width: "100%", textAlign: "left" }}>
+                    <button
+                      onClick={() => handleOrder(item)}
+                      style={{ ...cardButton, textAlign: "left" }}
+                    >
                       {item.image && (
                         <img
                           src={item.image}
@@ -181,7 +262,10 @@ const MenuStore = () => {
                       <p>
                         <b>Description:</b> {item.description}
                       </p>
-                    </Button>
+                      <p>
+                        <b>Id:</b> {item.id || item.ID || index}
+                      </p>
+                    </button>
                   </div>
                 ))}
             </div>
@@ -190,6 +274,26 @@ const MenuStore = () => {
       </div>
     </>
   );
+};
+
+// ———— inline styles ————
+const cardButton = {
+  width: "100%",
+  background: "white",
+  border: "1px solid #eee",
+  borderRadius: 10,
+  padding: 10,
+  cursor: "pointer",
+  boxShadow: "rgba(0,0,0,0.04) 0 2px 8px",
+};
+
+const btnPrimary = {
+  background: "#ffa360",
+  color: "#fff",
+  border: "none",
+  padding: "8px 12px",
+  borderRadius: 8,
+  cursor: "pointer",
 };
 
 export default MenuStore;

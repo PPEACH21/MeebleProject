@@ -1,0 +1,186 @@
+.storeBox {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  background-color: #ffffff;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  padding: 15px;
+  gap: 15px;
+  width: 100%;
+}
+
+.storeBox img {
+  width: 120px;
+  height: 120px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.storeText {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  text-align: left;
+  overflow: hidden; /* ป้องกันล้น */
+  word-wrap: break-word; /* ตัดคำอัตโนมัติ */
+  word-break: break-word; /* รองรับข้อความภาษาไทย/อังกฤษยาว */
+  max-width: 100%; /* จำกัดไม่ให้เกินกล่อง */
+}
+
+.storeTitle {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.storeRate {
+  font-size: 16px;
+  color: #ff9d00;
+  margin-bottom: 10px;
+}
+
+.storeSubtitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.storeDesc {
+  font-size: 14px;
+  color: #444;
+  line-height: 1.5;
+  max-width: 100%; /* ✅ ป้องกันล้นแนวนอน */
+  overflow: hidden; /* ✅ ป้องกันเกินขอบกล่อง */
+  text-overflow: ellipsis; /* ✅ ตัดคำเป็น ... ถ้ายาวเกิน */
+  white-space: normal; /* ✅ ให้ขึ้นบรรทัดใหม่ได้ */
+  word-break: break-word; /* ✅ แก้กรณีข้อความยาวติดกัน */
+}
+.mapBox {
+  background-color: #ffffff;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  padding: 15px;
+  width: 350px; /* ✅ เท่ากับ storeBox */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.mapBox h1 {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+}
+
+.miniMap {
+  width: 100%;
+  height: 200px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+}
+
+.miniMap iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 10px;
+}
+
+.openMapBtn {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background-color: #ff9d00;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.25s ease;
+}
+
+.openMapBtn:hover {
+  background-color: #e78a00;
+}
+
+.storeBox,
+.mapBox {
+  width: 100%; /* ✅ เท่ากัน */
+  max-width: 380px; /* กำหนดความกว้างสูงสุด */
+}
+.menuScroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%; /* ✅ กำหนดความสูงเต็มในคอลัมน์ */
+  max-height: calc(100vh - 150px); /* ✅ ปรับให้สูงไม่เกินหน้าจอ */
+  padding-right: 10px;
+  scroll-behavior: smooth;
+}
+
+/* ===== สกอร์บาร์สวยงาม ===== */
+.menuScroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.menuScroll::-webkit-scrollbar-thumb {
+  background: #d9d9d9;
+  border-radius: 8px;
+}
+
+.menuScroll::-webkit-scrollbar-thumb:hover {
+  background: #bbb;
+}
+
+/* ===== เลย์เอาต์รายการเมนู ===== */
+.menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
+  /* ✅ แต่ละกล่องกว้างขั้นต่ำ 240px
+     ✅ ถ้ามีที่เหลือ จะขยายจนเต็ม 4 กล่อง/แถว
+     ✅ ถ้าหน้าจอแคบ จะขึ้นบรรทัดใหม่อัตโนมัติ */
+  gap: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.menuBox {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,.12);
+  transition: transform .15s ease, box-shadow .15s ease;
+  overflow: hidden; /* ป้องกันเนื้อหา/รูปภาพล้นขอบ */
+}
+
+.menuBox:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,.16);
+}
+
+.menuBox button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.menuBox img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.menuBox p {
+  margin: 4px 0;
+  word-break: break-word;
+}
