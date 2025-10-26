@@ -1,11 +1,12 @@
 // src/pages/MenuStore.jsx
 import axios from "@/api/axios";
 import { useState, useEffect, useContext } from "react";
-import Navbar from "../component/Nav.jsx";
+import Navbar from "@/User/component/Nav";
 import { useParams, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 import { AuthContext } from "@/context/ProtectRoute";
+import { FaStar } from "react-icons/fa6";
 
 // --- helpers ---
 const normalizeVendor = (v) =>
@@ -14,8 +15,7 @@ const getShopId = (shop) =>
   shop?.id || shop?.ID || shop?.shop_id || shop?.shopId || "Shop01";
 
 const MenuStore = () => {
-  const { auth } = useContext(AuthContext); // ✅ ดึงข้อมูลผู้ใช้
-
+  const { auth } = useContext(AuthContext);
   const { id: rawVendorId } = useParams();
   const vendorId = normalizeVendor(rawVendorId);
 
@@ -127,7 +127,7 @@ const MenuStore = () => {
     }
 
     // ✅ ใช้ username เป็น customerId
-    const customerId = auth?.username || "";
+    const customerId = auth?.user_id || "";
     if (!customerId) {
       Swal.fire("ยังไม่ล็อกอิน", "ไม่พบ username กรุณาล็อกอินก่อน", "error");
       return;
@@ -139,6 +139,7 @@ const MenuStore = () => {
     const payload = {
       customerId, // ✅ ใช้ username เป็น customerId
       userId: auth.user_id, // ✅ ใช้ user_id จริง (document id ใน Firestore)
+      shop_name: shop?.shop_name,
       qty: Number(qty),
       item: {
         menuId,
@@ -167,7 +168,7 @@ const MenuStore = () => {
 
   return (
     <>
-      <Navbar />
+      <Navbar focus={true}  cart={true} />
       <div className="box">
         <div className="left">
           <div className="storeBox">
@@ -180,7 +181,7 @@ const MenuStore = () => {
             />
             <div className="storeText">
               <h2 className="storeTitle">{shop?.shop_name || "Store"}</h2>
-              <h3 className="storeRate">⭐ ดาว {shop?.rate ?? "-"}/5</h3>
+              <h3 className="storeRate" style={{display:'flex',alignItems:'center'}}> <FaStar size={20}/> {shop?.rate ?? "-"}/5</h3>
               <h4 className="storeSubtitle">คำอธิบายร้าน</h4>
               <p className="storeDesc">
                 {shop?.description || "No description available"}
@@ -205,7 +206,7 @@ const MenuStore = () => {
                   `https://www.google.com/maps?q=${lat},${lng}`,
                   "_blank"
                 )
-              }
+              }ร้าน
               style={btnPrimary}
             >
               Open in Map

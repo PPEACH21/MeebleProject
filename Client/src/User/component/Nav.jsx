@@ -6,9 +6,7 @@ import { FaRegUserCircle, FaHistory } from "react-icons/fa";
 import { TiShoppingCart } from "react-icons/ti";
 import { useNavigate } from "react-router-dom";
 
-import "@/../css/pages/StorePage.css";
-
-const Navbar = () => {
+const Navbar = ({ focus=false ,cart=false}) => {
   const { auth } = useContext(AuthContext);
 
   const getuserID = async () => {
@@ -22,18 +20,18 @@ const Navbar = () => {
       console.error("Error fetching user:", err);
     }
   };
+  
   const [dataUser, setDatauser] = useState([]);
-
   const navigate = useNavigate();
-
+  
   useEffect(() => {
     getuserID();
   }, []);
-
+  
   const goHome = () => {
     navigate("/home"); // ✅ เปลี่ยน path ไปหน้า Home
   };
-
+  
   return (
     <nav className="navHomePage">
       <div className="nav">
@@ -46,23 +44,48 @@ const Navbar = () => {
             fontSize: "20px",
           }}
         >
-          <img
-            src="https://i.ibb.co/MyMPRx3P/Chat-GPT-Image-Sep-23-2025-10-01-38-PM.jpg"
-            alt="Logo"
-            onClick={goHome}
-            style={{ cursor: "pointer" }}
-          />
-          <p onClick={goHome} style={{ cursor: "pointer" }}>MEEBLE PROJECT</p>
+          {focus?(
+            <p onClick={() => navigate(-1)} style={{ cursor: "pointer" }}>
+              Back
+            </p>
+          ):(
+            <>
+              <img
+                src="https://i.ibb.co/MyMPRx3P/Chat-GPT-Image-Sep-23-2025-10-01-38-PM.jpg"
+                alt="Logo"
+                onClick={goHome}
+                style={{ cursor: "pointer" }}
+              />
+              <p onClick={goHome} style={{ cursor: "pointer" }}>
+                MEEBLE PROJECT
+              </p>
+            </>
+          )}
         </div>
         <div className="navMenu">
+          {focus?
+            <>
+            {cart?
+              <div className="fontcolor">
+                <TiShoppingCart size={35} onClick={() => navigate("/cart")} />
+              </div>
+            :
+            <>
+            </>
+            }
+            </>
+          :
+            <>
+              <div className="fontcolor">
+                <FaHistory size={25} onClick={() => navigate("/history")} />
+              </div>
+              <div className="fontcolor">
+                <TiShoppingCart size={35} onClick={() => navigate("/cart")} />
+              </div>
+            </>
+          }
           <div className="rowset fontcolor">
             <p>Coin:{dataUser.Cost}.-</p>
-          </div>
-          <div className="fontcolor">
-            <FaHistory size={25} onClick={() => navigate("/history")} />
-          </div>
-          <div className="fontcolor">
-            <TiShoppingCart size={35} onClick={() => navigate("/cart")} />
           </div>
           <div
             className="rowset fontcolor"
@@ -76,5 +99,4 @@ const Navbar = () => {
     </nav>
   );
 };
-
 export default Navbar;

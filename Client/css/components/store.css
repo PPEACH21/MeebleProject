@@ -18,7 +18,7 @@
 }
 
 .storeText {
-  display: flex;
+  /* display: flex; */
   flex-direction: column;
   justify-content: flex-start;
   text-align: left;
@@ -38,7 +38,7 @@
 .storeRate {
   font-size: 16px;
   color: #ff9d00;
-  margin-bottom: 10px;
+  /* margin-bottom: 10px; */
 }
 
 .storeSubtitle {

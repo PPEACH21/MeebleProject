@@ -56,6 +56,7 @@ type CreateOrderFromMenuRequest struct {
 
 type AddToCartRequest struct {
 	VendorID   string `json:"vendorId"`   // optional
+	Shop_name     string `json:"shop_name"`     // optional
 	ShopID     string `json:"shopId"`     // optional
 	CustomerID string `json:"customerId"` // REQUIRED: username
 	UserID     string `json:"userId"`     // REQUIRED: auth.user_id (doc id)
@@ -98,6 +99,7 @@ type CartItem struct {
 
 type Cart struct {
 	CustomerID string     `json:"customerId" firestore:"customerId"` // ✅ แยกตะกร้าตาม user
+	Shop_name string     `json:"shop_name" firestore:"shop_name"` // ✅ แยกตะกร้าตาม user
 	Items      []CartItem `json:"items" firestore:"items"`           // รายการในตะกร้า
 	Total      float64    `json:"total" firestore:"total"`           // ยอดรวมทั้งหมด
 	UpdatedAt  time.Time  `json:"updatedAt" firestore:"updatedAt"`   // เวลาอัปเดตล่าสุด

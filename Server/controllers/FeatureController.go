@@ -179,6 +179,7 @@ func GetCart(c *fiber.Ctx) error {
 		// ยังไม่มี cart -> คืนว่าง
 		return c.JSON(models.Cart{
 			CustomerID: customerID,
+			Shop_name: "",
 			Items:      []models.CartItem{},
 			Total:      0,
 			UpdatedAt:  time.Now(),
@@ -206,7 +207,7 @@ func AddToCart(c *fiber.Ctx) error {
 	}
 
 	// ต้องมี: customerId (username), userId (doc id), menuId และ qty > 0
-	if req.CustomerID == "" || req.UserID == "" || req.Item.MenuID == "" || req.Qty <= 0 {
+	if req.CustomerID == "" || req.Shop_name=="" || req.UserID == "" || req.Item.MenuID == "" || req.Qty <= 0 {
 		return c.Status(400).JSON(fiber.Map{
 			"error": "customerId/userId/menuId/qty required",
 		})
@@ -252,6 +253,7 @@ func AddToCart(c *fiber.Ctx) error {
 			newCart = true
 			cart = models.Cart{
 				CustomerID: req.CustomerID,
+				Shop_name: req.Shop_name,
 				Items:      []models.CartItem{},
 				Total:      0,
 				UpdatedAt:  time.Now(),
@@ -352,6 +354,7 @@ func AddToCart(c *fiber.Ctx) error {
 		writeData := map[string]interface{}{
 			"user_id":    userRef,         // ✅ /users/{userId}
 			"customerId": cart.CustomerID, // ✅ username
+			"shop_name":  req.Shop_name,
 			"items":      cart.Items,
 			"total":      cart.Total,
 			"updatedAt":  cart.UpdatedAt,
@@ -471,6 +474,7 @@ func CheckoutCart(c *fiber.Ctx) error {
 		// ----- ล้างตะกร้า (คงโครง doc เดิม) -----
 		return tx.Set(cRef, map[string]interface{}{
 			"user_id":    userRef,        // DocumentRef ของผู้ใช้
+			"shop_name": "", // username
 			"customerId": req.CustomerID, // username
 			"items":      []models.CartItem{},
 			"total":      0,
