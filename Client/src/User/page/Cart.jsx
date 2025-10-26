@@ -5,6 +5,7 @@ import "sweetalert2/dist/sweetalert2.min.css";
 import { AuthContext } from "@/context/ProtectRoute";
 import { useNavigate, useLocation } from "react-router-dom";
 import "@css/pages/CartPage.css";
+import { MdDelete } from "react-icons/md";
 
 const currency = (n) =>
   (Number(n) || 0).toLocaleString("th-TH", {
@@ -27,10 +28,10 @@ export default function Cart() {
 
   // ปรับ mapping ให้ตรงกับระบบของคุณ
   const userId = auth?.user_id || auth?.uid || "";
-  const customerId = auth?.username || auth?.customerId || auth?.email || "";
+  const customerId = auth?.user_id  || auth?.username || auth?.email || "";
 
   const [loading, setLoading] = useState(true);
-  const [cart, setCart] = useState({ customerId, items: [], total: 0 });
+  const [cart, setCart] = useState({ customerId,shop_name:"", items: [], total: 0 });
 
   // ดึง vendor/shop จากรายการชิ้นแรกของตะกร้า (รองรับคีย์ตัวเล็ก/ใหญ่จาก BE)
   const getVendorShopFromItems = (items) => {
@@ -61,7 +62,7 @@ export default function Cart() {
 
   const canCheckout = useMemo(() => (cart.items?.length || 0) > 0 && cart.total > 0,[cart]);
 
-  // ✅ ใช้เส้นทาง /api/cart ให้ตรงกับ Backend ของคุณ
+  // ✅ ใช้เส้นทาง /api/cart ให้ตรงกับ Backend 
   const apiGetCart = useCallback(
     (customerId) =>
       axios.get("/api/cart", { params: { customerId }, withCredentials: true }),
@@ -96,7 +97,7 @@ export default function Cart() {
       }));
       const serverTotal = toNum(data.total);
       const safeTotal = serverTotal > 0 ? serverTotal : recomputeTotal(items);
-      setCart({ ...data, items, total: safeTotal });
+      setCart({ ...data,shop_name:data.shop_name, items, total: safeTotal });
       console.log (`cart :`,items)
     } catch (e) {
       console.error("GET /api/cart error:", e?.response?.data || e.message);
@@ -124,7 +125,7 @@ export default function Cart() {
         const items = prev.items
           .map((it) => (it.id === menuId ? { ...it, qty: newQty } : it))
           .filter((it) => toNum(it.qty) > 0);
-        return { ...prev, items, total: recomputeTotal(items) };
+        return { ...prev ,items, total: recomputeTotal(items) };
       });
     } catch (e) {
       console.error(
@@ -215,6 +216,7 @@ export default function Cart() {
 
   return (
     <div className="cartPage">
+      <h2>ชื่อร้าน : {cart.shop_name}</h2>
       <h2>ตะกร้าสินค้า</h2>
 
       {loading ? (
@@ -244,16 +246,20 @@ export default function Cart() {
                     <span className="x">x</span>
                     <div className="qtyBox">
                       <button
-                        className="qtyBtn"
+                        className="btn1" style={{padding:'2px 10px'}}
                          onClick={() => {
                           setCart(prev =>{
-                            const items = prev.items.map(item =>
-                              
+                            const newItems = prev.items.map(item =>
                               item.id === it.id
-                              ? { ...item, qty: item.qty - 1 }
-                              : item
-                            ) .filter(item => item.qty > 0)
-                            return { ...prev, items, total: recomputeTotal(items) };
+                                ? { ...item, qty: item.qty - 1 }
+                                : item
+                            );
+                            const zeroItem = newItems.find(item => item.id === it.id && item.qty <= 0);
+                            if (zeroItem) {
+                              updateQty(it.id,0);
+                            }
+                            const filteredItems = newItems.filter(item => item.qty > 0);
+                            return { ...prev, items: filteredItems, total: recomputeTotal(filteredItems) };
                           })
                         }}
                       >
@@ -261,22 +267,35 @@ export default function Cart() {
                       </button>
                       <input
                         className="qtyInput"
-                        type="number"
                         min={0}
                         value={toNum(it.qty)}
+                         onChange={(e) => {
+                          const newQty = Math.max(0, Number(e.target.value) || 0);
+                          setCart(prev => {
+                            const items = prev.items
+                              .map(item =>
+                                item.id === it.id ? { ...item, qty: newQty } : item
+                              )
+                            const zeroItem = items.find(item => item.id === it.id && item.qty <= 0);
+                            if (zeroItem) {
+                              updateQty(it.id,0);
+                            }
+                            const filteredItems = items.filter(item => item.qty > 0);
+                            return { ...prev,items: filteredItems, total: recomputeTotal(filteredItems) };
+                          });
+                        }}
                       />
+
                       <button
-                        className="qtyBtn"
+                        className="btn1" style={{padding:'2px 10px'}}
                         onClick={() => {
                           setCart(prev =>{
                             const items = prev.items.map(item =>
-                              
                               item.id === it.id
                               ? { ...item, qty: item.qty + 1 }
                               : item
                             ) .filter(item => item.qty > 0)
-
-                            return { ...prev, items, total: recomputeTotal(items) };
+                            return { ...prev,items, total: recomputeTotal(items) };
                           })
                         }}
                       >
@@ -284,7 +303,7 @@ export default function Cart() {
                       </button>
                     </div>
                     <span className="subtotal">
-                      = {currency(toNum(it.qty) * toNum(it.price))}
+                      {currency(toNum(it.qty) * toNum(it.price))}
                     </span>
                   </div>
                 </div>
@@ -293,7 +312,7 @@ export default function Cart() {
                   onClick={() => removeItem(it.id)}
                   aria-label="remove"
                 >
-                  🗑️
+                  <MdDelete color="#e00" size={30}/>
                 </button>
               </div>
             ))}
@@ -316,7 +335,7 @@ export default function Cart() {
                 disabled={!canCheckout}
                 onClick={onCheckout}
               >
-                ชำระเงิน / สร้างออเดอร์
+                ชำระเงิน
               </button>
             </div>
           </div>

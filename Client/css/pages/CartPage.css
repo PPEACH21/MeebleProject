@@ -57,9 +57,10 @@
 .qtyBox {
   display: inline-flex;
   align-items: center;
-  border: 1px solid #eee;
+  /* border: 1px solid #eee; */
   border-radius: 8px;
   overflow: hidden;
+  gap: 10px;
 }
 
 .qty  {

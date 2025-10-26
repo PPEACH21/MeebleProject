@@ -14,8 +14,7 @@ const getShopId = (shop) =>
   shop?.id || shop?.ID || shop?.shop_id || shop?.shopId || "Shop01";
 
 const MenuStore = () => {
-  const { auth } = useContext(AuthContext); // ✅ ดึงข้อมูลผู้ใช้
-
+  const { auth } = useContext(AuthContext);
   const { id: rawVendorId } = useParams();
   const vendorId = normalizeVendor(rawVendorId);
 
@@ -127,7 +126,7 @@ const MenuStore = () => {
     }
 
     // ✅ ใช้ username เป็น customerId
-    const customerId = auth?.username || "";
+    const customerId = auth?.user_id || "";
     if (!customerId) {
       Swal.fire("ยังไม่ล็อกอิน", "ไม่พบ username กรุณาล็อกอินก่อน", "error");
       return;
@@ -139,6 +138,7 @@ const MenuStore = () => {
     const payload = {
       customerId, // ✅ ใช้ username เป็น customerId
       userId: auth.user_id, // ✅ ใช้ user_id จริง (document id ใน Firestore)
+      shop_name: shop?.shop_name,
       qty: Number(qty),
       item: {
         menuId,
@@ -205,7 +205,7 @@ const MenuStore = () => {
                   `https://www.google.com/maps?q=${lat},${lng}`,
                   "_blank"
                 )
-              }
+              }ร้าน
               style={btnPrimary}
             >
               Open in Map
