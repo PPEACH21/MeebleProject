@@ -1,9 +1,10 @@
   import { useState, useEffect } from "react";
   import axios from "@/api/axios";
-  import Navbar from "../component/Nav";  
+  import Navbar from "@/User/component/Nav";  
   import SidebarType from "../component/SidebarType.jsx";
   import {m} from '@/paraglide/messages.js'
   import StoreCard from "../component/StoreCard.jsx";
+  import { FaSearch } from "react-icons/fa";
   import '@css/pages/StorePage.css'
 
   const StorePage = () => {
@@ -129,8 +130,8 @@
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-            <button onClick={SearchSubmit}>
-              <i className="fa fa-search"></i>
+            <button onClick={SearchSubmit} style={{display:'flex',justifyContent:'center',alignItems:"center"}}>
+              <FaSearch size={20}/>
             </button>
           </div>
 

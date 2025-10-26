@@ -6,6 +6,7 @@ import { AuthContext } from "@/context/ProtectRoute";
 import { useNavigate, useLocation } from "react-router-dom";
 import "@css/pages/CartPage.css";
 import { MdDelete } from "react-icons/md";
+import Navbar from "@/User/component/Nav";
 
 const currency = (n) =>
   (Number(n) || 0).toLocaleString("th-TH", {
@@ -98,7 +99,7 @@ export default function Cart() {
       const serverTotal = toNum(data.total);
       const safeTotal = serverTotal > 0 ? serverTotal : recomputeTotal(items);
       setCart({ ...data,shop_name:data.shop_name, items, total: safeTotal });
-      console.log (`cart :`,items)
+      console.log (`cart :`,cart)
     } catch (e) {
       console.error("GET /api/cart error:", e?.response?.data || e.message);
       Swal.fire(
@@ -215,8 +216,10 @@ export default function Cart() {
     return <p className="cartPage">ไม่พบ customerId — โปรดเข้าสู่ระบบ</p>;
 
   return (
+    <>
+    <Navbar focus={true}/>
     <div className="cartPage">
-      <h2>ชื่อร้าน : {cart.shop_name}</h2>
+      <h2>ชื่อร้าน : {cart.items?.length <1 ? `ไม่มีร้านที่เลือกขณะนี้` : cart.shop_name}</h2>
       <h2>ตะกร้าสินค้า</h2>
 
       {loading ? (
@@ -342,5 +345,6 @@ export default function Cart() {
         </>
       )}
     </div>
+    </>
   );
 }

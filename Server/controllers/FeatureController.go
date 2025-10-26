@@ -354,7 +354,7 @@ func AddToCart(c *fiber.Ctx) error {
 		writeData := map[string]interface{}{
 			"user_id":    userRef,         // ✅ /users/{userId}
 			"customerId": cart.CustomerID, // ✅ username
-			"shop_name":  cart.Shop_name,
+			"shop_name":  req.Shop_name,
 			"items":      cart.Items,
 			"total":      cart.Total,
 			"updatedAt":  cart.UpdatedAt,

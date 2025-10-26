@@ -7,7 +7,7 @@ const History=()=>{
 
     return(
         <>
-            <Navbar/>
+            <Navbar  focus={true}/>
             <div style={{display:'flex',justifyContent:'center'}}>
                 <div style={{width:'80%'}}>
                     <h1>History</h1>

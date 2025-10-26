@@ -1,11 +1,12 @@
 // src/pages/MenuStore.jsx
 import axios from "@/api/axios";
 import { useState, useEffect, useContext } from "react";
-import Navbar from "../component/Nav.jsx";
+import Navbar from "@/User/component/Nav";
 import { useParams, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 import { AuthContext } from "@/context/ProtectRoute";
+import { FaStar } from "react-icons/fa6";
 
 // --- helpers ---
 const normalizeVendor = (v) =>
@@ -167,7 +168,7 @@ const MenuStore = () => {
 
   return (
     <>
-      <Navbar />
+      <Navbar focus={true}  cart={true} />
       <div className="box">
         <div className="left">
           <div className="storeBox">
@@ -180,7 +181,7 @@ const MenuStore = () => {
             />
             <div className="storeText">
               <h2 className="storeTitle">{shop?.shop_name || "Store"}</h2>
-              <h3 className="storeRate">⭐ ดาว {shop?.rate ?? "-"}/5</h3>
+              <h3 className="storeRate" style={{display:'flex',alignItems:'center'}}> <FaStar size={20}/> {shop?.rate ?? "-"}/5</h3>
               <h4 className="storeSubtitle">คำอธิบายร้าน</h4>
               <p className="storeDesc">
                 {shop?.description || "No description available"}
