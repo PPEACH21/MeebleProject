@@ -6,8 +6,77 @@ import { FaRegUserCircle, FaHistory } from "react-icons/fa";
 import { TiShoppingCart } from "react-icons/ti";
 import { useNavigate } from "react-router-dom";
 
+function DropdownBasic({logout,username,email}) {
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
+
+  return (
+    <div style={{ position: "relative", color: "#fff"}}>
+
+      <div
+        className="dropdownmain"
+        onClick={() => setOpen(!open)}
+        onMouseEnter={() => setOpen(true)}
+      >
+        <FaRegUserCircle size={30} />
+        <span>{username || "Guest"}</span>
+      </div>
+      
+      {open && (
+        <div
+          className={`dropdownSelect ${open ? "fade-in" : "fade-out"}`}
+          onMouseLeave={(e) => {(e.currentTarget.style.background = "#fff"); setOpen(false)}}
+        >
+          <div style={{width:"300px",height:"100px",display:'flex',flexDirection:'column',justifyContent:'space-evenly'}}>
+            <div className="dropdownProfile">
+              <FaRegUserCircle size={55} />
+              <div style={{fontWeight:'bold'}} >
+                <p>{username || "Guest"}</p>
+                <p>{email || "Guest@gmail.com"}</p>
+              </div>
+            </div>
+            
+
+          </div>
+
+          <div
+            onClick={() => navigate("/profile")}
+            className="dropdownchoice"
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#FFE0C2")}
+            onMouseLeave={(e) => {(e.currentTarget.style.background = "#fff")}} 
+          >
+            แก้ไขโปรไฟล์
+          </div>
+          <div
+            onClick={() => navigate("/settings")}
+            className="dropdownchoice"
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#FFE0C2")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
+          >
+            ตั้งค่า
+          </div>
+          <div
+            onClick={handleLogout}
+            className="dropdownchoice"
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#FFE0C2")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
+          >
+            ออกจากระบบ
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 const Navbar = ({ focus=false ,cart=false}) => {
-  const { auth } = useContext(AuthContext);
+  const { auth,logout } = useContext(AuthContext);
 
   const getuserID = async () => {
     try {
@@ -88,11 +157,10 @@ const Navbar = ({ focus=false ,cart=false}) => {
             <p>Coin:{dataUser.Cost}.-</p>
           </div>
           <div
-            className="rowset fontcolor"
-            style={{ gap: 10, alignItems: "center" }}
+            style={{ gap: 10, alignItems: "center" ,cursor:'pointer'}}
+            // onClick={()=>console.log("Click")}
           >
-            <FaRegUserCircle size={28} />
-            <p>{dataUser.username}</p>
+            <DropdownBasic logout={logout} username={dataUser.username} email={dataUser.email}/>
           </div>
         </div>
       </div>

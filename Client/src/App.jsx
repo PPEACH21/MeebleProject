@@ -11,6 +11,8 @@ import StorePage from './User/page/StorePage';
 import Forgotpassword from './User/page/Forgotpassword';
 import Cart from './User/page/Cart';
 import History from './User/page/History';
+import Profile from './User/page/Profile';
+import SettingPage from './User/page/Setting';
 
 function App() {
   return(
@@ -29,6 +31,8 @@ function App() {
                 <Route path="/menu/:id"element={<MenuStore/>}/>
                 <Route path="/cart"element={<Cart/>}/>
                 <Route path="/history"element={<History/>}/>
+                <Route path="/settings"element={<SettingPage/>}/>
+                <Route path="/profile"element={<Profile/>}/>
               </Route>
           </Routes>
       </BrowserRouter>
