@@ -1,0 +1,135 @@
+/* Layout */
+.his-wrap {
+  display: flex;
+  justify-content: center;
+}
+.his-container {
+  width: 80%;
+  max-width: 980px;
+}
+.his-title {
+  margin: 16px 0 10px;
+}
+
+/* Sections */
+.his-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+.his-section-title {
+  margin: 0 0 10px;
+}
+.his-section-title--process { color: #ff8a35; }
+.his-section-title--success { color: #2ecc71; }
+
+/* Grid of cards */
+.his-grid {
+  display: grid;
+  gap: 14px;
+}
+
+/* Card */
+.his-card {
+  background: #fff;
+  padding: 16px 20px;
+  border-radius: 18px;
+  border: 1px solid #eee;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.his-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 32px rgba(0,0,0,0.08);
+}
+
+/* Left fields – ✅ ล็อกขนาดแต่ละช่อง */
+.his-card__left {
+  display: grid;
+  grid-template-columns: 200px 200px 300px; /* ✅ กำหนดความกว้างตายตัว */
+  gap: 28px;
+  align-items: center;
+  flex: 1;
+}
+
+/* Field content */
+.his-field {
+  overflow: hidden;          /* ป้องกัน text ทะลุขอบ */
+}
+.his-label {
+  font-weight: 700;
+  font-size: 12px;
+  opacity: .7;
+  margin-bottom: 2px;
+}
+.his-value {
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;       /* ✅ บรรทัดเดียว */
+  overflow: hidden;          /* ✅ ตัดส่วนเกิน */
+  text-overflow: ellipsis;   /* ✅ โชว์ … */
+}
+
+/* Chips */
+.his-chip {
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  flex: 0 0 auto;
+  white-space: nowrap;       /* ✅ ไม่ตัดชิป */
+}
+.his-chip--process {
+  color: #ff8a35;
+  border-color: #ff8a35;
+  background: rgba(255,138,53,0.10);
+}
+.his-chip--success {
+  color: #2ecc71;
+  border-color: #2ecc71;
+  background: rgba(46,204,113,0.10);
+}
+
+/* States */
+.his-loading,
+.his-empty {
+  text-align: center;
+  padding: 20px;
+  opacity: 0.7;
+}
+
+/* Responsive – ปรับคอลัมน์ตามจอ */
+@media (max-width: 900px) {
+  .his-card__left {
+    grid-template-columns: 150px 150px 200px;
+    gap: 16px;
+  }
+}
+@media (max-width: 640px) {
+  .his-container { width: 92%; }
+  .his-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .his-card__left {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    width: 100%;
+  }
+  .his-chip {
+    margin-top: 8px;
+  }
+}
+/* สีหัวข้อของสถานะใหม่ */
+.his-section-title--ongoing { color: #3498db; }
+
+/* สีชิป on-going */
+.his-chip--ongoing {
+  color: #3498db;
+  border-color: #3498db;
+  background: rgba(52,152,219,0.10);
+}

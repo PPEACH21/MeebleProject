@@ -19,6 +19,8 @@ type Shop = struct {
 	Type           string                 `json:"type" firestore:"type"`
 	Vendor_ref     *firestore.DocumentRef `json:"-" firestore:"vendor_id"`
 	Vendor_id      string                 `json:"vendor_id" firestore:"-"`
+	PriceMin       *float64               `json:"price_min" firestore:"price_min"`
+	PriceMax       *float64               `json:"price_max" firestore:"price_max"`
 }
 
 type Menu struct {
@@ -56,7 +58,7 @@ type CreateOrderFromMenuRequest struct {
 
 type AddToCartRequest struct {
 	VendorID   string `json:"vendorId"`   // optional
-	Shop_name     string `json:"shop_name"`     // optional
+	Shop_name  string `json:"shop_name"`  // optional
 	ShopID     string `json:"shopId"`     // optional
 	CustomerID string `json:"customerId"` // REQUIRED: username
 	UserID     string `json:"userId"`     // REQUIRED: auth.user_id (doc id)
@@ -99,7 +101,7 @@ type CartItem struct {
 
 type Cart struct {
 	CustomerID string     `json:"customerId" firestore:"customerId"` // ✅ แยกตะกร้าตาม user
-	Shop_name string     `json:"shop_name" firestore:"shop_name"` // ✅ แยกตะกร้าตาม user
+	Shop_name  string     `json:"shop_name" firestore:"shop_name"`   // ✅ เพิ่มฟิลด์นี้
 	Items      []CartItem `json:"items" firestore:"items"`           // รายการในตะกร้า
 	Total      float64    `json:"total" firestore:"total"`           // ยอดรวมทั้งหมด
 	UpdatedAt  time.Time  `json:"updatedAt" firestore:"updatedAt"`   // เวลาอัปเดตล่าสุด

@@ -14,6 +14,8 @@ import History from './User/page/History';
 import Profile from './User/page/Profile';
 import SettingPage from './User/page/Setting';
 
+import HistoryDetail from "@/User/page/HistoryDetail.jsx";
+
 function App() {
   return(
       <BrowserRouter>
@@ -33,6 +35,7 @@ function App() {
                 <Route path="/history"element={<History/>}/>
                 <Route path="/settings"element={<SettingPage/>}/>
                 <Route path="/profile"element={<Profile/>}/>
+                <Route path="/history/:id" element={<HistoryDetail />} />
               </Route>
           </Routes>
       </BrowserRouter>
