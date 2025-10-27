@@ -17,6 +17,7 @@ func Routes(app *fiber.App) {
 	app.Post("/addMenu", controllers.AddMenu)
 	app.Get("/menus", controllers.GetMenus)
 	app.Get("/vendors/:vendor_id/menu", controllers.GetMenus)
+	app.Delete("/vendors/:vendor_id/menu/:menu_id", controllers.DeleteMenu)
 	app.Post("/sendotp", service.OTPvertify())
 
 	//
