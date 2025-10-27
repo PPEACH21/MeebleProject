@@ -43,7 +43,7 @@ func Login(c *fiber.Ctx) error {
 		"username": member.Username,
 		"verified": member.Verified,
 		"role":     "user",
-		"exp":      time.Now().Add(time.Minute * 20).Unix(),
+		"exp":      time.Now().Add(time.Minute * 60).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -56,7 +56,7 @@ func Login(c *fiber.Ctx) error {
 	c.Cookie(&fiber.Cookie{
 		Name:     "token",
 		Value:    t,
-		Expires:  time.Now().Add(time.Minute * 100),
+		Expires:  time.Now().Add(time.Minute * 60),
 		HTTPOnly: false,
 		// Secure:   false,
 		// SameSite: "Strict",

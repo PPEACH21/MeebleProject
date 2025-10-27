@@ -1,0 +1,147 @@
+.hisd-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 30px 0;
+}
+.hisd-container {
+  width: 80%;
+  max-width: 900px;
+}
+.hisd-back {
+  border: none;
+  background: none;
+  color: #3498db;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+.hisd-title {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* 🧭 Tracking Bar */
+.tracking-bar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  position: relative;
+}
+.tracking-bar::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #eee;
+  z-index: 0;
+}
+.step {
+  text-align: center;
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+.step .dot {
+  width: 24px;
+  height: 24px;
+  margin: 0 auto 6px;
+  border-radius: 50%;
+  background: #ccc;
+  transition: all 0.3s;
+}
+.step.active .dot {
+  background: #2ecc71;
+  box-shadow: 0 0 6px #2ecc71aa;
+}
+.step span {
+  font-size: 13px;
+  color: #555;
+  font-weight: 500;
+}
+
+/* 🔹 Card */
+.hisd-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px 22px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.hisd-card.summary .row {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.label {
+  font-size: 13px;
+  color: #888;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+/* 🔹 Table */
+.table {
+  width: 100%;
+  display: grid;
+  gap: 8px;
+}
+.thead,
+.tr {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+}
+.thead {
+  font-weight: 600;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 6px;
+}
+.tr {
+  padding: 4px 0;
+  border-bottom: 1px solid #f2f2f2;
+}
+.total {
+  text-align: right;
+  margin-top: 14px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.total strong {
+  color: #2ecc71;
+  margin-left: 6px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .hisd-container { width: 92%; }
+  .thead, .tr { grid-template-columns: 1.6fr 0.8fr 1fr 1fr; }
+}
+.status-gif-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 24px 0;
+  text-align: center;
+}
+
+.status-gif {
+  width: 200px;
+  aspect-ratio: 1;
+  height: auto;
+  object-fit: cover;
+  border-radius: 12px;
+  animation: fadeIn 0.5s ease-in;
+}
+
+.status-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-top: 8px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}

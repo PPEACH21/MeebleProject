@@ -527,6 +527,7 @@ func CheckoutCart(c *fiber.Ctx) error {
 			"total":     cart.Total,
 			"createdAt": time.Now(),
 			"items":     cart.Items,
+			"status":    "process",
 		}); err != nil {
 			return err
 		}

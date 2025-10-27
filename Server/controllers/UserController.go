@@ -3,6 +3,8 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -116,19 +118,102 @@ func GetUserHistory(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "missing userId"})
 	}
 
-	docs, err := config.Client.Collection("users").Doc(userId).Collection("history").Documents(config.Ctx).GetAll()
+	col := config.Client.Collection("users").Doc(userId).Collection("history")
+
+	// ----------- Query Options -----------
+	limit := 50
+	if v := c.Query("limit"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			if n > 200 {
+				n = 200 // จำกัดสูงสุด 200
+			}
+			limit = n
+		}
+	}
+
+	// ✅ เริ่มจาก query แทน collectionRef
+	query := col.Query
+
+	// --- Filter ตามสถานะ (optional) ---
+	if s := strings.TrimSpace(c.Query("status")); s != "" {
+		query = query.Where("status", "==", s)
+	}
+
+	// --- เรียงจาก createdAt ล่าสุดก่อน ---
+	query = query.OrderBy("createdAt", firestore.Desc).Limit(limit)
+
+	// --- Pagination (optional): startAfter=timestamp (milliseconds) ---
+	if sa := strings.TrimSpace(c.Query("startAfter")); sa != "" {
+		if ms, err := strconv.ParseInt(sa, 10, 64); err == nil && ms > 0 {
+			query = query.StartAfter(time.UnixMilli(ms))
+		}
+	}
+
+	// ----------- Fetch Documents -----------
+	iter := query.Documents(config.Ctx)
+	defer iter.Stop()
+
+	var history []map[string]interface{}
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		}
+
+		d := doc.Data()
+
+		// ✅ ส่งเฉพาะ field ที่ UI ใช้
+		out := map[string]interface{}{
+			"id":        doc.Ref.ID,
+			"orderId":   d["orderId"],
+			"shop_name": d["shop_name"],
+			"createdAt": d["createdAt"],
+			"status":    d["status"],
+			"total":     d["total"], // เพิ่มยอดรวมให้ด้วย เผื่อแสดงใน History
+		}
+
+		history = append(history, out)
+	}
+
+	return c.JSON(history)
+}
+
+func GetUserHistoryByID(c *fiber.Ctx) error {
+	userId := c.Params("userId")
+	historyId := c.Params("historyId")
+
+	if userId == "" || historyId == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "missing userId or historyId"})
+	}
+
+	col := config.Client.Collection("users").Doc(userId).Collection("history")
+
+	// ---------- 1. ลองค้นด้วย Document ID ตรง ๆ ----------
+	doc, err := col.Doc(historyId).Get(config.Ctx)
+	if err == nil && doc.Exists() {
+		data := doc.Data()
+		data["id"] = doc.Ref.ID
+		return c.JSON(data)
+	}
+
+	// ---------- 2. ถ้าไม่เจอ → ลองค้นด้วย orderId ----------
+	iter := col.Where("orderId", "==", historyId).Limit(1).Documents(config.Ctx)
+	defer iter.Stop()
+
+	d, err := iter.Next()
+	if err == iterator.Done {
+		return c.Status(404).JSON(fiber.Map{"error": "history not found"})
+	}
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	var history []map[string]interface{}
-	for _, d := range docs {
-		data := d.Data()
-		data["id"] = d.Ref.ID
-		history = append(history, data)
-	}
-
-	return c.JSON(history)
+	data := d.Data()
+	data["id"] = d.Ref.ID
+	return c.JSON(data)
 }
 
 func userHistoryCol(userID string) *firestore.CollectionRef {

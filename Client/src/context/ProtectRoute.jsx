@@ -28,8 +28,15 @@ export const AuthProvider = ({children})=>{
     console.log(userData)
   };
 
-  const logout=()=>{
-    setAuth(null);
+  const logout=async()=>{
+    try {
+      await axios.post("/logout", {}, { withCredentials: true }); // ✅ เรียกเคลียร์ cookie จาก backend
+      console.log("Logged success.");
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      setAuth(null); // ล้าง state ฝั่ง frontend ด้วย
+    }
   };
 
   return (
