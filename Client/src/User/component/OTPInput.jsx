@@ -50,10 +50,9 @@ export const OTPInput=(email) =>{
                 withCredentials: true,
             }
             );
-            setAuth({ ...auth, verified: true });
-            console.log("✅ OTP sent successfully:", res.data);
+            console.log("OTP sent successfully:", res.data);
         } catch (err) {
-            console.error("❌ Error sending OTP:", err);
+            console.error("Error sending OTP:", err);
         }
     };
 
@@ -94,9 +93,12 @@ export const OTPInput=(email) =>{
                             withCredentials: true,
                         }
                     )
-    
-                    console.log("✅ OTP sent successfully:",updatadata);
+                    console.log("Verified success:", updatadata.data);
+
+                    const updatedAuth = { ...auth, verified: true };
+                    setAuth(updatedAuth);
                     
+                    console.log("Updated Auth:", updatedAuth);
                     navigate("/home")
                 }else{
                     navigate.replace("/changepasse")

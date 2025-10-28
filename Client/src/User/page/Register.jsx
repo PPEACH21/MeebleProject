@@ -30,13 +30,13 @@ const Register = () => {
         withCredentials: true,
       });
 
-      console.log("complete")
+      console.log("complete",res)
       setEmail("");
       setUsername("");
       setPassword("");
       setConfirmPassword("");
       setErrMsg("");
-      navigate("/verifyemail",{replace:true})
+      navigate("/login",{replace:true})
     } catch (err) {
       if (!err?.response) {
         console.log(err.message, err.code)
@@ -52,56 +52,56 @@ const Register = () => {
   };
 
   return (
-    <div className="contrainer bg-image2">
+    <div className="container bg-image2">
       <div className="setcenter ">
         <div className="box">
 
-        <h1 style={{marginTop:0}} >Register</h1>
-        
-        <form className="columnset" style={{gap:10}} onSubmit={handleSubmit}>
-          <label>{m.email()}</label>
-          <input
-            className="textInput"
-            type="email"
-            onChange={(e) => setEmail(e.target.value)}
-            value={email}
-            required
-          />
-          <label>{m.username()}</label>
-          <input
-            className="textInput"
-            type="text"
-            onChange={(e) => setUsername(e.target.value)}
-            value={username}
-            required
-          />
-          <label>{m.password()}</label>
-          <input
-            className="textInput"
-            type="password"
-            onChange={(e) => setPassword(e.target.value)}
-            value={password}
-            
-            required
-          />
-      
-          <label>{m.confrimpassword()}</label>
-          <input
-            className="textInput" 
-            type="password"
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            value={confirmPassword}
-            required
-            />
-            {errMsg && <p style={{ color: "red" }}>{errMsg}</p>}
-
-          <button type="submit" className="btn" style={{marginTop:20}}>{m.register()}</button>
+          <h1 style={{marginTop:0}} >Register</h1>
           
-          <div className="rowset" style={{fontSize:12,alignItems:'center',justifyContent:'center'}} >
-            <p style={{margin:0,paddingRight:3}}>{m.have_account()}</p>
-            <a style={{color:"blue", textDecoration: 'none'}} href="/login">{m.Signin()}</a>
-          </div>
-        </form>
+          <form className="columnset" style={{gap:10}} onSubmit={handleSubmit}>
+            <label>{m.email()}</label>
+            <input
+              className="textInput"
+              type="email"
+              onChange={(e) => setEmail(e.target.value)}
+              value={email}
+              required
+            />
+            <label>{m.username()}</label>
+            <input
+              className="textInput"
+              type="text"
+              onChange={(e) => setUsername(e.target.value)}
+              value={username}
+              required
+            />
+            <label>{m.password()}</label>
+            <input
+              className="textInput"
+              type="password"
+              onChange={(e) => setPassword(e.target.value)}
+              value={password}
+              
+              required
+            />
+        
+            <label>{m.confrimpassword()}</label>
+            <input
+              className="textInput" 
+              type="password"
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              value={confirmPassword}
+              required
+              />
+              {errMsg && <p style={{ color: "red" }}>{errMsg}</p>}
+
+            <button type="submit" className="btn" style={{marginTop:20}}>{m.register()}</button>
+            
+            <div className="rowset" style={{fontSize:12,alignItems:'center',justifyContent:'center'}} >
+              <p style={{margin:0,paddingRight:3}}>{m.have_account()}</p>
+              <a style={{color:"blue", textDecoration: 'none'}} href="/login">{m.Signin()}</a>
+            </div>
+          </form>
         </div>
       </div>
     </div>

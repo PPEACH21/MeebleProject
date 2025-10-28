@@ -25,7 +25,7 @@ func CreateUser(c *fiber.Ctx) error {
 
 	_,err = config.User.Where("username","==",user.Username).Limit(1).Documents(config.Ctx).Next()
 	if err == nil{
-		return c.Status(fiber.StatusAlreadyReported).SendString("Username have been Already")
+		return c.Status(fiber.StatusBadRequest).SendString("Username have been Already")
 	}
 	
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
