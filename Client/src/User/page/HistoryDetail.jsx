@@ -1,4 +1,3 @@
-import Navbar from "../component/Nav";
 import { useParams } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "@/context/ProtectRoute";
@@ -72,7 +71,6 @@ export default function HistoryDetail() {
   if (loading)
     return (
       <>
-        <Navbar focus={true} />
         <p className="hisd-loading">กำลังโหลดข้อมูล…</p>
       </>
     );
@@ -80,7 +78,6 @@ export default function HistoryDetail() {
   if (!data)
     return (
       <>
-        <Navbar focus={true} />
         <p className="hisd-empty">ไม่พบคำสั่งซื้อ</p>
       </>
     );
@@ -107,7 +104,6 @@ export default function HistoryDetail() {
 
   return (
     <>
-      <Navbar focus={true} />
       <div className="hisd-wrap">
         <div className="hisd-container">
           <h1 className="hisd-title">รายละเอียดการสั่งซื้อ</h1>

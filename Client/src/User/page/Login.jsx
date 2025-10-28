@@ -9,7 +9,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [errMsg, setErrMsg] = useState("");
   const navigate = useNavigate(); 
-  const { auth,login } = useContext(AuthContext);
+  const { auth,setAuth } = useContext(AuthContext);
 
   useEffect(()=>{
     console.log("LoginPage Auth:",auth);
@@ -36,13 +36,19 @@ const LoginPage = () => {
         verified: res.data.verified,
         role: res.data.role,
       };
-      
-      login(userData);
+
+      setAuth(userData)
       setUserkey("");
       setPassword("");
-      navigate("/home",{ replace: true })
       
-
+      if(!res.data.verified){
+        navigate("/verifyemail",{ replace: true })
+      }else{
+        navigate("/home",{ replace: true })
+      }
+      
+      
+      
     } catch (err) {
       if (!err?.response) {
         console.log(err.message, err.code)
@@ -60,7 +66,7 @@ const LoginPage = () => {
   return (
     <div className="contrainer bg-image2">
       <div className="setcenter" >
-        <div className="boxLogin">
+        <div className="box">
           <h1 style={{marginTop:0}}>Login</h1>
           <form className="columnset" style={{gap:10}} onSubmit={handleSubmit}>
             <label>{m.username()} {m.or()} {m.email()}</label>

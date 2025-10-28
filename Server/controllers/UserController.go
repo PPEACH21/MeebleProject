@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/PPEACH21/MebleBackend-Web/config"
 	"github.com/PPEACH21/MebleBackend-Web/models"
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 	"google.golang.org/api/iterator"
 )
 
@@ -73,15 +75,14 @@ func GetShop(c *fiber.Ctx) error {
 
 func VerifiedUser(c *fiber.Ctx) error {
 	userId := c.Params("id")
-
-	fmt.Println("User: ", userId)
+	// fmt.Println("User: ", userId)
 
 	data := config.User.Doc(userId)
 	docRef, err := data.Get(config.Ctx)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString("Not user ID")
 	}
-
+	
 	_, err = docRef.Ref.Update(config.Ctx, []firestore.Update{
 		{
 			Path:  "verified",
@@ -91,8 +92,47 @@ func VerifiedUser(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString("Update data Error")
 	}
+	
+	var member models.User
+	if err := docRef.DataTo(&member); err != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString("Error parsing user data")
+	}
+	
+	userData, err := docRef.Ref.Get(config.Ctx)
+    if err != nil {
+        return c.Status(fiber.StatusInternalServerError).SendString("Failed to fetch updated user")
+    }
 
-	return c.Status(fiber.StatusOK).JSON(data)
+	c.ClearCookie("token")
+    var updatedUser models.User
+    userData.DataTo(&updatedUser)
+
+	 claims := jwt.MapClaims{
+        "user_id":  userData.Ref.ID,
+        "email":    updatedUser.Email,
+        "username": updatedUser.Username,
+        "verified": updatedUser.Verified,
+        "role":     "user",
+        "exp":      time.Now().Add(time.Minute * 60).Unix(),
+    }
+
+    token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+    secret := os.Getenv("JWT_SECRET")
+    t, err := token.SignedString([]byte(secret))
+    if err != nil {
+        return c.SendStatus(fiber.StatusInternalServerError)
+    }
+
+    c.Cookie(&fiber.Cookie{
+        Name:     "token",
+        Value:    t,
+        Expires:  time.Now().Add(time.Minute * 60),
+        HTTPOnly: false,
+		// Secure:   false,
+		// SameSite: "Strict",
+    })
+
+    return c.Status(fiber.StatusAccepted).SendString("Update data Success")
 }
 
 func UserProfile(c *fiber.Ctx) error {

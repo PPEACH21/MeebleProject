@@ -1,12 +1,12 @@
 // src/pages/MenuStore.jsx
 import axios from "@/api/axios";
 import { useState, useEffect, useContext } from "react";
-import Navbar from "@/User/component/Nav";
 import { useParams, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 import { AuthContext } from "@/context/ProtectRoute";
 import { FaStar } from "react-icons/fa6";
+import "@css/pages/MenuStore.css"
 
 // --- helpers ---
 const normalizeVendor = (v) =>
@@ -167,113 +167,110 @@ const MenuStore = () => {
   };
 
   return (
-    <>
-      <Navbar focus={true}  cart={true} />
-      <div className="box">
-        <div className="left">
-          <div className="storeBox">
-            <img
-              src={
-                shop?.image ||
-                "https://i.pinimg.com/1200x/0d/08/60/0d0860d917320784369a58a1f01187d3.jpg"
-              }
-              alt="shop"
-            />
-            <div className="storeText">
-              <h2 className="storeTitle">{shop?.shop_name || "Store"}</h2>
-              <h3 className="storeRate" style={{display:'flex',alignItems:'center'}}> <FaStar size={20}/> {shop?.rate ?? "-"}/5</h3>
-              <h4 className="storeSubtitle">คำอธิบายร้าน</h4>
-              <p className="storeDesc">
-                {shop?.description || "No description available"}
-              </p>
-            </div>
-          </div>
-
-          <div className="mapBox">
-            <h1>Location</h1>
-            <div className="miniMap">
-              <iframe
-                src={`https://www.google.com/maps?q=${lat},${lng}&z=17&output=embed`}
-                allowFullScreen
-                loading="lazy"
-                title="mini-map"
-              />
-            </div>
-            <button
-              className="openMapBtn"
-              onClick={() =>
-                window.open(
-                  `https://www.google.com/maps?q=${lat},${lng}`,
-                  "_blank"
-                )
-              }ร้าน
-              style={btnPrimary}
-            >
-              Open in Map
-            </button>
-            {lat === 0 && lng === 0 && (
-              <div style={{ color: "#b45309", marginTop: 8 }}>
-                พิกัดยังไม่ถูกตั้งค่า (0,0) — โปรดอัปเดตในระบบผู้ขาย
-              </div>
-            )}
+    <div className="rowset">
+      <div className="left">
+        <div className="storeBox">
+          <img
+            src={
+              shop?.image ||
+              "https://i.pinimg.com/1200x/0d/08/60/0d0860d917320784369a58a1f01187d3.jpg"
+            }
+            alt="shop"
+          />
+          <div className="storeText">
+            <h2 className="storeTitle">{shop?.shop_name || "Store"}</h2>
+            <h3 className="storeRate" style={{display:'flex',alignItems:'center'}}> <FaStar size={20}/> {shop?.rate ?? "-"}/5</h3>
+            <h4 className="storeSubtitle">คำอธิบายร้าน</h4>
+            <p className="storeDesc">
+              {shop?.description || "No description available"}
+            </p>
           </div>
         </div>
 
-        <div className="right">
-          <div className="menuScroll">
-            <div className="menu">
-              {loading && <div style={{ padding: 12 }}>กำลังโหลดเมนู...</div>}
-              {!loading && err && (
-                <div style={{ color: "crimson", padding: 12 }}>{err}</div>
-              )}
-              {!loading && !err && menus.length === 0 && (
-                <div style={{ padding: 12 }}>ยังไม่มีเมนูให้แสดง</div>
-              )}
-
-              {!loading &&
-                !err &&
-                menus.map((item, index) => (
-                  <div
-                    key={item.id || index}
-                    className="menuBox"
-                    style={{ margin: "10px", padding: "10px" }}
-                  >
-                    <button
-                      onClick={() => handleOrder(item)}
-                      style={{ ...cardButton, textAlign: "left" }}
-                    >
-                      {item.image && (
-                        <img
-                          src={item.image}
-                          alt={item.name || "menu"}
-                          style={{
-                            width: "100%",
-                            maxWidth: 360,
-                            borderRadius: 8,
-                            marginBottom: 8,
-                          }}
-                        />
-                      )}
-                      <p>
-                        <b>Name:</b> {item.name}
-                      </p>
-                      <p>
-                        <b>Price:</b> {item.price} ฿
-                      </p>
-                      <p>
-                        <b>Description:</b> {item.description}
-                      </p>
-                      <p>
-                        <b>Id:</b> {item.id || item.ID || index}
-                      </p>
-                    </button>
-                  </div>
-                ))}
+        <div className="mapBox">
+          <h1>Location</h1>
+          <div className="miniMap">
+            <iframe
+              src={`https://www.google.com/maps?q=${lat},${lng}&z=17&output=embed`}
+              allowFullScreen
+              loading="lazy"
+              title="mini-map"
+            />
+          </div>
+          <button
+            className="openMapBtn"
+            onClick={() =>
+              window.open(
+                `https://www.google.com/maps?q=${lat},${lng}`,
+                "_blank"
+              )
+            }ร้าน
+            style={btnPrimary}
+          >
+            Open in Map
+          </button>
+          {lat === 0 && lng === 0 && (
+            <div style={{ color: "#b45309", marginTop: 8 }}>
+              พิกัดยังไม่ถูกตั้งค่า (0,0) — โปรดอัปเดตในระบบผู้ขาย
             </div>
+          )}
+        </div>
+      </div>
+
+      <div className="right">
+        <div className="menuScroll">
+          <div className="menu">
+            {loading && <div style={{ padding: 12 }}>กำลังโหลดเมนู...</div>}
+            {!loading && err && (
+              <div style={{ color: "crimson", padding: 12 }}>{err}</div>
+            )}
+            {!loading && !err && menus.length === 0 && (
+              <div style={{ padding: 12 }}>ยังไม่มีเมนูให้แสดง</div>
+            )}
+
+            {!loading &&
+              !err &&
+              menus.map((item, index) => (
+                <div
+                  key={item.id || index}
+                  className="menuBox"
+                  style={{ margin: "10px", padding: "10px" }}
+                >
+                  <button
+                    onClick={() => handleOrder(item)}
+                    style={{ ...cardButton, textAlign: "left" }}
+                  >
+                    {item.image && (
+                      <img
+                        src={item.image}
+                        alt={item.name || "menu"}
+                        style={{
+                          width: "100%",
+                          maxWidth: 360,
+                          borderRadius: 8,
+                          marginBottom: 8,
+                        }}
+                      />
+                    )}
+                    <p>
+                      <b>Name:</b> {item.name}
+                    </p>
+                    <p>
+                      <b>Price:</b> {item.price} ฿
+                    </p>
+                    <p>
+                      <b>Description:</b> {item.description}
+                    </p>
+                    <p>
+                      <b>Id:</b> {item.id || item.ID || index}
+                    </p>
+                  </button>
+                </div>
+              ))}
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

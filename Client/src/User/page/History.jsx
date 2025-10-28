@@ -1,4 +1,3 @@
-import Navbar from "../component/Nav";
 import { useContext, useEffect, useMemo, useState, useCallback } from "react";
 import { AuthContext } from "@/context/ProtectRoute";
 import axios from "@/api/axios";
@@ -137,7 +136,6 @@ export default function History() {
   // ---------- Render ----------
   return (
     <>
-      <Navbar focus={true} />
       <div className="his-wrap">
         <div className="his-container">
           <h1 className="his-title">History</h1>

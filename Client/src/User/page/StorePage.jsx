@@ -1,6 +1,5 @@
   import { useState, useEffect } from "react";
   import axios from "@/api/axios";
-  import Navbar from "@/User/component/Nav";  
   import SidebarType from "../component/SidebarType.jsx";
   import {m} from '@/paraglide/messages.js'
   import StoreCard from "../component/StoreCard.jsx";
@@ -117,7 +116,6 @@
 
   return (
     <div>
-      <Navbar />
       <div className="mainLayout">
         <SidebarType type={type} TypeClick={handleTypeClick} />
 
