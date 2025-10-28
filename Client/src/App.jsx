@@ -14,31 +14,43 @@ import History from './User/page/History';
 import Profile from './User/page/Profile';
 import SettingPage from './User/page/Setting';
 
+import { NavLayout } from './User/component/Nav';
 import HistoryDetail from "@/User/page/HistoryDetail.jsx";
 
 function App() {
   return(
-      <BrowserRouter>
-          <Routes>
-              <Route path='/register' element={<Register/>}/>
-              <Route path='/login' element={<LoginPage/>}/>
-              <Route path='/' element={<HomePage/>}/>
-              <Route path='/forgotpass' element={<Forgotpassword/>}/>
-              
-              <Route element={<ProtectedLayout />}>
-                <Route path='/verifyemail' element={<VerifyEmail/>}/>
-                <Route path="/home" element={<StorePage />}/>
-                <Route path="/mappick"element={<MapPickerButton/>}/>
-                <Route path="/*"element={<LoginPage/>}/>
-                <Route path="/menu/:id"element={<MenuStore/>}/>
-                <Route path="/cart"element={<Cart/>}/>
-                <Route path="/history"element={<History/>}/>
-                <Route path="/settings"element={<SettingPage/>}/>
-                <Route path="/profile"element={<Profile/>}/>
-                <Route path="/history/:id" element={<HistoryDetail />} />
-              </Route>
-          </Routes>
-      </BrowserRouter>
+    <BrowserRouter>
+      <Routes>
+          <Route path='/register' element={<Register/>}/>
+          <Route path='/login' element={<LoginPage/>}/>
+          <Route path='/*' element={<HomePage/>}/>
+          <Route path='/forgotpass' element={<Forgotpassword/>}/>
+          <Route path='/verifyemail' element={<VerifyEmail/>}/>
+          
+          <Route element={<ProtectedLayout role="user"/>}>
+            <Route element={<NavLayout/>}>
+              <Route path="/home" element={<StorePage />}/>
+            </Route>
+            
+            <Route element={<NavLayout focus={true}/>}>
+              <Route path="/history"element={<History/>}/>
+              <Route path="/cart"element={<Cart/>}/>
+              <Route path="/settings"element={<SettingPage/>}/>
+              <Route path="/profile"element={<Profile/>}/>
+              <Route path="/history/:id" element={<HistoryDetail />} />
+            </Route>
+            
+            <Route element={<NavLayout focus={true} cart={true}/>}>
+              <Route path="/menu/:id"element={<MenuStore/>}/>
+            </Route>
+            <Route path="/mappick"element={<MapPickerButton/>}/>
+          </Route>
+
+          <Route element={<ProtectedLayout role="vendor" />}>
+
+          </Route>
+      </Routes>
+    </BrowserRouter>
   )
 }
 

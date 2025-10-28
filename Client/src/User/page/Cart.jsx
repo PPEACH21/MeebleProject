@@ -6,7 +6,6 @@ import { AuthContext } from "@/context/ProtectRoute";
 import { useNavigate, useLocation } from "react-router-dom";
 import "@css/pages/CartPage.css";
 import { MdDelete } from "react-icons/md";
-import Navbar from "@/User/component/Nav";
 
 const currency = (n) =>
   (Number(n) || 0).toLocaleString("th-TH", {
@@ -237,7 +236,6 @@ export default function Cart() {
 
   return (
     <>
-      <Navbar focus={true} />
       <div className="cartPage">
         <h2>
           ชื่อร้าน :{" "}

@@ -1,3 +1,25 @@
+
+.left {
+  display: flex;
+  flex: 1; 
+  flex-direction: column;
+  gap: 30px;
+  align-items: center;
+  padding: 15px;
+  /* background-color: blue; */
+}
+
+.right {
+  display: flex;
+  flex: 3;
+  width: 100%;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 15px;
+  box-sizing: border-box;
+}
+
+
 .storeBox {
   display: flex;
   flex-direction: row;
@@ -7,7 +29,7 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
   padding: 15px;
   gap: 15px;
-  width: 100%;
+  width: 80%;
 }
 
 .storeBox img {
@@ -18,7 +40,6 @@
 }
 
 .storeText {
-  /* display: flex; */
   flex-direction: column;
   justify-content: flex-start;
   text-align: left;
@@ -52,11 +73,11 @@
   font-size: 14px;
   color: #444;
   line-height: 1.5;
-  max-width: 100%; /* ✅ ป้องกันล้นแนวนอน */
-  overflow: hidden; /* ✅ ป้องกันเกินขอบกล่อง */
-  text-overflow: ellipsis; /* ✅ ตัดคำเป็น ... ถ้ายาวเกิน */
-  white-space: normal; /* ✅ ให้ขึ้นบรรทัดใหม่ได้ */
-  word-break: break-word; /* ✅ แก้กรณีข้อความยาวติดกัน */
+  max-width: 100%; 
+  overflow: hidden; 
+  text-overflow: ellipsis;
+  white-space: normal; 
+  word-break: break-word;
 }
 .mapBox {
   background-color: #ffffff;
@@ -108,22 +129,18 @@
   background-color: #e78a00;
 }
 
-.storeBox,
-.mapBox {
-  width: 100%; /* ✅ เท่ากัน */
-  max-width: 380px; /* กำหนดความกว้างสูงสุด */
+.storeBox,.mapBox {
+  width: 90%; 
+  max-width: 380px;
 }
 .menuScroll {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  height: 100%; /* ✅ กำหนดความสูงเต็มในคอลัมน์ */
-  max-height: calc(100vh - 150px); /* ✅ ปรับให้สูงไม่เกินหน้าจอ */
+  max-height: calc(100vh - 90px);
   padding-right: 10px;
-  scroll-behavior: smooth;
 }
 
-/* ===== สกอร์บาร์สวยงาม ===== */
 .menuScroll::-webkit-scrollbar {
   width: 8px;
 }
@@ -141,9 +158,6 @@
 .menu {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
-  /* ✅ แต่ละกล่องกว้างขั้นต่ำ 240px
-     ✅ ถ้ามีที่เหลือ จะขยายจนเต็ม 4 กล่อง/แถว
-     ✅ ถ้าหน้าจอแคบ จะขึ้นบรรทัดใหม่อัตโนมัติ */
   gap: 20px;
   width: 100%;
   box-sizing: border-box;
@@ -154,7 +168,7 @@
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0,0,0,.12);
   transition: transform .15s ease, box-shadow .15s ease;
-  overflow: hidden; /* ป้องกันเนื้อหา/รูปภาพล้นขอบ */
+  overflow: hidden; 
 }
 
 .menuBox:hover {

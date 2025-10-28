@@ -5,8 +5,20 @@ import axios from "@/api/axios";
 import { FaRegUserCircle, FaHistory } from "react-icons/fa";
 import { TiShoppingCart } from "react-icons/ti";
 import { useNavigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 
-function DropdownBasic({logout,username,email}) {
+export const NavLayout = ({focus,cart}) => {
+  return (
+    <>
+      <Navbar focus={focus} cart={cart}/>
+      <div style={{height: "calc(100vh - 60px)", overflowY:'auto'}}>
+        <Outlet/>
+      </div>
+    </>
+  );
+};
+
+const DropdownProfile =({logout,username,email})=> {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -74,7 +86,6 @@ function DropdownBasic({logout,username,email}) {
   );
 }
 
-
 const Navbar = ({ focus=false ,cart=false}) => {
   const { auth,logout } = useContext(AuthContext);
 
@@ -84,7 +95,7 @@ const Navbar = ({ focus=false ,cart=false}) => {
         withCredentials: true,
       });
       setDatauser(res.data);
-      console.log("API Response:", res.data);
+      // console.log("API Response:", res.data);
     } catch (err) {
       console.error("Error fetching user:", err);
     }
@@ -123,7 +134,7 @@ const Navbar = ({ focus=false ,cart=false}) => {
                 src="https://i.ibb.co/MyMPRx3P/Chat-GPT-Image-Sep-23-2025-10-01-38-PM.jpg"
                 alt="Logo"
                 onClick={goHome}
-                style={{ cursor: "pointer" }}
+                style={{ cursor: "pointer" ,height:'60px', width:'60px'}}
               />
               <p onClick={goHome} style={{ cursor: "pointer" }}>
                 MEEBLE PROJECT
@@ -160,11 +171,12 @@ const Navbar = ({ focus=false ,cart=false}) => {
             style={{ gap: 10, alignItems: "center" ,cursor:'pointer'}}
             // onClick={()=>console.log("Click")}
           >
-            <DropdownBasic logout={logout} username={dataUser.username} email={dataUser.email}/>
+            <DropdownProfile logout={logout} username={dataUser.username} email={dataUser.email}/>
           </div>
         </div>
       </div>
     </nav>
   );
 };
+
 export default Navbar;

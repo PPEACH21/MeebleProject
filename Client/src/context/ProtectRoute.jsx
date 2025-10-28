@@ -16,9 +16,9 @@ export const AuthProvider = ({children})=>{
         setAuth(res.data);
       }catch{
         setAuth(null);
-      }finally{
-        setLoading(false);
-      }
+        }finally{
+          setLoading(false);
+        }
     };
     getid();
   }, []);
@@ -46,10 +46,10 @@ export const AuthProvider = ({children})=>{
   );
 }
 
-export const ProtectRoute =({ children })=>{
+export const ProtectRoute =({ children , role})=>{
   const {auth,loading} = useContext(AuthContext);
   const location = useLocation();
-  console.log("ProtectRoute",auth)
+  // console.log("ProtectRoute",auth)
 
   if (loading) {
     return <div>Loading...</div>;
@@ -58,15 +58,22 @@ export const ProtectRoute =({ children })=>{
     console.log("NO Auth",auth)
     return <Navigate to="/" replace state={{ from: location }} />;
   }
-  // if(!auth.verified && location.pathname !== "/verifyemail"){
-  //   return <Navigate to="/verifyemail" replace state={{ from: location }} />;
-  // }
+  
+  if(!auth.verified){
+    console.log("NO Auth",auth)
+    return <Navigate to="/verifyemail" replace state={{ from: location }} />;
+  }
+  
+  if(auth.role != role){
+    console.log("You role no match",auth)
+    return <Navigate to="/" replace state={{ from: location }} />;
+  }
   return children
 }
 
-export const ProtectedLayout=()=> {
+export const ProtectedLayout=({role})=> {
   return (
-    <ProtectRoute>
+    <ProtectRoute role={role}>
       <Outlet />
     </ProtectRoute>
   );
