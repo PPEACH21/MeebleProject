@@ -137,14 +137,18 @@ func VerifiedUser(c *fiber.Ctx) error {
 
 func UserProfile(c *fiber.Ctx) error {
 	userID := c.Params("id")
+	
 	fmt.Println("User: ", userID)
-
 	data := config.User.Doc(userID)
 	docRef, err := data.Get(config.Ctx)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).SendString("Not user ID")
+		data = config.Vendor.Doc(userID)
+		docRef, err = data.Get(config.Ctx)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).SendString("Not user ID")
+		}
 	}
-
+	
 	userData := docRef.Data()
 	if userData == nil {
 		return c.Status(fiber.StatusNotFound).SendString("User not found")

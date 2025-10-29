@@ -13,6 +13,15 @@ const LoginPage = () => {
 
   useEffect(()=>{
     console.log("LoginPage Auth:",auth);
+    if(auth && auth.role==="vendor"){
+      if (auth.verified) {
+        navigate("/vendor/home", { replace: true });
+      } else {
+        navigate("/vendor/verifyemail", { replace: true });
+      }
+      return;
+    }
+    
     if(auth && auth.verified){
       navigate('/home', { replace: true });
     }else if(auth && !auth.verified){

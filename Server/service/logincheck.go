@@ -18,14 +18,29 @@ func Login(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 
+	role:="user"
+	checkuser := true;
 	docs, err := config.User.Where("email", "==", user.Email).Limit(1).Documents(config.Ctx).Next()
 	if err != nil {
-		docs, err = config.Client.Collection("users").Where("username", "==", user.Username).Limit(1).Documents(config.Ctx).Next()
+		docs, err = config.User.Where("username", "==", user.Username).Limit(1).Documents(config.Ctx).Next()
 		if err != nil {
-			return c.Status(fiber.StatusNotFound).SendString("Email or Username Not Found")
+			checkuser=false
 		}
 	}
+	
+	
+	if !checkuser{
+		docs, err = config.Vendor.Where("email", "==", user.Email).Limit(1).Documents(config.Ctx).Next()
+		if err != nil {
+			docs, err = config.Vendor.Where("username", "==", user.Username).Limit(1).Documents(config.Ctx).Next()
+			if err != nil {
+				return c.Status(fiber.StatusNotFound).SendString("Email or Username Not Found")
+			}
+		}
+		role="vendor"
+	}
 
+	
 	var member models.User
 	if err := docs.DataTo(&member); err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString("Error parsing user data")
@@ -42,7 +57,7 @@ func Login(c *fiber.Ctx) error {
 		"email":    member.Email,
 		"username": member.Username,
 		"verified": member.Verified,
-		"role":     "user",
+		"role":     role,
 		"exp":      time.Now().Add(time.Minute * 60).Unix(),
 	}
 
@@ -66,7 +81,7 @@ func Login(c *fiber.Ctx) error {
 		"user_id":  docs.Ref.ID,
 		"email":    member.Email,
 		"username": member.Username,
-		"role":     "user",
+		"role":     role,
 		"verified": member.Verified,
 		"message":  "login success",
 	})

@@ -14,6 +14,7 @@ import History from './User/page/History';
 import Profile from './User/page/Profile';
 import SettingPage from './User/page/Setting';
 
+import VHomePage from './Vendor/page/vHome';
 import { NavLayout } from './User/component/Nav';
 import HistoryDetail from "@/User/page/HistoryDetail.jsx";
 
@@ -47,6 +48,9 @@ function App() {
           </Route>
 
           <Route element={<ProtectedLayout role="vendor" />}>
+            <Route element={<NavLayout/>}>
+              <Route path="/vendor/home"element={<VHomePage/>}/>
+            </Route>
 
           </Route>
       </Routes>
