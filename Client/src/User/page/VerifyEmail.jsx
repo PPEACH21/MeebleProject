@@ -1,6 +1,5 @@
 import { useContext, useEffect, useRef, useState } from "react"
 import { AuthContext } from "@/context/ProtectRoute";
-import "@css/pages/VerifyEmail.css"
 import OTPInput from "../component/OTPInput";
 import { useNavigate } from "react-router-dom";
 
@@ -17,20 +16,25 @@ const VerifyEmail=()=>{
     },[auth, loading])
     
     return(
-        <div className="d-flex justify-content-center align-content-center vh-100 p-5">
-            {!state ? 
-                <div >
-                    <p>You must to Verify Email for use web</p>
-                    <button onClick={()=>{setState(!state)}}>send to give OTP</button>
+        <div className="container bg-image2">
+            <div className="setcenter">
+                <div className="box">
+                    {!state ? 
+                        <div className="columnset setcenterNF" style={{textAlign:'center'}}>
+                            <p style={{fontWeight:'bold', fontSize:"25px", marginBlock:10}}>Verify Email</p>
+                            <p>You must to Verify Email for use web</p>
+                            <button className="btn1" onClick={()=>{setState(!state)}}>send to give OTP</button>
+                        </div>
+                    :
+                        <div>
+                            <p>Enter OTP sent to Your Email</p> 
+                            <OTPInput/>
+                            <p>{auth.username}</p>
+                            <p>TEST</p>
+                        </div>
+                    }
                 </div>
-            :
-                <div>
-                    <p>Enter OTP sent to Your Email</p> 
-                    <OTPInput/>
-                    <p>{auth.username}</p>
-                    <p>TEST</p>
-                </div>
-            }
+            </div>
         </div>
     )
 }

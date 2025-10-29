@@ -13,6 +13,7 @@ var Client *firestore.Client
 var User *firestore.CollectionRef
 var Shops *firestore.CollectionRef
 var Vendor *firestore.CollectionRef
+var OTP *firestore.CollectionRef
 var Ctx = context.Background()
 
 func InitFirebase(){
@@ -32,5 +33,6 @@ func InitFirebase(){
 	User = Client.Collection("users")
 	Shops = Client.Collection("shops")
 	Vendor = Client.Collection("vendors")
+	OTP = Client.Collection("otp")
 }
 

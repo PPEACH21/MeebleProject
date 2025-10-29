@@ -18,8 +18,9 @@ type Select = struct {
 	Count  string `json:"count firestore:count"`
 	Cost   string `json:"cost firestore:cost"`
 }
-type Request struct {
-	Username string `json: "username"`
-	Email    string `json:"email"`
-	Otp      string `json:"otp"`
+
+type OTP_Verify struct{
+	Email string `json:"email" firestore:"email"`
+	Username string `json:"username" firestore:"username"`
+	OTP string `json:"otp" firestore:"otp"`
 }

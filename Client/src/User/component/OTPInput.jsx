@@ -1,49 +1,49 @@
 import { useState,useRef,useEffect, useContext } from "react";
 import axios from "@/api/axios";
-import "@css/pages/VerifyEmail.css"
 import { AuthContext } from "@/context/ProtectRoute";
 import {  useNavigate } from "react-router-dom";
 
-export const OTPInput=(email) =>{
+export const OTPInput=({email=false,state,setState}) =>{
     const {auth,setAuth} = useContext(AuthContext);
     const [otp,setOTP]= useState(new Array(6).fill(""));
     const navigate= useNavigate(); 
     const inputRef = useRef([])
 
     useEffect (()=>{
-        if(auth){
+        sendmessage()
+    },[])
+
+    const sendmessage = ()=>{
+        if(!email){
             SendOTP(randomNumber, auth);
         }else{
-            SendOTPRepassword(randomNumber,email);
+            SendOTPRepassword(email);
         }
         if(inputRef.current[0]){
             inputRef.current[0].focus();
         }
-    },[])
-    
+    }
     const SendOTPRepassword = async (email)=>{
         try {
             const res = await axios.post(
             "/sendotp_repassword",
             { 
-                email: email,   
-                otp: otp.toString()
+                email: email,
             }
             );
-            console.log("✅ OTP sent successfully:", res.data);
+            console.log("OTP sent successfully:", res.data);
         } catch (err) {
-            console.error("❌ Error sending OTP:", err);
+            console.error("Error sending OTP:", err);
         }
     }
 
-    const SendOTP = async (otp) => {
+    const SendOTP = async () => {
         try {
             const res = await axios.post(
             "/sendotp",
             { 
                 username: auth.username, 
                 email: auth.email,   
-                otp: otp.toString()
             },
             {
                 headers: { "Content-Type": "application/json" },
@@ -84,43 +84,33 @@ export const OTPInput=(email) =>{
         const otpCode = otp.join("");
         console.log("OTP submitted:", otpCode);
         
-        if(otpCode==randomNumber){
-            try {
-                if(auth){
-                    const updatadata = await axios.put(`/verifiedEmail/${auth.user_id}`,{},
-                        {
-                            headers: { "Content-Type": "application/json" },
-                            withCredentials: true,
-                        }
-                    )
-                    console.log("Verified success:", updatadata.data);
+        try {
+            if(!email){
+                const checkOTP = await axios.post(`/checkotp`,{otp:otpCode,email:auth.email})
+                console.log("checkOTP Success",checkOTP.status)
+                const updatadata = await axios.put(`/verifiedEmail/${auth.user_id}`,{},
+                    {
+                        headers: { "Content-Type": "application/json" },
+                        withCredentials: true,
+                    }
+                )
+                console.log("Verified success:", updatadata.data);
 
-                    const updatedAuth = { ...auth, verified: true };
-                    setAuth(updatedAuth);
-                    
-                    console.log("Updated Auth:", updatedAuth);
-                    navigate("/home")
-                }else{
-                    navigate.replace("/changepasse")
-                }
-            } catch (err) {
-                console.error("❌ Error sending OTP:", err);
-            }
-
-        }else{
-            console.log("Not Correct")
+                const updatedAuth = { ...auth, verified: true };
+                setAuth(updatedAuth);
+                
+                console.log("Updated Auth:", updatedAuth);
+                navigate("/home")
+            }else{
+                const checkOTP = await axios.post(`/checkotp`,{otp:otpCode,email:email})
+                console.log("checkOTP Success",checkOTP.status)
+                console.log("Changepassword Page");
+                setState(state+1);
+            }   
+        }catch(err){
+            console.error("Error OTP Not Correct:", err);
         }
-        
-    };
-
-    
-    const [randomNumber, setRandomNumber] = useState(Math.floor(100000 + Math.random() * 900000));
-    
-    const reRandomNumber =()=>{
-        setRandomNumber(Math.floor(100000 + Math.random() * 900000))
-        SendOTP(randomNumber,auth)
     }
-
 
     return(
         <div>
@@ -128,7 +118,7 @@ export const OTPInput=(email) =>{
                 otp.map((value,index)=>{
                     return(
                         <input
-                            className="otpinput me-2"
+                            className="otpinput"
                             key={index}
                             ref={(input)=>(inputRef.current[index]=input)}
                             text="text"
@@ -141,18 +131,18 @@ export const OTPInput=(email) =>{
                 })
             }
 
-            <div style={{ marginTop: "10px" }}>
+            <div style={{ textAlign:'end', marginTop: "10px" }}>
                 <a
                 href="#"
                 onClick={(e) => {
                     e.preventDefault();
-                    reRandomNumber();
+                    sendmessage();
                 }}
                 >Resend OTP
                 </a>
             </div>
-            <div style={{ marginTop: "10px" }}>
-                <button onClick={handleSubmit}>Submit</button>
+            <div  className="setcenterNF" style={{ marginTop: "10px"}}>
+            <button className="btn" style={{width:"80%"}} onClick={handleSubmit}>Submit</button>
             </div>
         </div>
     )
