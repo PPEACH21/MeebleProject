@@ -42,7 +42,8 @@ func main(){
 	app.Post("/login",service.Login)
 	app.Post("/sendotp_repassword", service.OTPrepassword())
 	app.Post("/checkEmail", service.CheckEmail)
-
+	app.Post("/checkotp", service.MathOTP)
+	app.Put("/changepassword", service.ChangePassword)
 	app.Use(middlewares.ProtectedCookie())
 		routes.Routes(app)
 	app.Listen(":8080")

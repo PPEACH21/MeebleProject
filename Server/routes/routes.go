@@ -13,7 +13,6 @@ func Routes(app *fiber.App) {
 	app.Post("/Shop", controllers.CreateShop)
 	app.Get("/user/:id", controllers.UserProfile)
 	app.Put("/setLocation/:ID", controllers.SetLocation)
-	app.Put("/verifiedEmail/:id", controllers.VerifiedUser)
 	app.Post("/addMenu", controllers.AddMenu)
 	app.Get("/menus", controllers.GetMenus)
 	app.Get("/vendors/:vendor_id/menu", controllers.GetMenus)
@@ -21,8 +20,10 @@ func Routes(app *fiber.App) {
 	// routes/routes.go
 	app.Get("/users/:userId/history", controllers.GetUserHistory)
 	app.Get("/users/:userId/history/:historyId", controllers.GetUserHistoryByID)
-
+	
+	app.Put("/verifiedEmail/:id", controllers.VerifiedUser)
 	app.Post("/sendotp", service.OTPvertify())
+	
 
 	app.Post("/logout", service.Logout)
 	//
