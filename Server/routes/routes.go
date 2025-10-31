@@ -14,14 +14,19 @@ func Routes(app *fiber.App) {
 	app.Post("/Shop", controllers.CreateShop)
 	app.Get("/user/:id", controllers.UserProfile)
 	app.Put("/setLocation/:ID", controllers.SetLocation)
-	app.Post("/addMenu", controllers.AddMenu)
-	app.Get("/menus", controllers.GetMenus)
-	app.Get("/vendors/:vendor_id/menu", controllers.GetMenus)
-	app.Delete("/vendors/:vendor_id/menu/:menu_id", controllers.DeleteMenu)
+	app.Get("/shops/:shopId/menu", controllers.GetMenus)
+	app.Post("/shops/:shopId/menu", controllers.AddMenu)
+	app.Get("/shops/by-vendor/:vendorId", controllers.GetShopByVendor)
+	app.Patch("/shops/:shopId/menu/:menuId", controllers.UpdateMenu)
+	app.Patch("/shops/:shopId/menu/:menuId/active", controllers.ToggleMenuActive)
+	app.Delete("/shops/:shopId/menu/:menuId", controllers.DeleteMenu)
+
 	// routes/routes.go
 	app.Get("/users/:userId/history", controllers.GetUserHistory)
 	app.Get("/users/:userId/history/:historyId", controllers.GetUserHistoryByID)
-	
+	app.Put("/shops/:id/status", controllers.UpdateShopStatus)
+	app.Put("/shops/:id/reserve", controllers.UpdateReserveStatus)
+
 	app.Put("/verifiedEmail/:id", controllers.VerifiedUser)
 	app.Post("/sendotp", service.OTPvertify())
 
@@ -29,7 +34,11 @@ func Routes(app *fiber.App) {
 	//
 	app.Get("/api/cart", controllers.GetCart)
 	app.Post("/api/cart/add", controllers.AddToCart)
-	app.Post("/api/cart/checkout", controllers.CheckoutCart)
+	app.Post("/api/cart/checkout", controllers.CheckoutCartFromDB)
 	app.Patch("/api/cart/qty", controllers.UpdateCartQty)
+	app.Get("/orders", controllers.ListOrdersByUser) // ดึงทั้งหมดตาม userId
+	app.Get("/orders/shop", controllers.ListOrdersByShop)
+	app.Get("/orders/customer/:id", controllers.GetUserNameCustomer)
+	app.Get("/orders/:id", controllers.GetOrderByID) // ดึงรายละเอียดออเดอร์เดียว
 
 }

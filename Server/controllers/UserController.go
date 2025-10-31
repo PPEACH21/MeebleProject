@@ -3,7 +3,9 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -14,63 +16,34 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"google.golang.org/api/iterator"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func GetShop(c *fiber.Ctx) error {
-	var shops []models.Shop
-	data := config.Shops.Documents(config.Ctx)
+	ctx := config.Ctx
+	col := config.Client.Collection("shops")
 
-	// cache ผลลัพธ์ราคา (คำนวณครั้งเดียวต่อ vendor)
-	type vm struct{ min, max *float64 }
-	vendorPrices := map[string]vm{}
-	recomputed := map[string]bool{} // กันคำนวณซ้ำ
-
-	for {
-		doc, err := data.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
-		}
-
-		var u models.Shop
-		if err := doc.DataTo(&u); err != nil {
-			continue
-		}
-
-		// map vendor_id จาก reference
-		if u.Vendor_ref != nil {
-			u.Vendor_id = u.Vendor_ref.ID
-		}
-
-		// ✅ คำนวณ min/max ให้ vendor นี้ (ครั้งเดียวในหนึ่ง request)
-		if u.Vendor_id != "" {
-			// ถ้าเรายังไม่ได้คำนวณให้ vendor นี้ ให้คำนวณเลยตอนเจอร้านแรกของ vendor นั้น
-			if !recomputed[u.Vendor_id] {
-				if minVal, maxVal, err := ComputeVendorPriceRangeSimple(u.Vendor_id); err == nil {
-					// เก็บในแคช (เป็น pointer)
-					mi, ma := minVal, maxVal
-					vendorPrices[u.Vendor_id] = vm{min: &mi, max: &ma}
-				} else {
-					// ถ้าคำนวณพัง ก็เก็บ nil ไว้ก่อน (FE จะเห็นเป็น null/“–”)
-					//fmt.Println("[/Shop] recompute error vendor=", u.Vendor_id, "err=", err)
-					vendorPrices[u.Vendor_id] = vm{min: nil, max: nil}
-				}
-				recomputed[u.Vendor_id] = true
-			}
-
-			// ดึงค่าจากแคชมาใส่ลงร้าน
-			if rng, ok := vendorPrices[u.Vendor_id]; ok {
-				u.PriceMin = rng.min
-				u.PriceMax = rng.max
-			}
-		}
-
-		shops = append(shops, u)
+	snaps, err := col.Documents(ctx).GetAll()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "failed to fetch shops",
+			"msg":   err.Error(),
+		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(shops)
+	// ส่ง map ตรง ๆ เพื่อรักษาคีย์ทั้งหมดให้ตรง Firestore (min_price, max_price จะติดมาด้วย)
+	out := make([]map[string]interface{}, 0, len(snaps))
+	for _, s := range snaps {
+		m := s.Data()
+		// แนบ id เผื่อ doc ไม่มีฟิลด์ id
+		if _, ok := m["id"]; !ok {
+			m["id"] = s.Ref.ID
+		}
+		out = append(out, m)
+	}
+
+	return c.JSON(out)
 }
 
 func VerifiedUser(c *fiber.Ctx) error {
@@ -82,7 +55,7 @@ func VerifiedUser(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString("Not user ID")
 	}
-	
+
 	_, err = docRef.Ref.Update(config.Ctx, []firestore.Update{
 		{
 			Path:  "verified",
@@ -92,52 +65,52 @@ func VerifiedUser(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString("Update data Error")
 	}
-	
+
 	var member models.User
 	if err := docRef.DataTo(&member); err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString("Error parsing user data")
 	}
-	
+
 	userData, err := docRef.Ref.Get(config.Ctx)
-    if err != nil {
-        return c.Status(fiber.StatusInternalServerError).SendString("Failed to fetch updated user")
-    }
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString("Failed to fetch updated user")
+	}
 
 	c.ClearCookie("token")
-    var updatedUser models.User
-    userData.DataTo(&updatedUser)
+	var updatedUser models.User
+	userData.DataTo(&updatedUser)
 
-	 claims := jwt.MapClaims{
-        "user_id":  userData.Ref.ID,
-        "email":    updatedUser.Email,
-        "username": updatedUser.Username,
-        "verified": updatedUser.Verified,
-        "role":     "user",
-        "exp":      time.Now().Add(time.Minute * 60).Unix(),
-    }
+	claims := jwt.MapClaims{
+		"user_id":  userData.Ref.ID,
+		"email":    updatedUser.Email,
+		"username": updatedUser.Username,
+		"verified": updatedUser.Verified,
+		"role":     "user",
+		"exp":      time.Now().Add(time.Minute * 60).Unix(),
+	}
 
-    token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-    secret := os.Getenv("JWT_SECRET")
-    t, err := token.SignedString([]byte(secret))
-    if err != nil {
-        return c.SendStatus(fiber.StatusInternalServerError)
-    }
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	secret := os.Getenv("JWT_SECRET")
+	t, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
 
-    c.Cookie(&fiber.Cookie{
-        Name:     "token",
-        Value:    t,
-        Expires:  time.Now().Add(time.Minute * 60),
-        HTTPOnly: false,
+	c.Cookie(&fiber.Cookie{
+		Name:     "token",
+		Value:    t,
+		Expires:  time.Now().Add(time.Minute * 60),
+		HTTPOnly: false,
 		// Secure:   false,
 		// SameSite: "Strict",
-    })
+	})
 
-    return c.Status(fiber.StatusAccepted).SendString("Update data Success")
+	return c.Status(fiber.StatusAccepted).SendString("Update data Success")
 }
 
 func UserProfile(c *fiber.Ctx) error {
 	userID := c.Params("id")
-	
+
 	fmt.Println("User: ", userID)
 	data := config.User.Doc(userID)
 	docRef, err := data.Get(config.Ctx)
@@ -148,7 +121,7 @@ func UserProfile(c *fiber.Ctx) error {
 			return c.Status(fiber.StatusBadRequest).SendString("Not user ID")
 		}
 	}
-	
+
 	userData := docRef.Data()
 	if userData == nil {
 		return c.Status(fiber.StatusNotFound).SendString("User not found")
@@ -408,6 +381,147 @@ func UpdateOrderStatus(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "status updated", "status": next})
 }
 
+// ---------- helper ----------
+func getString(m map[string]interface{}, keys ...string) string {
+	for _, k := range keys {
+		if v, ok := m[k]; ok && v != nil {
+			if s, ok := v.(string); ok && strings.TrimSpace(s) != "" {
+				return s
+			}
+		}
+	}
+	return ""
+}
+
+func getTimeLike(m map[string]interface{}, keys ...string) time.Time {
+	for _, k := range keys {
+		if v, ok := m[k]; ok && v != nil {
+			switch t := v.(type) {
+			case time.Time:
+				return t
+			case *time.Time:
+				if t != nil {
+					return *t
+				}
+			case map[string]interface{}:
+				// Firestore บาง client แปลง timestamp เป็น map["_seconds": ...]
+				if sec, ok := t["_seconds"]; ok {
+					if s, ok := sec.(int64); ok {
+						return time.Unix(s, 0)
+					}
+					if s, ok := sec.(float64); ok {
+						return time.Unix(int64(s), 0)
+					}
+				}
+			}
+		}
+	}
+	return time.Time{}
+}
+
+func normalizeOrder(docID string, data map[string]interface{}) models.OrderDTO {
+	return models.OrderDTO{
+		ID:        docID,
+		OrderID:   getString(data, "orderId", "order_id", "id"),
+		ShopName:  getString(data, "shop_name", "shopName", "storeName", "vendorName"),
+		Status:    getString(data, "status"),
+		CreatedAt: getTimeLike(data, "createdAt", "created_at", "time", "orderedAt"),
+		Raw:       data,
+	}
+}
+
+// ---------- main ----------
+func ListOrdersByUser(c *fiber.Ctx) error {
+	userId := strings.TrimSpace(c.Query("userId"))
+	if userId == "" {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "userId is required"})
+	}
+
+	ctx := config.Ctx
+	db := config.Client
+
+	// ✅ ไม่มี OrderBy เพื่อหลีกเลี่ยงการสร้าง composite index
+	q := db.Collection("orders").Where("userId", "==", userId).Limit(200)
+
+	snaps, err := q.Documents(ctx).GetAll()
+	if err != nil {
+		fmt.Println("❌ Firestore error:", err)
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	orders := make([]models.OrderDTO, 0, len(snaps))
+	for _, d := range snaps {
+		orders = append(orders, normalizeOrder(d.Ref.ID, d.Data()))
+	}
+
+	// ✅ sort ฝั่ง Go (แทนการใช้ OrderBy ใน Firestore)
+	sort.Slice(orders, func(i, j int) bool {
+		ti := getTimeLike(orders[i].Raw, "createdAt")
+		tj := getTimeLike(orders[j].Raw, "createdAt")
+		return ti.After(tj)
+	})
+
+	return c.JSON(orders)
+}
+
+// ---------- ดึงออเดอร์รายตัว ----------
+func GetOrderByID(c *fiber.Ctx) error {
+	orderID := strings.TrimSpace(c.Params("id"))
+	if orderID == "" {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "orderId is required"})
+	}
+
+	ctx := config.Ctx
+	db := config.Client
+
+	doc, err := db.Collection("orders").Doc(orderID).Get(ctx)
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return c.Status(http.StatusNotFound).JSON(fiber.Map{"error": "order not found"})
+		}
+		fmt.Println("❌ Firestore error:", err)
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	data := doc.Data()
+	data["id"] = doc.Ref.ID
+
+	// ✅ ดึงชื่อจาก users โดยใช้ customerId
+	var customerID string
+	if cid, ok := data["customerId"].(string); ok && cid != "" {
+		customerID = cid
+	} else if raw, ok := data["raw"].(map[string]interface{}); ok {
+		if cid, ok2 := raw["customerId"].(string); ok2 {
+			customerID = cid
+		}
+	}
+
+	if customerID != "" {
+		fmt.Println("🔍 [GetOrderByID] Found customerId:", customerID)
+		userDoc, err := db.Collection("users").Doc(customerID).Get(ctx)
+		if err != nil {
+			fmt.Println("⚠️ Error getting user:", err)
+		} else if userDoc.Exists() {
+			userData := userDoc.Data()
+
+			// ✅ ใช้ field "username" จาก Firestore
+			if uname, ok := userData["username"].(string); ok {
+				data["customerName"] = uname
+				fmt.Printf("✅ ใช้ username: %s\n", uname)
+			} else {
+				fmt.Println("⚠️ ไม่มี field 'username' ใน user doc")
+				data["customerName"] = "ไม่ระบุชื่อผู้ใช้"
+			}
+		} else {
+			fmt.Println("⚠️ ไม่พบ user doc:", customerID)
+			data["customerName"] = "ไม่พบข้อมูลผู้ใช้"
+		}
+	} else {
+		data["customerName"] = "ไม่มี customerId"
+	}
+
+	return c.JSON(data)
+}
 func UpdateProfile(c *fiber.Ctx)error{
 	userID := c.Params("id")
 

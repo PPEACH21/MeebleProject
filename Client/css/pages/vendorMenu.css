@@ -1,0 +1,279 @@
+/* ===== Layout หลัก ===== */
+.vm-container {
+  margin: 0 auto;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+/* หัวข้อห่างจากปุ่ม/คอนเทนต์ถัดไป */
+.vm-title {
+  margin: 0;
+}
+.vm-actions {
+  margin-top: 12px; /* เพิ่ม gap ระหว่างหัวข้อกับปุ่ม */
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ===== กล่องฟอร์ม (ทั้งหน้า + ใน popup) ===== */
+.vm-form {
+  display: grid;
+  gap: 12px; /* ระยะห่างระหว่างฟิลด์ */
+}
+.vm-field {
+  display: grid;
+  gap: 6px; /* ระยะห่างระหว่าง label กับ input */
+}
+.vm-input,
+.vm-textarea {
+  width: 100%;
+  min-width: 0; /* กันล้นเมื่ออยู่ใน grid/flex */
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-sizing: border-box; /* ขอบ+padding ไม่ดันให้ล้น */
+}
+.vm-textarea {
+  resize: vertical;
+}
+
+/* ปุ่มแอ็คชัน */
+.vm-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+/* ===== ตาราง + กันล้นแนวนอน ===== */
+.vm-table-wrap {
+  overflow-x: auto; /* ถ้าจอแคบ ให้เลื่อนซ้ายขวาแทนล้น */
+}
+.vm-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden; /* กัน border-radius ไม่ทำงาน */
+  table-layout: fixed; /* ช่วยตัดคำ/กันล้น */
+}
+.vm-table th,
+.vm-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: top;
+  word-break: break-word; /* ตัดคำยาว ๆ กันล้นคอลัมน์ */
+}
+
+/* รูปภาพในตาราง/พรีวิว */
+.vm-img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+.vm-preview {
+  width: 160px;
+  height: 160px;
+  max-width: 100%; /* กันพรีวิวล้นในจอเล็ก */
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+/* ===== Popup กลางจอ ===== */
+.vm-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 1000;
+}
+.vm-modal__panel {
+  width: min(720px, 96vw); /* พอดีกับขอบจอ */
+  max-height: 90vh;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.vm-modal__header {
+  padding: 14px 18px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+}
+.vm-modal__body {
+  padding: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* สถานะแท็ก */
+.vm-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid transparent;
+}
+
+/* ==== Toggle Switch (Slide) ==== */
+.vm-switch {
+  --vm-w: 46px;
+  --vm-h: 26px;
+  --vm-pad: 2px;
+  --vm-knob: calc(var(--vm-h) - var(--vm-pad) * 2);
+  --vm-dur: 260ms;
+  --vm-ease: cubic-bezier(0.22, 0.61, 0.36, 1); /* spring-ish */
+  position: relative;
+  display: inline-block;
+  width: var(--vm-w);
+  height: var(--vm-h);
+  vertical-align: middle;
+}
+
+.vm-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.vm-slider {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #eef2f7 0%, #e5e7eb 100%);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color var(--vm-dur) var(--vm-ease),
+    box-shadow var(--vm-dur) var(--vm-ease), transform 120ms ease;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06) inset, 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* glossy line */
+.vm-slider::after {
+  content: "";
+  position: absolute;
+  left: 8%;
+  top: 10%;
+  right: 8%;
+  height: 12%;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  filter: blur(0.5px);
+  pointer-events: none;
+}
+
+/* knob */
+.vm-slider::before {
+  content: "";
+  position: absolute;
+  width: var(--vm-knob);
+  height: var(--vm-knob);
+  left: var(--vm-pad);
+  top: var(--vm-pad);
+  background: #fff;
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.08);
+  transform: translateX(0);
+  transition: transform var(--vm-dur) var(--vm-ease), box-shadow 120ms ease,
+    background-color var(--vm-dur) var(--vm-ease);
+}
+
+.vm-switch {
+  --vm-w: 48px;
+  --vm-h: 26px;
+  --vm-pad: 3px;
+  --vm-knob: calc(var(--vm-h) - var(--vm-pad) * 2);
+  --vm-dur: 220ms;
+  --vm-ease: cubic-bezier(.25,.8,.25,1);
+  position: relative;
+  display: inline-block;
+  width: var(--vm-w);
+  height: var(--vm-h);
+  vertical-align: middle;
+}
+
+.vm-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* แทร็ก: OFF = แดง, ON = เขียว (flat) */
+.vm-slider {
+  position: absolute;
+  inset: 0;
+  background: #ef4444;                /* red-500 (OFF) */
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    background-color var(--vm-dur) var(--vm-ease),
+    transform var(--vm-dur) var(--vm-ease);
+}
+
+/* ปุ่มกลม (knob) ไม่มีเงา */
+.vm-slider::before {
+  content: "";
+  position: absolute;
+  width: var(--vm-knob);
+  height: var(--vm-knob);
+  left: var(--vm-pad);
+  top: var(--vm-pad);
+  background: #ffffff;
+  border-radius: 999px;
+  transform: translateX(0);
+  transition: transform var(--vm-dur) var(--vm-ease);
+}
+
+/* ON state: เขียว + knob เลื่อนขวา */
+.vm-switch input:checked + .vm-slider {
+  background: #22c55e;                /* green-500 (ON) */
+}
+.vm-switch input:checked + .vm-slider::before {
+  transform: translateX(calc(var(--vm-w) - var(--vm-knob) - var(--vm-pad) * 2));
+}
+
+/* โหมดโฟกัส (ไม่ใช้เงา ใช้กรอบแทน) */
+.vm-switch input:focus-visible + .vm-slider {
+  outline: 2px solid #93c5fd;         /* blue-300 */
+  outline-offset: 2px;
+}
+
+/* ปิดการใช้งาน */
+.vm-switch input:disabled + .vm-slider {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+
+/* ขณะโหลด: แสดงวงแหวนหมุนบน knob (ไม่มีเงา) */
+.vm-switch.is-loading .vm-slider::before {
+  background:
+    conic-gradient(from 0deg, rgba(0,0,0,0) 0 75%, rgba(0,0,0,.25) 76% 100%),
+    #ffffff;
+  -webkit-mask: radial-gradient(circle 7px, transparent 6px, #000 7px);
+          mask: radial-gradient(circle 7px, transparent 6px, #000 7px);
+  animation: vm-spin 900ms linear infinite;
+}
+
+/* ON + Loading: รักษาตำแหน่ง knob ขณะหมุน */
+.vm-switch.is-loading input:checked + .vm-slider::before {
+  transform: translateX(calc(var(--vm-w) - var(--vm-knob) - var(--vm-pad) * 2));
+}
+
+/* ลดแอนิเมชันสำหรับผู้ใช้ที่ลด motion */
+@media (prefers-reduced-motion: reduce) {
+  .vm-slider,
+  .vm-slider::before {
+    transition: none !important;
+    animation: none !important;
+  }
+}

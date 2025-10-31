@@ -1,0 +1,79 @@
+/* src/css/components/VendorSidebar.css */
+.vendor-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 220px; /* กว้างแบบภาพ */
+  background: #FCEADE; /* พื้นดำ */
+  color: #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.vendor-sidebar__nav {
+  padding: 10px 8px;
+  overflow:hidden;
+}
+
+.vendor-sidebar__item {
+  display: block;
+  padding: 12px 14px;
+  margin: 4px 0;
+  border-radius: 8px;
+  color: #4F4F4F;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.05s ease;
+}
+
+.vendor-sidebar__item:hover {
+  background: #e06868;
+  transform: translateX(1px);
+}
+
+/* สไตล์ active แบบ Dokan (ปุ่มแดง + หัวลูกศรชี้ไป content) */
+.vendor-sidebar__item.is-active {
+  background: #ef4444; /* แดง */
+  color: #fff;
+  position: relative;
+}
+
+.vendor-sidebar__item.is-active::after {
+  content: "";
+  position: absolute;
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 10px solid #ef4444; /* หัวธนูแดง */
+}
+
+/* ตัวหนังสือ */
+.vendor-sidebar__text {
+  font-size: 0.98rem;
+  letter-spacing: 0.2px;
+}
+
+/* Responsive: ย่อเป็นแถบไอคอนเมื่อจอแคบ */
+@media (max-width: 920px) {
+  .vendor-sidebar {
+    width: 64px;
+  }
+  .vendor-sidebar__brand {
+    text-align: center;
+    font-size: 16px;
+  }
+  .vendor-sidebar__text {
+    display: none;
+  }
+  .vendor-sidebar__item {
+    text-align: center;
+  }
+  .vendor-sidebar__item.is-active::after {
+    display: none;
+  }
+}
