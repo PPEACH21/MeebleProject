@@ -4,6 +4,9 @@ import "time"
 
 type User = struct {
 	Email      string    `json:"email" firestore:"email"`
+	Avatar  string    `json:"avatar" firestore:"avatar"`
+	Firstname  string    `json:"firstname" firestore:"firstname"`
+	Lastname  string    `json:"lastname" firestore:"lastname"`
 	Username   string    `json:"username" firestore:"username"`
 	Password   string    `json:"password" firestore:"password"`
 	OTP_Verify string    `json:"otp_verify" firestore:"otp_verify"`
