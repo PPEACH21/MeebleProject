@@ -39,6 +39,8 @@ func CreateUser(c *fiber.Ctx) error {
 
 	_, _, err = config.User.Add(config.Ctx,map[string]interface{}{
 		"email":     user.Email,
+		"firstname": "",
+		"lastname": "",
 		"username": 	user.Username,
 		"password":   user.Password,
 		"otp_verify": "",

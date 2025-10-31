@@ -8,6 +8,7 @@ import (
 )
 
 func Routes(app *fiber.App) {
+	app.Put("/profile/:id", controllers.UpdateProfile)
 	app.Get("/profile", middlewares.Profile)
 	app.Get("/Shop", controllers.GetShop)
 	app.Post("/Shop", controllers.CreateShop)
@@ -23,7 +24,6 @@ func Routes(app *fiber.App) {
 	
 	app.Put("/verifiedEmail/:id", controllers.VerifiedUser)
 	app.Post("/sendotp", service.OTPvertify())
-	
 
 	app.Post("/logout", service.Logout)
 	//
