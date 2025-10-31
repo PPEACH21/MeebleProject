@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"mime/multipart"
 	"os"
-	"strconv"
+	"reflect"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -62,115 +63,33 @@ func saveFile(c *fiber.Ctx, file *multipart.FileHeader) (string, error) {
 	return path, nil
 }
 
-func AddMenu(c *fiber.Ctx) error {
-	ctx := context.Background()
-
-	vendorId := "tnn1Kbr4VZF5nSjPllFi"
-	data := config.Client.Collection("vendors").
-		Doc(vendorId).
-		Collection("menu")
-
-	var menu models.Menu
-	if err := c.BodyParser(&menu); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "ข้อมูลไม่ถูกต้อง"})
-	}
-
-	docs, err := data.Documents(ctx).GetAll()
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "อ่านข้อมูลไม่สำเร็จ"})
-	}
-
-	newId := fmt.Sprintf("menu%d", len(docs)+1)
-
-	if _, err = data.Doc(newId).Set(ctx, menu); err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "บันทึก Firestore ไม่สำเร็จ"})
-	}
-
-	// ✅ อัปเดตราคา min/max ของ vendor นี้
-	minP, maxP, err := ComputeVendorPriceRangeSimple(vendorId)
-	if err != nil {
-		fmt.Println("❌ Recompute error:", err)
-	} else {
-		fmt.Printf("✅ อัปเดตราคา vendor %s: %.2f - %.2f\n", vendorId, minP, maxP)
-	}
-
-	return c.JSON(fiber.Map{
-		"success": true,
-		"id":      newId,
-		"menu":    menu,
-	})
-}
-
 func GetMenus(c *fiber.Ctx) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	vendorId := c.Params("vendor_id")
-	if vendorId == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"success": false,
-			"error":   "missing vendor_id",
-		})
+	shopId := c.Params("shopId")
+	if shopId == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "missing shopId"})
 	}
 
-	col := config.Client.Collection("vendors").Doc(vendorId).Collection("menu")
-
+	col := config.Client.Collection("shops").Doc(shopId).Collection("menu")
 	docs, err := col.Documents(ctx).GetAll()
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"success": false,
-			"error":   "ดึงข้อมูลไม่สำเร็จ",
-		})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "อ่านข้อมูลเมนูไม่สำเร็จ"})
 	}
 
 	menus := make([]models.Menu, 0, len(docs))
 	for _, d := range docs {
 		var m models.Menu
-		if err := d.DataTo(&m); err != nil {
-			continue
+		if err := d.DataTo(&m); err == nil {
+			m.ID = d.Ref.ID
+			menus = append(menus, m)
 		}
-		m.ID = d.Ref.ID
-		menus = append(menus, m)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"success":   true,
-		"vendor_id": vendorId,
-		"menus":     menus,
+	return c.JSON(fiber.Map{
+		"menus": menus, // ✅ ส่งแค่เมนูตามที่ต้องการ
 	})
-}
-
-// DELETE /vendors/:vendor_id/menu/:menu_id
-func DeleteMenu(c *fiber.Ctx) error {
-	vendorID := c.Params("vendor_id")
-	menuID := c.Params("menu_id")
-
-	menuRef := config.Client.Collection("vendors").
-		Doc(vendorID).
-		Collection("menu").
-		Doc(menuID)
-
-	// เอา shop_id มาก่อนลบ เพื่อไป recompute
-	doc, err := menuRef.Get(config.Ctx)
-	if err != nil {
-		return c.Status(404).SendString("menu not found")
-	}
-	shopID, _ := doc.Data()["shop_id"].(string)
-
-	if _, err := menuRef.Delete(config.Ctx); err != nil {
-		return c.Status(500).SendString("delete menu failed")
-	}
-
-	if shopID != "" {
-		minP, maxP, err := ComputeVendorPriceRangeSimple(vendorID)
-		if err != nil {
-			fmt.Println("❌ Recompute error:", err)
-		} else {
-			fmt.Printf("✅ อัปเดตราคา vendor %s: %.2f - %.2f\n", vendorID, minP, maxP)
-		}
-	}
-
-	return c.SendStatus(204)
 }
 
 // -------------------- helpers (เวอร์ชันตะกร้าระดับบนสุด) --------------------
@@ -217,44 +136,82 @@ func GetCart(c *fiber.Ctx) error {
 
 	snap, err := topCartDoc(customerID).Get(config.Ctx)
 	if err != nil || !snap.Exists() {
-		// ยังไม่มี cart -> คืนว่าง
-		return c.JSON(models.Cart{
-			CustomerID: customerID,
-			Shop_name:  "",
-			Items:      []models.CartItem{},
-			Total:      0,
-			UpdatedAt:  time.Now(),
+		// ยังไม่มี cart -> คืนว่าง (ใช้คีย์ตัวเล็กให้ตรง FE)
+		return c.JSON(fiber.Map{
+			"customerId": customerID,
+			"shop_name":  "",
+			"items":      []models.CartItem{},
+			"total":      0,
+			"updatedAt":  time.Now(),
 		})
 	}
-	var cart models.Cart
-	if err := snap.DataTo(&cart); err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "cart decode error", "msg": err.Error()})
-	}
-	// เผื่อโครงสร้างเก่ายังไม่มี CustomerID
-	if cart.CustomerID == "" {
-		cart.CustomerID = customerID
-	}
-	return c.JSON(cart)
+
+	// ✅ คืน map จาก Firestore ตรง ๆ เพื่อรักษา key เป็นตัวเล็ก (items, total, shop_name, shopId, vendorId)
+	return c.JSON(snap.Data())
 }
 
-// POST /api/cart/add
-// รับ: vendorId(ไม่บังคับ), shopId(ไม่บังคับ), customerId*, qty*, item.menuId*, item.{name,price,image,description}
 func AddToCart(c *fiber.Ctx) error {
 	var req models.AddToCartRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(400).JSON(fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "BodyParser error", "msg": err.Error(),
 		})
 	}
 
-	// ต้องมี: customerId (username), userId (doc id), menuId และ qty > 0
-	if req.CustomerID == "" || req.Shop_name == "" || req.UserID == "" || req.Item.MenuID == "" || req.Qty <= 0 {
-		return c.Status(400).JSON(fiber.Map{
-			"error": "customerId/userId/menuId/qty required",
+	// 🔎 DEBUG: ดู payload ที่เข้ามาจริง
+	fmt.Println("========== DEBUG AddToCart ==========")
+	fmt.Printf("Raw Payload: %+v\n", req)
+	fmt.Println("=====================================")
+
+	// ✅ ตรวจ required fields แบบระบุทีละช่อง
+	missing := []string{}
+	if strings.TrimSpace(req.CustomerID) == "" {
+		missing = append(missing, "customerId")
+	}
+	if strings.TrimSpace(req.UserID) == "" {
+		missing = append(missing, "userId")
+	}
+	if strings.TrimSpace(req.ShopID) == "" {
+		missing = append(missing, "shopId")
+	}
+	if strings.TrimSpace(req.Shop_name) == "" {
+		// รองรับกรณี FE ส่ง shopName มาแทน shop_name
+		if v := reflect.ValueOf(req).FieldByName("ShopName"); v.IsValid() {
+			if s, ok := v.Interface().(string); ok && strings.TrimSpace(s) != "" {
+				req.Shop_name = s
+			}
+		}
+		if strings.TrimSpace(req.Shop_name) == "" {
+			missing = append(missing, "shop_name")
+		}
+	}
+	if strings.TrimSpace(req.Item.MenuID) == "" {
+		missing = append(missing, "menuId")
+	}
+	if req.Qty <= 0 {
+		missing = append(missing, "qty (> 0)")
+	}
+
+	if len(missing) > 0 {
+		fmt.Printf("❌ Missing fields: %v\n", missing)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "missing required fields",
+			"missing": missing,
+			"exampleBody": map[string]any{
+				"customerId": "peach",
+				"userId":     "abc123",
+				"shopId":     "Shop01",
+				"shop_name":  "KU Canteen",
+				"item": map[string]any{
+					"menuId": "MENU001",
+				},
+				"qty": 1,
+			},
+			"note": "รองรับทั้ง shop_name และ shopName; qty ต้องมากกว่า 0",
 		})
 	}
 
-	// ถ้า FE ไม่ส่ง name/price/image/description มา และมี vendorId -> เติมจากเมนู
+	// เติมข้อมูลเมนูถ้าขาด (optional)
 	if (req.Item.Name == "" || req.Item.Price <= 0 || req.Item.Image == "" || req.Item.Description == "") && req.VendorID != "" {
 		if m, err := loadMenuByID(req.VendorID, req.Item.MenuID); err == nil {
 			if req.Item.Name == "" {
@@ -272,26 +229,20 @@ func AddToCart(c *fiber.Ctx) error {
 		}
 	}
 
-	// user_id ให้เป็น DocumentRef ของ users/{userId}
 	userRef := config.Client.Collection("users").Doc(req.UserID)
 
-	// อ้างอิงเมนู (optional)
 	var menuRef *firestore.DocumentRef
 	if req.VendorID != "" {
 		menuRef = config.Client.Collection("vendors").Doc(req.VendorID).
 			Collection("menu").Doc(req.Item.MenuID)
 	}
 
-	// cart/{customerId} — cart ผูกกับ username
 	ref := topCartDoc(req.CustomerID)
 
 	err := config.Client.RunTransaction(config.Ctx, func(ctx context.Context, tx *firestore.Transaction) error {
-		// โหลด cart เดิม
 		var cart models.Cart
 		snap, err := tx.Get(ref)
-		newCart := false
 		if err != nil || !snap.Exists() {
-			newCart = true
 			cart = models.Cart{
 				CustomerID: req.CustomerID,
 				Shop_name:  req.Shop_name,
@@ -299,50 +250,36 @@ func AddToCart(c *fiber.Ctx) error {
 				Total:      0,
 				UpdatedAt:  time.Now(),
 			}
+			fmt.Println("ℹ️  Cart not found -> create new")
 		} else if err := snap.DataTo(&cart); err != nil {
+			fmt.Println("❌ Error decoding cart:", err)
 			return err
+		} else {
+			fmt.Printf("🔎 Current Cart: %+v\n", cart)
 		}
 
-		// ====== [เงื่อนไขสำคัญ] กัน Add ข้ามร้าน/ข้ามผู้ขาย ======
-		// ใช้ vendor/shop ของ "รายการแรกในตะกร้า" เป็นตัวล็อก
-		existingVendor := ""
+		// 🔒 Lock ด้วย shopId เท่านั้น
 		existingShop := ""
-		if !newCart && len(cart.Items) > 0 {
-			existingVendor = cart.Items[0].VendorID
+		if len(cart.Items) > 0 {
 			existingShop = cart.Items[0].ShopID
 		}
-
-		incomingVendor := req.VendorID
 		incomingShop := req.ShopID
 
-		// Normalize: ถ้าของเดิมยังว่างแต่มีค่าเข้ามา ให้ยึดค่าที่เข้ามาเป็น lock
-		if !newCart && len(cart.Items) > 0 {
-			if existingVendor == "" && incomingVendor != "" {
-				existingVendor = incomingVendor
-			}
+		if len(cart.Items) > 0 {
 			if existingShop == "" && incomingShop != "" {
 				existingShop = incomingShop
 			}
-		}
-
-		// ถ้าตะกร้ามีของอยู่แล้ว บังคับให้ vendor/shop ต้องตรงกัน
-		if len(cart.Items) > 0 {
-			// ขาดค่าใดค่าหนึ่งถือว่า "ไม่ตรง" เพื่อกันข้อมูลหลุด
-			if incomingVendor == "" || incomingShop == "" || existingVendor == "" || existingShop == "" ||
-				existingVendor != incomingVendor || existingShop != incomingShop {
-				// ส่ง 409 Conflict พร้อมรายละเอียด
-				return fiber.NewError(fiber.StatusConflict, fmt.Sprintf(
-					"CART_VENDOR_CONFLICT: cart locked to vendor=%s shop=%s, incoming vendor=%s shop=%s",
-					existingVendor, existingShop, incomingVendor, incomingShop,
-				))
+			if incomingShop == "" || existingShop == "" || existingShop != incomingShop {
+				msg := fmt.Sprintf("CART_SHOP_CONFLICT: cart locked to shop=%s, incoming shop=%s", existingShop, incomingShop)
+				fmt.Println("❌", msg)
+				return fiber.NewError(fiber.StatusConflict, msg)
 			}
 		}
-		// ======================================================
 
-		// รวมรายการซ้ำตาม menuId
+		// ✅ รวมรายการซ้ำในร้านเดียวกัน (shopId + menuId)
 		found := false
 		for i := range cart.Items {
-			if cart.Items[i].ID == req.Item.MenuID {
+			if cart.Items[i].ShopID == req.ShopID && cart.Items[i].ID == req.Item.MenuID {
 				cart.Items[i].Qty += req.Qty
 				if req.Item.Price > 0 {
 					cart.Items[i].Price = req.Item.Price
@@ -359,9 +296,6 @@ func AddToCart(c *fiber.Ctx) error {
 				if cart.Items[i].VendorID == "" {
 					cart.Items[i].VendorID = req.VendorID
 				}
-				if cart.Items[i].ShopID == "" {
-					cart.Items[i].ShopID = req.ShopID
-				}
 				if cart.Items[i].MenuRef == nil {
 					cart.Items[i].MenuRef = menuRef
 				}
@@ -377,13 +311,13 @@ func AddToCart(c *fiber.Ctx) error {
 				Price:       req.Item.Price,
 				Image:       req.Item.Image,
 				Description: req.Item.Description,
-				VendorID:    req.VendorID,
-				ShopID:      req.ShopID,
+				VendorID:    req.VendorID, // optional
+				ShopID:      req.ShopID,   // 🔑 สำคัญ
 				MenuRef:     menuRef,
 			})
 		}
 
-		// คำนวณยอดรวม
+		// รวมยอด
 		var total float64
 		for _, it := range cart.Items {
 			total += float64(it.Qty) * it.Price
@@ -391,84 +325,138 @@ func AddToCart(c *fiber.Ctx) error {
 		cart.Total = total
 		cart.UpdatedAt = time.Now()
 
-		// บันทึก — เพิ่ม field lock ระดับ doc ไว้อ่านเร็วขึ้น (Firestore เป็น schemaless ใส่เพิ่มได้)
+		// เขียนกลับด้วยคีย์ตัวเล็ก (ตรงกับ FE)
 		writeData := map[string]interface{}{
-			"user_id":    userRef,         // ✅ /users/{userId}
-			"customerId": cart.CustomerID, // ✅ username
+			"user_id":    userRef,
+			"customerId": cart.CustomerID,
 			"shop_name":  req.Shop_name,
 			"items":      cart.Items,
 			"total":      cart.Total,
 			"updatedAt":  cart.UpdatedAt,
+			"shopId":     req.ShopID, // 🔒 lock shop
 		}
-		// lock ตามร้าน/ผู้ขาย (อ้างอิงจากของชิ้นแรกในตะกร้า)
-		if len(cart.Items) > 0 {
-			writeData["vendorId"] = cart.Items[0].VendorID
-			writeData["shopId"] = cart.Items[0].ShopID
-		} else {
-			// ตะกร้าเพิ่งเริ่มให้ล็อกด้วยของที่กำลังใส่
+		if req.VendorID != "" {
 			writeData["vendorId"] = req.VendorID
-			writeData["shopId"] = req.ShopID
 		}
 
-		return tx.Set(ref, writeData)
+		fmt.Printf("📝 Write Cart: shopId=%s total=%.2f items=%d\n", req.ShopID, cart.Total, len(cart.Items))
+		return tx.Set(ref, writeData) // หรือใช้ MergeAll ก็ได้ แล้วแต่ต้องการ
 	})
+
 	if err != nil {
-		// ถ้าเป็น 409 ให้สะท้อนกลับไปพร้อมโค้ดและรายละเอียด
 		if fe, ok := err.(*fiber.Error); ok && fe.Code == fiber.StatusConflict {
 			return c.Status(fe.Code).JSON(fiber.Map{
-				"error": "เพื่อความถูกต้องของการทำรายการ โปรดลบตะกร้าสินค้าของร้านเดิมก่อนสั่งซื้อจากร้านใหม่",
-				"code":  "CART_VENDOR_CONFLICT",
+				"error": "ตะกร้าถูกล็อกไว้ที่ร้านเดิม โปรดชำระ/ลบของเดิมก่อนสั่งร้านอื่น",
+				"code":  "CART_SHOP_CONFLICT",
 				"msg":   fe.Message,
 			})
 		}
-		return c.Status(500).JSON(fiber.Map{
-			"error": "failed to add to cart", "msg": err.Error(),
-		})
+		fmt.Println("❌ AddToCart failed:", err)
+		return c.Status(500).JSON(fiber.Map{"error": "failed to add to cart", "msg": err.Error()})
 	}
+
+	fmt.Println("✅ AddToCart success")
 	return c.JSON(fiber.Map{"message": "added to cart"})
 }
 
-// POST /api/cart/checkout
-// ใช้ vendorId + shopId ตอนนี้เพื่อสร้าง order ให้ร้าน และล้าง cart/{customerId}
-func CheckoutCart(c *fiber.Ctx) error {
-	var req models.SimpleCartRequest
+func toFloat(v interface{}) float64 {
+	switch t := v.(type) {
+	case int:
+		return float64(t)
+	case int64:
+		return float64(t)
+	case float64:
+		return t
+	case float32:
+		return float64(t)
+	default:
+		return 0
+	}
+}
+func toInt(v interface{}) int {
+	switch t := v.(type) {
+	case int:
+		return t
+	case int64:
+		return int(t)
+	case float64:
+		return int(t)
+	case float32:
+		return int(t)
+	default:
+		return 0
+	}
+}
+
+// CheckoutCartFromDB: อ่าน /cart/{customerId} แล้วสร้าง history + หักเงิน + เคลียร์ตะกร้า
+func CheckoutCartFromDB(c *fiber.Ctx) error {
+	type Req struct {
+		UserID     string `json:"userId"`
+		CustomerID string `json:"customerId"`
+	}
+	var req Req
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "BodyParser error", "msg": err.Error()})
 	}
-	// ต้องมี userId (doc id), customerId (username), vendorId, shopId
-	if req.UserID == "" || req.CustomerID == "" || req.VendorID == "" || req.ShopID == "" {
-		return c.Status(400).JSON(fiber.Map{
-			"error": "userId/customerId/vendorId/shopId is required",
-		})
+	if strings.TrimSpace(req.UserID) == "" || strings.TrimSpace(req.CustomerID) == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "userId/customerId is required"})
 	}
 
-	cRef := topCartDoc(req.CustomerID)
+	cartRef := config.Client.Collection("cart").Doc(req.CustomerID)
 	userRef := config.Client.Collection("users").Doc(req.UserID)
 
-	var createdOrderID string
+	var createdHistoryID string
+
 	err := config.Client.RunTransaction(config.Ctx, func(ctx context.Context, tx *firestore.Transaction) error {
-		// ----- โหลด cart -----
-		snapCart, err := tx.Get(cRef)
-		if err != nil || !snapCart.Exists() {
-			return fiber.ErrNotFound
+		// 1) โหลด cart
+		cs, err := tx.Get(cartRef)
+		if err != nil || !cs.Exists() {
+			return fiber.NewError(fiber.StatusNotFound, "cart not found")
 		}
-		var cart models.Cart
-		if err := snapCart.DataTo(&cart); err != nil {
-			return err
+		var cart struct {
+			CustomerID string                   `firestore:"customerId"`
+			UserIDPath interface{}              `firestore:"user_id"` // อนุโลมทั้ง ref หรือ string
+			ShopID     string                   `firestore:"shopId"`
+			ShopName   string                   `firestore:"shop_name"`
+			Items      []map[string]interface{} `firestore:"items"`
+			Total      interface{}              `firestore:"total"` // อนุโลมชนิด
 		}
-		if len(cart.Items) == 0 || cart.Total <= 0 {
-			return fiber.ErrBadRequest
+		if err := cs.DataTo(&cart); err != nil {
+			return fiber.NewError(fiber.StatusInternalServerError, "invalid cart data")
+		}
+		if len(cart.Items) == 0 {
+			return fiber.NewError(fiber.StatusBadRequest, "cart empty")
 		}
 
-		// ----- โหลดผู้ใช้เพื่ออ่าน Cost และหักเงิน -----
-		snapUser, err := tx.Get(userRef)
-		if err != nil || !snapUser.Exists() {
+		// 2) คำนวณ total ใหม่จาก items
+		var recomputed float64
+		for _, it := range cart.Items {
+			price := toFloat(it["price"])
+			if price == 0 {
+				price = toFloat(it["Price"])
+			}
+			qty := toInt(it["qty"])
+			if qty == 0 {
+				qty = toInt(it["Qty"])
+			}
+			if price > 0 && qty > 0 {
+				recomputed += price * float64(qty)
+			}
+		}
+		if recomputed <= 0 {
+			recomputed = toFloat(cart.Total) // fallback
+		}
+		if recomputed <= 0 {
+			return fiber.NewError(fiber.StatusBadRequest, "cannot compute total")
+		}
+
+		// 3) ตรวจเงินผู้ใช้
+		us, err := tx.Get(userRef)
+		if err != nil || !us.Exists() {
 			return fiber.NewError(fiber.StatusNotFound, "user not found")
 		}
-
-		// ดึงค่า Cost โดยรองรับทั้ง int64/float64
 		var currentCost float64
-		if v, ok := snapUser.Data()["Cost"]; ok && v != nil {
+		if v, ok := us.Data()["Cost"]; ok && v != nil {
 			switch t := v.(type) {
 			case int64:
 				currentCost = float64(t)
@@ -476,98 +464,65 @@ func CheckoutCart(c *fiber.Ctx) error {
 				currentCost = float64(t)
 			case float64:
 				currentCost = t
+			case string:
+				currentCost = toFloat(t) // ✅ รองรับ string
 			default:
 				return fiber.NewError(fiber.StatusInternalServerError, "invalid Cost type on user")
 			}
-		} else {
-			currentCost = 0
+		}
+		if currentCost < recomputed {
+			return fiber.NewError(402, fmt.Sprintf("insufficient funds: have %.2f, need %.2f", currentCost, recomputed))
 		}
 
-		// ตรวจสอบเงินพอไหม
-		if currentCost < cart.Total {
-			return fiber.NewError(402, fmt.Sprintf("insufficient funds: have %.2f, need %.2f", currentCost, cart.Total))
-		}
-
-		newCost := currentCost - cart.Total
-
-		// ----- เขียนออเดอร์ไปที่ร้าน -----
-		oRef := ordersCol(req.VendorID, req.ShopID).NewDoc()
-		order := map[string]interface{}{
+		// 4) เขียน history
+		historyRef := config.Client.Collection("orders").NewDoc()
+		createdHistoryID = historyRef.ID
+		if err := tx.Set(historyRef, map[string]interface{}{
+			"historyId":  createdHistoryID,
+			"userId":     req.UserID,
+			"userRef":    userRef,
+			"customerId": req.CustomerID,
+			"shopId":     cart.ShopID,
+			"shop_name":  cart.ShopName,
 			"items":      cart.Items,
-			"total":      cart.Total,
+			"total":      recomputed,
+			"status":     "prepare",
 			"createdAt":  time.Now(),
 			"updatedAt":  time.Now(),
-			"customerId": req.CustomerID,
-			"userId":     req.UserID,
-			"vendorId":   req.VendorID,   // ✅ ใส่ vendorId
-			"shopId":     req.ShopID,     // ✅ ใส่ shopId
-			"shop_name":  cart.Shop_name, // ✅ ใส่ชื่อร้าน
-			"status":     "prepare",
-		}
-		if err := tx.Set(oRef, order); err != nil {
+		}); err != nil {
 			return err
 		}
-		createdOrderID = oRef.ID
 
-		// ----- อัปเดตยอดเงินผู้ใช้ -----
+		// 5) หักเงินผู้ใช้
 		if err := tx.Update(userRef, []firestore.Update{
-			{Path: "Cost", Value: newCost},
+			{Path: "Cost", Value: currentCost - recomputed},
+			{Path: "updatedAt", Value: time.Now()},
 		}); err != nil {
 			return err
 		}
 
-		// ✅ เพิ่ม: ย้ายรหัสออเดอร์ไป /users/{userId}/history/{orderId}
-		historyRef := userRef.Collection("history").Doc(createdOrderID)
-		if err := tx.Set(historyRef, map[string]interface{}{
-			"orderId":   createdOrderID,
-			"orderRef":  oRef,
-			"vendorId":  req.VendorID,
-			"shopId":    req.ShopID,
-			"shop_name": cart.Shop_name, // ✅ ใส่ชื่อร้าน
-			"total":     cart.Total,
-			"createdAt": time.Now(),
-			"items":     cart.Items,
-			"status":    "process",
-		}); err != nil {
-			return err
-		}
-
-		// ✅ เพิ่ม: ลบฟิลด์เก่าบน users/{userId} ที่ไม่ใช้แล้ว
-		_ = tx.Update(userRef, []firestore.Update{
-			{Path: "last_order", Value: firestore.Delete},
-			{Path: "temp_order", Value: firestore.Delete},
-		})
-
-		// ----- ล้างตะกร้า -----
-		return tx.Set(cRef, map[string]interface{}{
-			"user_id":    userRef,
-			"shop_name":  "",
+		// 6) ล้างตะกร้า (คง user_id ไว้ได้ จะเป็น ref หรือ string ก็ได้)
+		return tx.Set(cartRef, map[string]interface{}{
+			"user_id":    cart.UserIDPath,
 			"customerId": req.CustomerID,
-			"items":      []models.CartItem{},
+			"shopId":     "",
+			"shop_name":  "",
+			"items":      []interface{}{},
 			"total":      0,
 			"updatedAt":  time.Now(),
-		})
+		}, firestore.MergeAll)
 	})
 
 	if err != nil {
-		if err == fiber.ErrNotFound {
-			return c.Status(404).JSON(fiber.Map{"error": "cart not found"})
-		}
-		if err == fiber.ErrBadRequest {
-			return c.Status(400).JSON(fiber.Map{"error": "cart empty"})
-		}
-		if fe, ok := err.(*fiber.Error); ok && fe.Code == 402 {
-			return c.Status(402).JSON(fiber.Map{
-				"error": "เงินไม่เพียงพอ กรุณาเติมเงินเข้าระบบ",
-				"msg":   fe.Message,
-			})
+		if fe, ok := err.(*fiber.Error); ok {
+			return c.Status(fe.Code).JSON(fiber.Map{"error": fe.Message})
 		}
 		return c.Status(500).JSON(fiber.Map{"error": "checkout failed", "msg": err.Error()})
 	}
 
 	return c.JSON(fiber.Map{
-		"message": "order created & moved to history",
-		"orderId": createdOrderID,
+		"message":   "history created & user charged & cart cleared",
+		"historyId": createdHistoryID,
 	})
 }
 
@@ -606,11 +561,14 @@ func UpdateCartQty(c *fiber.Ctx) error {
 			return fiber.ErrNotFound
 		}
 
-		// qty <= 0 => ลบทิ้ง
+		// ปรับรายการ
 		if req.Qty <= 0 {
+			// ลบรายการ
 			cart.Items = append(cart.Items[:idx], cart.Items[idx+1:]...)
 		} else {
+			// อัปเดตจำนวน
 			cart.Items[idx].Qty = req.Qty
+
 			// อัปเดต meta เฉพาะถ้าส่งมา (optional)
 			if cart.Items[idx].VendorID == "" && req.VendorID != "" {
 				cart.Items[idx].VendorID = req.VendorID
@@ -626,12 +584,20 @@ func UpdateCartQty(c *fiber.Ctx) error {
 			total += float64(it.Qty) * it.Price
 		}
 
-		return tx.Set(ref, map[string]interface{}{
-			"customerId": cart.CustomerID,
-			"items":      cart.Items,
-			"total":      total,
-			"updatedAt":  time.Now(),
-		}, firestore.MergeAll)
+		updates := []firestore.Update{
+			{Path: "customerId", Value: cart.CustomerID},
+			{Path: "items", Value: cart.Items},
+			{Path: "total", Value: total},
+			{Path: "updatedAt", Value: time.Now()},
+		}
+
+		// ✅ ถ้าตะกร้าว่าง → ล้างชื่อร้าน
+		if len(cart.Items) == 0 || total <= 0 {
+			updates = append(updates, firestore.Update{Path: "shop_name", Value: ""})
+			// (ถ้าต้องการล้างข้อมูลอื่น ๆ เช่น vendorId/shopId ที่ระดับ cart ก็เพิ่มที่นี่ได้)
+		}
+
+		return tx.Update(ref, updates)
 	})
 
 	if err != nil {
@@ -641,95 +607,4 @@ func UpdateCartQty(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "update qty failed", "msg": err.Error()})
 	}
 	return c.JSON(fiber.Map{"message": "ok"})
-}
-
-func ComputeVendorPriceRangeSimple(vendorId string) (float64, float64, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	col := config.Client.Collection("vendors").Doc(vendorId).Collection("menu")
-	docs, err := col.Documents(ctx).GetAll()
-	if err != nil {
-		return 0, 0, fmt.Errorf("fetch menus failed: %v", err)
-	}
-	if len(docs) == 0 {
-		return 0, 0, nil
-	}
-
-	var minPrice, maxPrice float64
-	first := true
-
-	for _, d := range docs {
-		val := d.Data()["price"]
-		var price float64
-
-		switch v := val.(type) {
-		case int64:
-			price = float64(v)
-		case int:
-			price = float64(v)
-		case float64:
-			price = v
-		case string:
-			if p, err := strconv.ParseFloat(v, 64); err == nil {
-				price = p
-			} else {
-				continue
-			}
-		default:
-			continue
-		}
-
-		if first {
-			minPrice, maxPrice = price, price
-			first = false
-		} else {
-			if price < minPrice {
-				minPrice = price
-			}
-			if price > maxPrice {
-				maxPrice = price
-			}
-		}
-	}
-
-	vendorRef := config.Client.Collection("vendors").Doc(vendorId)
-
-	// ✅ โหลดค่าปัจจุบันใน Firestore มาก่อน
-	snap, err := vendorRef.Get(ctx)
-	if err == nil && snap.Exists() {
-		var oldMin, oldMax float64
-		if v, ok := snap.Data()["price_min"]; ok {
-			switch t := v.(type) {
-			case float64:
-				oldMin = t
-			case int64:
-				oldMin = float64(t)
-			}
-		}
-		if v, ok := snap.Data()["price_max"]; ok {
-			switch t := v.(type) {
-			case float64:
-				oldMax = t
-			case int64:
-				oldMax = float64(t)
-			}
-		}
-
-		// 🔒 ถ้าค่าใหม่เท่ากับเก่า → ไม่ต้องอัปเดต Firestore
-		if oldMin == minPrice && oldMax == maxPrice {
-			return minPrice, maxPrice, nil
-		}
-	}
-
-	// ✍️ อัปเดตเฉพาะเมื่อมีการเปลี่ยนแปลงจริง
-	_, err = vendorRef.Update(ctx, []firestore.Update{
-		{Path: "price_min", Value: minPrice},
-		{Path: "price_max", Value: maxPrice},
-	})
-	if err != nil {
-		return minPrice, maxPrice, fmt.Errorf("update vendor failed: %v", err)
-	}
-
-	return minPrice, maxPrice, nil
 }

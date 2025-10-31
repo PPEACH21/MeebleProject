@@ -1,0 +1,132 @@
+.dashboard-layout {
+  display: flex;
+  height: 100%;         /* สูงเต็มหน้าจอ */
+  overflow: hidden;       /* ❌ กันทั้งหน้า scroll */
+}
+
+/* ส่วน sidebar */
+.dashboard-layout > aside {
+  flex-shrink: 0;
+}
+
+/* ส่วน main — ห้าม scroll */
+.dashboard-main {
+  flex: 1;
+  height: 100vh;          /* สูงเต็มหน้าจอ */
+  overflow: hidden;       /* ✅ ห้าม scroll ในส่วน main */
+  padding: 24px;
+  background: #f8f9fb;
+}
+
+
+  /* เนื้อหาภายใน */
+  .dashboard-main .content {  
+    max-width: 1200px;
+    margin: 0 auto;
+    flex-direction: row;
+    
+    justify-content:flex-end;
+  }
+
+  .dashboard-main .content h1 {
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
+    margin-top: -20px;
+    margin-left: -100px;
+  }
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .status-btn {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .status-btn.open {
+    background: #10b981; /* เขียว */
+    color: white;
+  }
+
+  .status-btn.closed {
+    background: #ef4444; /* แดง */
+    color: white;
+  }
+
+  .status-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .btn-group {
+    display: flex;
+    gap: 12px;
+  }
+
+  /* ปุ่มเปิดร้าน */
+  .status-btn {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+  .status-btn.open {
+    background: #10b981;
+    color: white;
+  }
+  .status-btn.closed {
+    background: #ef4444;
+    color: white;
+  }
+
+  /* ปุ่มเปิดการจอง */
+  .reserve-btn {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+  .reserve-btn.on {
+    background: #3b82f6; /* น้ำเงิน */
+    color: white;
+  }
+  .reserve-btn.off {
+    background: #9ca3af; /* เทา */
+    color: white;
+  }
+
+  .shop-status-group {
+    margin-top: 20px;
+    padding: 14px 20px;
+    background: #f3f4f6;
+    border-radius: 10px;
+  }
+  .text-open {
+    color: #059669;
+    font-weight: 600;
+  }
+  .text-closed {
+    color: #dc2626;
+    font-weight: 600;
+  }
+.sale{
+  width: 400px;
+  height: 250px;
+  background-color: #9ca3af;
+  margin-left: -100px;
+  border-radius: 10px;
+}

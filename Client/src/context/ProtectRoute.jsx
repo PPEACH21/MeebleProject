@@ -9,7 +9,7 @@ export const AuthProvider = ({children})=>{
   const [loading, setLoading] = useState(true); 
   
   useEffect(() => {
-    const getid = async () => {
+    const getId = async () => {
       try{
         const res = await axios.get("/profile", { withCredentials: true });
         console.log("API Response:", res.data);
@@ -20,7 +20,7 @@ export const AuthProvider = ({children})=>{
           setLoading(false);
         }
     };
-    getid();
+    getId();
   }, []);
 
   const login=(userData) => {
@@ -78,6 +78,5 @@ export const ProtectedLayout=({role})=> {
     </ProtectRoute>
   );
 }
-
 
 

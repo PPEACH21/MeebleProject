@@ -1,0 +1,157 @@
+import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import axios from "@/api/axios";
+import "@css/pages/VendorOrderDetail.css";
+
+const toDate = (v) => {
+  if (!v) return null;
+  if (typeof v === "object" && ("seconds" in v || "_seconds" in v)) {
+    const s = v.seconds ?? v._seconds;
+    return new Date(s * 1000);
+  }
+  return new Date(v);
+};
+
+const formatThaiBuddhist = (v) => {
+  const d = toDate(v);
+  if (!d || isNaN(+d)) return "-";
+  return new Intl.DateTimeFormat("th-TH-u-ca-buddhist", {
+    day: "numeric",
+    month: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(d);
+};
+
+const currency = (n) =>
+  (Number(n) || 0).toLocaleString("th-TH", {
+    style: "currency",
+    currency: "THB",
+  });
+
+const getStatusGif = (status) => {
+  const s = String(status || "").toLowerCase();
+  if (["prepare", "preparing", "กำลังจัดเตรียม"].includes(s))
+    return "https://media3.giphy.com/media/OaNtfLLzPq4I8/giphy.gif";
+  if (["ongoing", "on-going", "shipping", "กำลังจัดส่ง"].includes(s))
+    return "https://media2.giphy.com/media/cfuL5gqFDreXxkWQ4o/giphy.gif";
+  if (["success", "completed", "done", "เสร็จสิ้น", "สำเร็จ"].includes(s))
+    return "https://media4.giphy.com/media/T70hpBP1L0N7U0jtkq/giphy.gif";
+  return "https://media3.giphy.com/media/OaNtfLLzPq4I8/giphy.gif";
+};
+
+export default function VendorOrderDetail() {
+  const { id } = useParams();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get(`/orders/${id}`, { withCredentials: true });
+        setData(res.data);
+      } catch (e) {
+        console.error("❌ โหลดรายละเอียดออเดอร์ล้มเหลว:", e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [id]);
+
+  if (loading) return <p className="v-detail-loading">กำลังโหลดข้อมูล…</p>;
+  if (!data) return <p className="v-detail-empty">ไม่พบออเดอร์นี้</p>;
+
+  const items = Array.isArray(data.items) ? data.items : [];
+  const total =
+    data.total ||
+    items.reduce(
+      (s, it) => s + (Number(it.qty) || 0) * (Number(it.price) || 0),
+      0
+    );
+
+  const st = String(data.status || "").trim().toLowerCase();
+  const steps = ["กำลังจัดเตรียม", "กำลังจัดส่ง", "สำเร็จ"];
+  let currentStep = 0;
+  if (["prepare"].includes(st)) currentStep = 0;
+  else if (["ongoing", "on-going", "กำลังจัดส่ง"].includes(st)) currentStep = 1;
+  else if (["success", "completed", "done", "เสร็จสิ้น", "สำเร็จ"].includes(st))
+    currentStep = 2;
+
+  return (
+    <div className="v-detail-wrap">
+      <div className="v-detail-container">
+        <h1 className="v-detail-title">รายละเอียดออเดอร์ร้าน</h1>
+
+        <div className="status-gif-container">
+          <img
+            src={getStatusGif(data.status)}
+            alt="order-status"
+            className="status-gif"
+          />
+          <p className="status-text">สถานะปัจจุบัน: {steps[currentStep]}</p>
+        </div>
+
+        <div className="tracking-bar">
+          {steps.map((s, idx) => (
+            <div
+              key={idx}
+              className={`step ${idx <= currentStep ? "active" : ""}`}
+            >
+              <div className="dot" />
+              <span>{s}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="v-card summary">
+          <div className="row">
+            <div>
+              <p className="label">Order ID</p>
+              <p>{data.orderId || data.id}</p>
+            </div>
+            <div>
+              <p className="label">ลูกค้า</p>
+              <p>{data.customerName || "ไม่ระบุ"}</p>
+            </div>
+            <div>
+              <p className="label">วันที่</p>
+              <p>{formatThaiBuddhist(data.createdAt)}</p>
+            </div>
+            <div>
+              <p className="label">สถานะ</p>
+              <p>{steps[currentStep]}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="v-card items">
+          <h3>รายการอาหาร</h3>
+          <div className="table">
+            <div className="thead">
+              <div>ชื่อเมนู</div>
+              <div>จำนวน</div>
+              <div>ราคา</div>
+              <div>รวม</div>
+            </div>
+            <div className="tbody">
+              {items.map((it, idx) => (
+                <div className="tr" key={idx}>
+                  <div>{it.name || `เมนูที่ ${idx + 1}`}</div>
+                  <div>{it.qty}</div>
+                  <div>{currency(it.price)}</div>
+                  <div>{currency(it.qty * it.price)}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="total">
+            <span>ยอดรวมทั้งหมด:</span>
+            <strong>{currency(total)}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

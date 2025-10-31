@@ -6,76 +6,86 @@ import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 import { AuthContext } from "@/context/ProtectRoute";
 import { FaStar } from "react-icons/fa6";
-import "@css/pages/MenuStore.css"
+import "@css/pages/MenuStore.css";
 
-// --- helpers ---
-const normalizeVendor = (v) =>
-  (v || "").replace(/^\/?vendors\//, "").replace(/^\//, "");
+/* ----------------- helpers ----------------- */
+
+// หยิบ shopId จากอ็อบเจ็กต์ร้านหลายรูปแบบ
 const getShopId = (shop) =>
-  shop?.id || shop?.ID || shop?.shop_id || shop?.shopId || "Shop01";
+  shop?.id || shop?.ID || shop?.shop_id || shop?.shopId || "";
 
-const MenuStore = () => {
+// ปลอดภัย: ดึง lat/lng จากโครงสร้างที่อาจต่างกัน
+const pickLatLng = (s) => {
+  const gp = s?.address || s?.geo || {};
+  const lat = gp.latitude ?? gp.lat ?? s?.lat ?? 0;
+  const lng = gp.longitude ?? gp.lng ?? s?.lng ?? 0;
+  return { lat: Number(lat) || 0, lng: Number(lng) || 0 };
+};
+
+// แปลงเมนูให้ฟิลด์สม่ำเสมอ
+const normalizeMenu = (x) => ({
+  id: x.ID ?? x.id ?? x.docId ?? x.menuId ?? x.menu_id ?? "",
+  name: x.Name ?? x.name ?? "",
+  price: Number(x.Price ?? x.price ?? 0),
+  description: x.Description ?? x.description ?? "",
+  image: x.Image ?? x.image ?? "",
+  active: (x.Active ?? x.active ?? true) === true,
+});
+
+/* ----------------- component ----------------- */
+
+export default function MenuStore() {
   const { auth } = useContext(AuthContext);
-  const { id: rawVendorId } = useParams();
-  const vendorId = normalizeVendor(rawVendorId);
-
   const location = useLocation();
-  const shopFromState = location.state?.shop || null;
+  const { id: paramShopId } = useParams(); // /menu/:id
 
+  // ✅ ดึง shopId: param → state → query → localStorage
+  const shopFromState = location.state?.shop || null;
+  const stateShopId = location.state?.shopId || getShopId(shopFromState) || "";
+  const queryShopId = new URLSearchParams(location.search).get("shopId") || "";
+  const storageShopId =
+    (typeof window !== "undefined" && localStorage.getItem("currentShopId")) ||
+    "";
+  const shopId = paramShopId || stateShopId || queryShopId || storageShopId;
+
+  // ⬇️ ต้องมี setShop เพื่อเติมชื่อร้านภายหลังจาก DB
   const [shop, setShop] = useState(
     shopFromState ? { ...shopFromState, id: getShopId(shopFromState) } : null
   );
+
   const [menus, setMenus] = useState([]);
   const [lat, setLat] = useState(13.736717);
   const [lng, setLng] = useState(100.523186);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
+  // ตั้งพิกัดจาก state ถ้ามี
   useEffect(() => {
-    if (shopFromState?.address?.latitude && shopFromState?.address?.longitude) {
-      setLat(shopFromState.address.latitude);
-      setLng(shopFromState.address.longitude);
+    const gp = shopFromState?.address;
+    if (gp?.latitude && gp?.longitude) {
+      setLat(gp.latitude);
+      setLng(gp.longitude);
     }
   }, [shopFromState]);
 
-  const fetchShopIfNeeded = async (vid) => {
-    if (shop) return;
-    try {
-      const res = await axios.get("/Shop", { withCredentials: true });
-      const list = Array.isArray(res.data) ? res.data : [];
-      const found = list.find((s) => normalizeVendor(s.vendor_id) === vid);
-      if (found) {
-        const withId = {
-          ...found,
-          id: found.id || found.ID || found.shop_id || found.shopId || "Shop01",
-        };
-        setShop(withId);
-
-        const gp = withId.address;
-        if (
-          gp &&
-          typeof gp.latitude === "number" &&
-          typeof gp.longitude === "number" &&
-          !(gp.latitude === 0 && gp.longitude === 0)
-        ) {
-          setLat(gp.latitude);
-          setLng(gp.longitude);
-        }
-      }
-    } catch (e) {
-      console.error("fetch shop error:", e);
+  // ✅ โหลดเมนูจาก shops/{shopId}/menu (ผู้ใช้ทั่วไปเห็นเฉพาะ active)
+  const fetchMenusByShop = async (sid) => {
+    if (!sid) {
+      setErr("missing shopId");
+      setLoading(false);
+      return;
     }
-  };
-
-  const fetchMenus = async (vid) => {
+    setLoading(true);
     try {
-      const res = await axios.get(`/vendors/${vid}/menu`, {
+      const res = await axios.get(`/shops/${sid}/menu`, {
         withCredentials: true,
       });
-      setMenus(res.data?.menus ?? []);
+      const raw = res.data?.menus ?? res.data ?? [];
+      const normalized = (Array.isArray(raw) ? raw : []).map(normalizeMenu);
+      setMenus(normalized.filter((m) => m.active));
       setErr("");
     } catch (e) {
-      console.error("fetch menus error:", e);
+      console.error("fetch menus error:", e?.response?.data || e);
       setErr("ไม่สามารถดึงเมนูได้");
       setMenus([]);
     } finally {
@@ -84,29 +94,56 @@ const MenuStore = () => {
   };
 
   useEffect(() => {
-    if (!vendorId) {
-      setErr("missing vendor_id");
-      setLoading(false);
-      return;
+    // เก็บลง localStorage เผื่อ refresh/revisit
+    if (shopId && typeof window !== "undefined") {
+      localStorage.setItem("currentShopId", shopId);
     }
-    fetchShopIfNeeded(vendorId);
-    fetchMenus(vendorId);
-  }, [vendorId]);
+    fetchMenusByShop(shopId);
+  }, [shopId]);
 
+  // ⬇️ เติมข้อมูลร้านจาก DB ถ้าไม่มีชื่อร้าน (ใช้ /Shop ที่คุณมีใน backend)
   useEffect(() => {
-    // 🔒 ปิดการเลื่อนของทั้งหน้า เมื่อเข้า MenuStore
-    const prevHtmlOverflow = document.documentElement.style.overflow;
-    const prevBodyOverflow = document.body.style.overflow;
+    const ensureShopMeta = async () => {
+      try {
+        if (!shopId) return;
 
-    document.documentElement.style.overflow = "hidden";
-    document.body.style.overflow = "hidden";
+        // ถ้ามีชื่อร้านอยู่แล้ว ไม่ต้องดึง
+        if (shop?.shop_name) return;
 
-    // ✅ คืนค่ากลับตอนออกจากหน้านี้
-    return () => {
-      document.documentElement.style.overflow = prevHtmlOverflow;
-      document.body.style.overflow = prevBodyOverflow;
+        // เรียก /Shop (คืนรายการร้านทั้งหมดใน collection "shops")
+        const res = await axios.get("/Shop", { withCredentials: true });
+        const list = Array.isArray(res.data) ? res.data : [];
+        const found =
+          list.find((s) => (s.id || s.ID) === shopId) ||
+          list.find((s) => (s.shopId || s.shop_id) === shopId);
+
+        if (found) {
+          const { lat: la, lng: ln } = pickLatLng(found);
+          setShop((prev) => ({
+            ...(prev || {}),
+            ...found,
+            id: found.id || found.ID || shopId,
+          }));
+          if (la || ln) {
+            setLat(la);
+            setLng(ln);
+          }
+          // debug
+          console.log("✅ Loaded shop meta:", {
+            id: found.id || found.ID || shopId,
+            shop_name: found.shop_name || found.name,
+          });
+        } else {
+          console.warn("⚠️ Shop not found in /Shop list for id:", shopId);
+        }
+      } catch (e) {
+        console.error("ensureShopMeta error:", e?.response?.data || e);
+      }
     };
-  }, []);
+    ensureShopMeta();
+  }, [shopId, shop?.shop_name]);
+
+  /* ----------------- add-to-cart (merge logic) ----------------- */
 
   const handleOrder = async (item) => {
     const { value: qty } = await Swal.fire({
@@ -118,45 +155,93 @@ const MenuStore = () => {
       cancelButtonText: "ยกเลิก",
       showCancelButton: true,
     });
-    if (!qty) return;
+    if (qty === null || qty === undefined) return;
 
-    const menuId = item.id || item.ID || item.menuId || item.menu_id || "";
+    const qtyNum = Number(qty);
+    if (!Number.isFinite(qtyNum) || qtyNum <= 0) {
+      Swal.fire("จำนวนไม่ถูกต้อง", "กรุณาใส่จำนวนตั้งแต่ 1 ขึ้นไป", "error");
+      return;
+    }
+
+    const menuIdRaw = item.id || item.ID || item.menuId || item.menu_id || "";
+    const menuId = String(menuIdRaw);
     if (!menuId) {
       Swal.fire("ข้อมูลไม่ครบ", "เมนูนี้ไม่มี ID (menuId)", "error");
       return;
     }
 
-    // ✅ ใช้ username เป็น customerId
     const customerId = auth?.user_id || "";
     if (!customerId) {
-      Swal.fire("ยังไม่ล็อกอิน", "ไม่พบ username กรุณาล็อกอินก่อน", "error");
+      Swal.fire("ยังไม่ล็อกอิน", "กรุณาล็อกอินก่อน", "error");
       return;
     }
 
-    // optional
-    const shopId = getShopId(shop);
+    const itemId = `${shopId}:${menuId}`;
 
     const payload = {
-      customerId, // ✅ ใช้ username เป็น customerId
-      userId: auth.user_id, // ✅ ใช้ user_id จริง (document id ใน Firestore)
-      shop_name: shop?.shop_name,
-      qty: Number(qty),
+      customerId,
+      userId: auth.user_id,
+      shopId,
+      // ส่งชื่อร้านไปด้วย (ถ้ามี) — ฝั่ง BE จะอ่านจาก DB เป็นหลักอยู่แล้ว
+      shop_name: shop?.shop_name || shop?.name || "",
+      qty: qtyNum,
       item: {
+        id: itemId,
         menuId,
+        shopId,
         name: item.name,
-        price: Number(item.price),
+        price: Number(item.price) || 0,
         image: item.image || "",
         description: item.description || "",
       },
-      vendorId,
-      shopId,
     };
 
+    console.log("🛒 Add to Cart Payload:", payload);
+
     try {
-      await axios.post("/api/cart/add", payload, { withCredentials: true });
+      const { data: currentCart = {} } = await axios.get("/api/cart", {
+        params: { customerId },
+        withCredentials: true,
+      });
+
+      console.log("📦 Current Cart Data:", currentCart);
+
+      const found = (currentCart.items || []).find(
+        (it) =>
+          String(it.menuId ?? it.menu_id ?? "") === menuId &&
+          String(it.shopId ?? it.ShopID ?? "") === String(shopId)
+      );
+
+      if (found) {
+        const newQty = Number(found.qty || 0) + qtyNum;
+        console.log(`🔁 พบเมนูเดิมในร้านนี้ → รวมจำนวนเป็น ${newQty}`);
+        await axios.patch(
+          "/api/cart/qty",
+          {
+            shopId,
+            customerId,
+            menuId,
+            qty: newQty,
+          },
+          { withCredentials: true }
+        );
+        console.log("✅ PATCH /api/cart/qty สำเร็จ");
+      } else {
+        console.log("➕ เพิ่มเมนูใหม่ลงตะกร้า (POST /api/cart/add)");
+        await axios.post("/api/cart/add", payload, { withCredentials: true });
+        console.log("✅ POST /api/cart/add สำเร็จ");
+      }
+
       Swal.fire("สำเร็จ", "เพิ่มลงตะกร้าแล้ว", "success");
+
+      window.dispatchEvent(
+        new CustomEvent("cart:updated", {
+          detail: { shopId, menuId, delta: qtyNum },
+        })
+      );
+      localStorage.setItem("cartUpdatedAt", String(Date.now()));
     } catch (e) {
-      console.error("add to cart error:", e?.response?.data || e);
+      console.error("❌ Add to Cart Error:", e?.response?.data || e);
       const msg =
         e?.response?.data?.error ||
         e?.response?.data?.msg ||
@@ -165,6 +250,8 @@ const MenuStore = () => {
       Swal.fire("ผิดพลาด", String(msg), "error");
     }
   };
+
+  /* ----------------- render ----------------- */
 
   return (
     <div className="rowset">
@@ -178,11 +265,22 @@ const MenuStore = () => {
             alt="shop"
           />
           <div className="storeText">
-            <h2 className="storeTitle">{shop?.shop_name || "Store"}</h2>
-            <h3 className="storeRate" style={{display:'flex',alignItems:'center'}}> <FaStar size={20}/> {shop?.rate ?? "-"}/5</h3>
+            {/* ⬇️ ตอนนี้จะดึงชื่อได้ทั้งจาก state และจาก /Shop */}
+            <h2 className="storeTitle">
+              {shop?.shop_name || shop?.name || "Store"}
+            </h2>
+            <h3
+              className="storeRate"
+              style={{ display: "flex", alignItems: "center" }}
+            >
+              <FaStar size={20} /> {shop?.rate ?? "-"} / 5
+            </h3>
             <h4 className="storeSubtitle">คำอธิบายร้าน</h4>
             <p className="storeDesc">
               {shop?.description || "No description available"}
+            </p>
+            <p style={{ marginTop: 6, color: "#64748b" }}>
+              <b>Shop ID:</b> <code>{shopId || "—"}</code>
             </p>
           </div>
         </div>
@@ -204,7 +302,7 @@ const MenuStore = () => {
                 `https://www.google.com/maps?q=${lat},${lng}`,
                 "_blank"
               )
-            }ร้าน
+            }
             style={btnPrimary}
           >
             Open in Map
@@ -234,7 +332,7 @@ const MenuStore = () => {
                 <div
                   key={item.id || index}
                   className="menuBox"
-                  style={{ margin: "10px", padding: "10px" }}
+                  style={{ margin: 10, padding: 10 }}
                 >
                   <button
                     onClick={() => handleOrder(item)}
@@ -249,6 +347,7 @@ const MenuStore = () => {
                           maxWidth: 360,
                           borderRadius: 8,
                           marginBottom: 8,
+                          objectFit: "cover",
                         }}
                       />
                     )}
@@ -261,8 +360,8 @@ const MenuStore = () => {
                     <p>
                       <b>Description:</b> {item.description}
                     </p>
-                    <p>
-                      <b>Id:</b> {item.id || item.ID || index}
+                    <p style={{ opacity: 0.6, fontSize: 12 }}>
+                      <b>Id:</b> {item.id || index}
                     </p>
                   </button>
                 </div>
@@ -272,9 +371,9 @@ const MenuStore = () => {
       </div>
     </div>
   );
-};
+}
 
-// ———— inline styles ————
+/* ----------------- inline styles ----------------- */
 const cardButton = {
   width: "100%",
   background: "white",
@@ -293,5 +392,3 @@ const btnPrimary = {
   borderRadius: 8,
   cursor: "pointer",
 };
-
-export default MenuStore;

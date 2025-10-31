@@ -7,7 +7,8 @@ import (
 	"google.golang.org/genproto/googleapis/type/latlng"
 )
 
-type Shop = struct {
+type Shop struct {
+	ID             string                 `json:"id" firestore:"-"` // ✅ เพิ่มบรรทัดนี้
 	Address        *latlng.LatLng         `json:"address" firestore:"address"`
 	Create_at      time.Time              `json:"createAt" firestore:"createAt"`
 	Description    string                 `json:"description" firestore:"description"`
@@ -26,6 +27,7 @@ type Shop = struct {
 type Menu struct {
 	ID          string  `json:"id" firestore:"-"` // <<-- เพิ่ม: ไม่เขียนลง Firestore
 	Name        string  `json:"name" firestore:"name"`
+	Active      bool    `json:"active" firestore:"active"`
 	Price       float64 `json:"price" firestore:"price"`
 	Description string  `json:"description" firestore:"description"`
 	Image       string  `json:"image" firestore:"image"`
@@ -102,6 +104,8 @@ type CartItem struct {
 type Cart struct {
 	CustomerID string     `json:"customerId" firestore:"customerId"` // ✅ แยกตะกร้าตาม user
 	Shop_name  string     `json:"shop_name" firestore:"shop_name"`   // ✅ เพิ่มฟิลด์นี้
+	VendorID   string     `json:"vendorId" firestore:"vendorId"`     // ✅ เพิ่ม
+	ShopID     string     `json:"shopId" firestore:"shopId"`         // ✅ เพิ่ม
 	Items      []CartItem `json:"items" firestore:"items"`           // รายการในตะกร้า
 	Total      float64    `json:"total" firestore:"total"`           // ยอดรวมทั้งหมด
 	UpdatedAt  time.Time  `json:"updatedAt" firestore:"updatedAt"`   // เวลาอัปเดตล่าสุด

@@ -1,0 +1,112 @@
+.v-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+  font-family: "Noto Sans Thai", sans-serif;
+}
+
+.v-container {
+  width: 100%;
+  max-width: 900px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.v-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #333;
+  text-align: center;
+}
+
+.v-loading,
+.v-empty {
+  text-align: center;
+  color: #666;
+  font-size: 1rem;
+  padding: 2rem 0;
+}
+
+/* grid */
+.v-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+/* card */
+.v-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fafafa;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.v-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.v-card__left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.v-field {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.v-label {
+  font-weight: 600;
+  color: #555;
+  min-width: 90px;
+}
+
+.v-value {
+  color: #333;
+}
+
+/* status chip */
+.v-chip {
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #fff;
+  min-width: 100px;
+  text-align: center;
+}
+
+.v-chip--prepare {
+  background: #f5a623; /* orange */
+}
+
+.v-chip--ongoing {
+  background: #4a90e2; /* blue */
+}
+
+.v-chip--success {
+  background: #27ae60; /* green */
+}
+
+/* responsive */
+@media (max-width: 640px) {
+  .v-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+  }
+  .v-chip {
+    align-self: flex-end;
+  }
+}
+    

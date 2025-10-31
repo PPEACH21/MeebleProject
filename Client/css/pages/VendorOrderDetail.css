@@ -1,0 +1,136 @@
+.v-detail-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+  background: #f8f9fa;
+  font-family: "Noto Sans Thai", sans-serif;
+}
+
+.v-detail-container {
+  width: 100%;
+  max-width: 900px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.v-detail-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+/* Loading / Empty */
+.v-detail-loading,
+.v-detail-empty {
+  text-align: center;
+  color: #555;
+  padding: 2rem;
+}
+
+/* Status GIF */
+.status-gif-container {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.status-gif {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+}
+.status-text {
+  font-weight: 600;
+  color: #444;
+  margin-top: 0.5rem;
+}
+
+/* Progress bar */
+.tracking-bar {
+  display: flex;
+  justify-content: space-between;
+  margin: 1.5rem 0;
+  position: relative;
+}
+.tracking-bar::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #eee;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+.step {
+  position: relative;
+  text-align: center;
+  z-index: 2;
+  flex: 1;
+}
+.step .dot {
+  width: 18px;
+  height: 18px;
+  background: #bbb;
+  border-radius: 50%;
+  margin: 0 auto 0.4rem;
+  transition: all 0.2s ease;
+}
+.step.active .dot {
+  background: #27ae60;
+}
+.step span {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* Cards */
+.v-card {
+  background: #fafafa;
+  border-radius: 12px;
+  padding: 1.2rem 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+.v-card .row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.8rem;
+}
+.label {
+  font-weight: 600;
+  color: #666;
+}
+.table {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+}
+.thead,
+.tr {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  text-align: center;
+}
+.thead {
+  font-weight: 700;
+  background: #e9ecef;
+  border-radius: 8px;
+  padding: 0.5rem 0;
+}
+.tr {
+  background: #fff;
+  border-radius: 8px;
+  padding: 0.4rem 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.total {
+  text-align: right;
+  margin-top: 1rem;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #222;
+}
