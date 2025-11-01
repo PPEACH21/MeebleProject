@@ -28,7 +28,7 @@ const DropdownProfile =({logout,username,email})=> {
   };
 
   return (
-    <div style={{ position: "relative", color: "#fff"}}>
+    <div style={{ position: "relative", color: "#fff" ,zIndex: 2}}>
 
       <div
         className="dropdownmain"
