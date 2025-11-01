@@ -1,5 +1,5 @@
 import { NavLink, useParams, useLocation, generatePath } from "react-router-dom";
-import "@css/components/VendorSidebar.css";
+import "@css/components/vendorSidebar.css";
 
 export default function VendorSidebar() {
   const params = useParams();
