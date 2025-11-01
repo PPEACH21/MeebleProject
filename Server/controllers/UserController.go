@@ -403,6 +403,9 @@ func UpdateProfile(c *fiber.Ctx) error {
 	if newdata.Lastname != "" && newdata.Lastname != dbuser.Lastname {
 		updateData["lastname"] = newdata.Lastname
 	}
+	if newdata.Phone != "" && newdata.Phone != dbuser.Phone {
+		updateData["phone"] = newdata.Phone
+	}
 	if newdata.Avatar != "" && newdata.Avatar != dbuser.Avatar {
 		updateData["avatar"] = newdata.Avatar
 	}

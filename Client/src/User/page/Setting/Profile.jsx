@@ -23,6 +23,7 @@ const Profile = ()=>{
     const [Lastname,setLastname]=useState("")
     const [username,setUsername]=useState("username")
     const [email,setEmail]=useState("email@gmail.com")
+    const [phone,setPhone]=useState("")
     const [photoURL, setPhotoURL] = useState("https://i.ibb.co/ZpCpKSMG/image.png");
     const [loadingUpload, setLoadingUpload] = useState(false);
     const fileInputRef = useRef(null);
@@ -39,6 +40,7 @@ const Profile = ()=>{
             setLastname(res.data.lastname)
             setUsername(res.data.username)
             setEmail(res.data.email)
+            setPhone(res.data.phone)
             setPhotoURL(res.data.avatar)
             if (res.data.avatar) setPhotoURL(res.data.avatar);
             // console.log(res)
@@ -52,6 +54,7 @@ const Profile = ()=>{
         const updatedData = {
             Firstname,
             Lastname,
+            phone,
             Avatar:photoURL,
         };
 
@@ -102,7 +105,12 @@ const Profile = ()=>{
 
     return(
         <div className="columnset setcenterNF" style={{alignItems:'center', margin:'70px'}}>
-            <h1 style={{marginTop:0}}>Profile</h1>
+            <div>
+                
+                <h1 style={{marginTop:0}}>Profile</h1>
+            </div>
+            
+            
             <div style={{ position: "relative" }}>
                 <img src={photoURL}
                     style={{
@@ -149,6 +157,8 @@ const Profile = ()=>{
                     <InputField value={Lastname} setValue={setLastname} readOnly={!editmode}/>
                 </div>
                 <div className="rowset" style={{gap:"20px"}}>
+                    <p>Phone</p>
+                    <InputField value={phone} setValue={setPhone} readOnly={!editmode}/>
                     <p>username</p>
                     <InputField value={username} readOnly/>
 
