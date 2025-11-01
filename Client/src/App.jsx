@@ -19,7 +19,7 @@ import VendorMenu from "./Vendor/page/vendorMenu";
 import VHomePage from "./Vendor/page/vHome";
 import VendorOrders from "./Vendor/page/vendorOrder";
 import VendorSettings from "./Vendor/page/vendorSetting";
-import VendorLayout from "./Vendor/component/VendorLayout";
+import VendorLayout from "./Vendor/component/VendorLayout.jsx";
 import HistoryDetail from "@/User/page/HistoryDetail.jsx";
 import Language from "./User/page/Setting/Language";
 
