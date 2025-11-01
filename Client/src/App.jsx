@@ -21,7 +21,8 @@ import VendorOrders from "./Vendor/page/vendorOrder";
 import VendorSettings from "./Vendor/page/vendorSetting";
 import HistoryDetail from "@/User/page/HistoryDetail.jsx";
 import Language from "./User/page/Setting/Language";
-import VendorLayout from "./Vendor/component/VendorLayout.jsx";
+import VendorLayout from "./Vendor/component/VendorLayout"
+
 
 function App() {
   return (
@@ -55,7 +56,7 @@ function App() {
 
         <Route element={<ProtectedLayout role="vendor" />}>
           <Route element={<NavLayout />}>
-            <Route element={<VendorLayout />}>
+            <Route element={<VendorLayout/>}>
               <Route path="/vendor/home" element={<VHomePage />} />
               <Route path="/vendor/orders" element={<VendorOrders />} />
               <Route
@@ -75,5 +76,4 @@ function App() {
     </BrowserRouter>
   );
 }
-
 export default App;
