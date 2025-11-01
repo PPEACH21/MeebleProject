@@ -435,78 +435,49 @@ func DeleteMenu(c *fiber.Ctx) error {
 	})
 }
 
-// ---------- ดึงออเดอร์ทั้งหมดของร้าน ----------
+// ---------- ดึงออเดอร์ "ที่ยังไม่เสร็จ" ของร้าน ----------
 func ListOrdersByShop(c *fiber.Ctx) error {
 	shopId := strings.TrimSpace(c.Query("shopId"))
 	if shopId == "" {
-		fmt.Println("🚫 ไม่มี shopId ใน query")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "shopId is required"})
 	}
 
 	ctx := config.Ctx
 	db := config.Client
 
-	fmt.Printf("\n🛒 [DEBUG] กำลังค้นหาออเดอร์ของร้าน shopId = %s\n", shopId)
+	// ดึงเฉพาะสถานะที่ยังทำอยู่
+	q := db.Collection("orders").
+		Where("shopId", "==", shopId).
+		Where("status", "in", []interface{}{"prepare", "ongoing"}). // ตัด success ออก
+		Limit(200)
 
-	q := db.Collection("orders").Where("shopId", "==", shopId).Limit(200)
 	snaps, err := q.Documents(ctx).GetAll()
 	if err != nil {
-		fmt.Println("❌ Firestore query error:", err)
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	fmt.Printf("📦 พบออเดอร์ทั้งหมด %d รายการ\n", len(snaps))
-
 	orders := make([]models.OrderDTO, 0, len(snaps))
-
 	for _, d := range snaps {
 		data := d.Data()
 		order := normalizeOrder(d.Ref.ID, data)
 
-		// ✅ แสดง customerId ที่เจอ
-		cid, _ := data["customerId"].(string)
-		if cid == "" {
-			fmt.Printf("⚠️  Order %s ไม่มี customerId\n", d.Ref.ID)
-		} else {
-			fmt.Printf("🔍 Order %s → customerId = %s\n", d.Ref.ID, cid)
-
-			userDoc, err := db.Collection("users").Doc(cid).Get(ctx)
-			if err != nil {
-				fmt.Printf("  ⚠️ Error ดึง user(%s): %v\n", cid, err)
-			} else if !userDoc.Exists() {
-				fmt.Printf("  ⚠️ ไม่พบ user doc ของ %s\n", cid)
-			} else {
-				userData := userDoc.Data()
-				fmt.Printf("  ✅ พบ user doc: %+v\n", userData)
-
-				// ตรวจ field ต่าง ๆ
-				if uname, ok := userData["name"].(string); ok {
+		// เติมชื่อผู้ใช้แบบเดิมที่คุณทำอยู่
+		if cid, _ := data["customerId"].(string); cid != "" {
+			if userDoc, err := db.Collection("users").Doc(cid).Get(ctx); err == nil && userDoc.Exists() {
+				if uname, ok := userDoc.Data()["username"].(string); ok {
 					order.CustomerName = uname
-					fmt.Printf("  🧍 ชื่อลูกค้า (name): %s\n", uname)
-				} else if uname, ok := userData["fullname"].(string); ok {
-					order.CustomerName = uname
-					fmt.Printf("  🧍 ชื่อลูกค้า (fullname): %s\n", uname)
-				} else if uname, ok := userData["username"].(string); ok {
-					order.CustomerName = uname
-					fmt.Printf("  🧍 ชื่อลูกค้า (username): %s\n", uname)
-				} else {
-					fmt.Printf("  ⚠️ ไม่พบ field 'name' / 'fullname' / 'username'\n")
 				}
 			}
 		}
-
 		orders = append(orders, order)
 	}
 
-	// ✅ เรียงเวลาล่าสุดก่อน
+	// เรียงล่าสุดก่อน (ตาม createdAt)
 	sort.Slice(orders, func(i, j int) bool {
 		ti := getTimeLike(orders[i].Raw, "createdAt")
 		tj := getTimeLike(orders[j].Raw, "createdAt")
 		return ti.After(tj)
 	})
-
-	fmt.Println("✅ เสร็จสิ้นการประมวลผล orders\n")
-
 	return c.JSON(orders)
 }
 
@@ -557,4 +528,305 @@ func GetUserNameCustomer(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(data)
+}
+func shopHistoryCol(shopID string) *firestore.CollectionRef {
+	return config.Client.Collection("shops").Doc(shopID).Collection("history")
+}
+func ordersRoot() *firestore.CollectionRef {
+	return config.Client.Collection("orders")
+}
+
+func userHistoryCol(userID string) *firestore.CollectionRef {
+	return config.Client.Collection("users").Doc(userID).Collection("history")
+}
+func UpdateOrderStatus(c *fiber.Ctx) error {
+	orderId := strings.TrimSpace(c.Params("orderId"))
+	if orderId == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "orderId is required"})
+	}
+
+	var body struct {
+		Status string `json:"status"`
+	}
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "BodyParser error", "msg": err.Error()})
+	}
+	next := strings.TrimSpace(body.Status)
+	switch next {
+	case "prepare", "on-going", "ongoing", "success":
+	default:
+		return c.Status(400).JSON(fiber.Map{"error": "invalid status"})
+	}
+
+	ctx := config.Ctx
+	db := config.Client
+	orderRef := ordersRoot().Doc(orderId)
+
+	err := db.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
+		// 1) อ่านออเดอร์ปัจจุบัน
+		snap, err := tx.Get(orderRef)
+		if err != nil || !snap.Exists() {
+			return fiber.ErrNotFound
+		}
+		data := snap.Data()
+
+		// ฟิลด์สำคัญที่ต้องมีใน order
+		shopId, _ := data["shopId"].(string)
+		if shopId == "" {
+			return fiber.NewError(fiber.StatusConflict, "order missing shopId")
+		}
+		// user id อาจเก็บชื่อ customerId หรือ userId ก็รองรับทั้งคู่
+		userId := ""
+		if v, ok := data["userId"].(string); ok && v != "" {
+			userId = v
+		} else if v, ok := data["customerId"].(string); ok && v != "" {
+			userId = v
+		}
+		if userId == "" {
+			// ไม่บังคับ error: อนุญาตให้ผ่าน แต่จะไม่ได้เขียน user history
+			fmt.Printf("⚠️ order %s has no userId/customerId\n", orderId)
+		}
+
+		// สถานะปัจจุบัน
+		current := "prepare"
+		if v, ok := data["status"].(string); ok && v != "" {
+			current = strings.ToLower(strings.TrimSpace(v))
+		}
+
+		// โลจิก transition (prepare -> on-going -> success)
+		normalize := func(s string) string {
+			s = strings.ToLower(strings.TrimSpace(s))
+			if s == "on-going" {
+				return "ongoing"
+			}
+			return s
+		}
+		cur := normalize(current)
+		nx := normalize(next)
+
+		valid := map[string][]string{
+			"prepare": {"ongoing"},
+			"ongoing": {"success"},
+			"success": {},
+		}
+		allowed := valid[cur]
+		can := false
+		for _, a := range allowed {
+			if a == nx {
+				can = true
+				break
+			}
+		}
+
+		// Idempotent: ถ้า status เดิม = ใหม่
+		if cur == nx {
+			return tx.Update(orderRef, []firestore.Update{
+				{Path: "updatedAt", Value: time.Now()},
+			})
+		}
+		if !can {
+			return fiber.NewError(fiber.StatusConflict, fmt.Sprintf("invalid transition: %s -> %s", cur, nx))
+		}
+
+		now := time.Now()
+
+		// 2) ถ้ายังไม่ success แค่อัปเดตสถานะใน orders
+		if nx != "success" {
+			return tx.Update(orderRef, []firestore.Update{
+				{Path: "status", Value: nx},
+				{Path: "updatedAt", Value: now},
+			})
+		}
+
+		// 3) ถ้า success ⇒ สร้างเอกสาร history ทั้ง shop และ user (ถ้ามี userId) แล้วลบ orders
+		// เตรียม payload สำหรับ history
+		// เก็บข้อมูลหลัก ๆ ให้พอแสดงผล (items/total/shop_name/userId/createdAt/finishedAt/…)
+		histDoc := map[string]interface{}{
+			"id":                orderId,
+			"status":            "success",
+			"shopId":            shopId,
+			"userId":            userId, // อาจว่างได้ ถ้าออเดอร์ไม่มี
+			"items":             data["items"],
+			"total":             data["total"],
+			"shop_name":         data["shop_name"],
+			"customerName":      data["customerName"],
+			"createdAt":         firstNonNil(data["createdAt"], data["rawCreatedAt"]), // เผื่อมีรูปแบบ custom
+			"finishedAt":        now,
+			"movedToHistoryAt":  now,
+			"sourceOrderStatus": cur,
+			"source":            "orders",
+		}
+
+		// เขียนลง shops/{shopId}/history/{orderId}
+		shopHistRef := shopHistoryCol(shopId).Doc(orderId)
+		if err := tx.Set(shopHistRef, histDoc, firestore.MergeAll); err != nil {
+			return err
+		}
+		// ถ้ามี userId ⇒ เขียนลง users/{userId}/history/{orderId}
+		if userId != "" {
+			userHistRef := userHistoryCol(userId).Doc(orderId)
+			if err := tx.Set(userHistRef, histDoc, firestore.MergeAll); err != nil {
+				return err
+			}
+		}
+
+		// สุดท้าย ลบจาก orders ให้เป็น “ย้าย” จริง ๆ
+		if err := tx.Delete(orderRef); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		if err == fiber.ErrNotFound {
+			return c.Status(404).JSON(fiber.Map{"error": "order not found"})
+		}
+		if fe, ok := err.(*fiber.Error); ok && (fe.Code == 400 || fe.Code == 409) {
+			return c.Status(fe.Code).JSON(fiber.Map{"error": fe.Message})
+		}
+		return c.Status(500).JSON(fiber.Map{"error": "update status failed", "msg": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{"message": "status updated", "status": next})
+}
+
+// ตัวช่วยหยิบค่าแรกที่ไม่ nil
+func firstNonNil(vals ...interface{}) interface{} {
+	for _, v := range vals {
+		if v != nil {
+			return v
+		}
+	}
+	return nil
+}
+
+// GET /api/shops/:shopId/history
+func ListShopHistory(c *fiber.Ctx) error {
+	shopId := strings.TrimSpace(c.Params("shopId"))
+	if shopId == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "shopId is required"})
+	}
+
+	ctx := config.Ctx
+	db := config.Client
+	col := db.Collection("shops").Doc(shopId).Collection("history")
+
+	// พยายาม orderBy finishedAt -> ถ้าไม่ได้ fallback movedToHistoryAt
+	q := col.OrderBy("finishedAt", firestore.Desc).Limit(200)
+	snaps, err := q.Documents(ctx).GetAll()
+	if err != nil {
+		if s, ok := status.FromError(err); ok && (s.Code() == codes.FailedPrecondition || s.Code() == codes.InvalidArgument) {
+			q2 := col.OrderBy("movedToHistoryAt", firestore.Desc).Limit(200)
+			if snaps2, err2 := q2.Documents(ctx).GetAll(); err2 == nil {
+				snaps = snaps2
+				err = nil
+			}
+		}
+	}
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	// รวบรวม userId ทั้งหมดเพื่อลดการยิงซ้ำ
+	type row struct {
+		id   string
+		data map[string]interface{}
+	}
+	rows := make([]row, 0, len(snaps))
+	userIDs := make(map[string]struct{})
+	for _, d := range snaps {
+		m := d.Data()
+		m["id"] = d.Ref.ID
+		rows = append(rows, row{id: d.Ref.ID, data: m})
+
+		if uid, ok := m["userId"].(string); ok && strings.TrimSpace(uid) != "" {
+			userIDs[strings.TrimSpace(uid)] = struct{}{}
+		}
+	}
+
+	// ดึงชื่อผู้ใช้ทั้งหมดแบบ cache
+	nameCache := make(map[string]string, len(userIDs))
+	for uid := range userIDs {
+		name, _ := getUserNameByID(ctx, db, uid) // ไม่ fail ทั้งลิสต์ถ้าบางคน error
+		if name != "" {
+			nameCache[uid] = name
+		}
+	}
+
+	// ใส่ customerName ให้แต่ละแถว (ถ้าเดิมไม่มี)
+	res := make([]map[string]interface{}, 0, len(rows))
+	for _, r := range rows {
+		m := r.data
+		// ถ้าเดิมไม่มี customerName ให้ใส่จาก cache
+		if _, has := m["customerName"]; !has || m["customerName"] == "" {
+			if uid, ok := m["userId"].(string); ok && uid != "" {
+				if nm, ok2 := nameCache[uid]; ok2 && nm != "" {
+					m["customerName"] = nm
+				}
+			}
+		}
+		res = append(res, m)
+	}
+
+	return c.JSON(res)
+}
+
+// GET /api/shops/:shopId/history/:orderId
+func GetShopHistoryDoc(c *fiber.Ctx) error {
+	shopId := strings.TrimSpace(c.Params("shopId"))
+	orderId := strings.TrimSpace(c.Params("orderId"))
+	if shopId == "" || orderId == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "shopId/orderId is required"})
+	}
+
+	ctx := config.Ctx
+	db := config.Client
+
+	ref := db.Collection("shops").Doc(shopId).Collection("history").Doc(orderId)
+	snap, err := ref.Get(ctx)
+	if err != nil || !snap.Exists() {
+		return c.Status(404).JSON(fiber.Map{"error": "history doc not found"})
+	}
+	m := snap.Data()
+	m["id"] = snap.Ref.ID
+
+	// ถ้าไม่มี customerName แต่มี userId → ไปดึงชื่อมาเติม
+	if (m["customerName"] == nil || m["customerName"] == "") && m["userId"] != nil {
+		if uid, ok := m["userId"].(string); ok && strings.TrimSpace(uid) != "" {
+			if name, _ := getUserNameByID(ctx, db, uid); name != "" {
+				m["customerName"] = name
+			}
+		}
+	}
+
+	return c.JSON(m)
+}
+func getUserNameByID(ctx context.Context, db *firestore.Client, userId string) (string, error) {
+	userId = strings.TrimSpace(userId)
+	if userId == "" {
+		return "", nil
+	}
+	snap, err := db.Collection("users").Doc(userId).Get(ctx)
+	if err != nil || !snap.Exists() {
+		return "", err
+	}
+	u := snap.Data()
+	// ไล่ fallback ตามฟิลด์ที่มักใช้กัน
+	if s, ok := u["username"].(string); ok && s != "" {
+		return s, nil
+	}
+	if s, ok := u["name"].(string); ok && s != "" {
+		return s, nil
+	}
+	if s, ok := u["fullname"].(string); ok && s != "" {
+		return s, nil
+	}
+	if s, ok := u["displayName"].(string); ok && s != "" {
+		return s, nil
+	}
+	if s, ok := u["email"].(string); ok && s != "" {
+		return s, nil
+	}
+	return "", nil
 }

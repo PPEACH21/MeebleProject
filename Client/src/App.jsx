@@ -42,7 +42,7 @@ function App() {
             <Route path="/cart" element={<Cart />} />
             <Route path="/settings" element={<SettingPage />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/orders/:id" element={<HistoryDetail />} />
+            <Route path="/history/:id" element={<HistoryDetail />} />
           </Route>
 
           <Route element={<NavLayout focus={true} cart={true} />}>

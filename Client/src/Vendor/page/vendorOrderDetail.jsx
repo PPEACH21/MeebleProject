@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import axios from "@/api/axios";
 import "@css/pages/VendorOrderDetail.css";
 
@@ -41,10 +41,38 @@ const getStatusGif = (status) => {
   return "https://media3.giphy.com/media/OaNtfLLzPq4I8/giphy.gif";
 };
 
+// ---------- เพิ่ม: ตัวช่วยทำให้สถานะเป็นรูปแบบเดียวกัน ----------
+const canonicalStatus = (raw) => {
+  const s = String(raw || "").trim().toLowerCase();
+  if (["prepare", "preparing", "กำลังจัดเตรียม"].includes(s)) return "prepare";
+  if (["ongoing", "on-going", "shipping", "กำลังจัดส่ง"].includes(s))
+    return "ongoing";
+  if (["success", "completed", "done", "เสร็จสิ้น", "สำเร็จ"].includes(s))
+    return "success";
+  // ดีฟอลต์ให้เป็น prepare
+  return "prepare";
+};
+
+const statusLabelTH = {
+  prepare: "กำลังจัดเตรียม",
+  ongoing: "กำลังจัดส่ง",
+  success: "สำเร็จ",
+};
+
+// เรียงลำดับสถานะ
+const statusOrder = ["prepare", "ongoing", "success"];
+
 export default function VendorOrderDetail() {
   const { id } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // ---------- เพิ่ม: state สำหรับกดอัปเดตสถานะ ----------
+  const [updating, setUpdating] = useState(false);
+  const currStatus = useMemo(
+    () => canonicalStatus(data?.status),
+    [data?.status]
+  );
 
   useEffect(() => {
     (async () => {
@@ -60,6 +88,37 @@ export default function VendorOrderDetail() {
     })();
   }, [id]);
 
+  // ---------- เพิ่ม: ฟังก์ชันอัปเดตสถานะ ----------
+  const updateStatus = async (newStatus) => {
+    if (!id) return;
+    if (newStatus === currStatus) return;
+
+    try {
+      setUpdating(true);
+
+      // optimistic update
+      setData((prev) => (prev ? { ...prev, status: newStatus } : prev));
+
+      // เรียก API อัปเดตสถานะ (ให้แบ็กเอนด์ไปซิงก์ฝั่งลูกค้าด้วย)
+      await axios.patch(
+        `/orders/${id}/status`,
+        { status: newStatus },
+        { withCredentials: true }
+      );
+
+      // ถ้าอยากรีเฟรชจากเซิร์ฟเวอร์อีกครั้ง (กันกรณีราคา/ฟิลด์อื่นเปลี่ยน)
+      // const fresh = await axios.get(`/orders/${id}`, { withCredentials: true });
+      // setData(fresh.data);
+    } catch (e) {
+      console.error("❌ อัปเดตสถานะล้มเหลว:", e);
+      // roll back ถ้าอยาก
+      setData((prev) => (prev ? { ...prev, status: currStatus } : prev));
+      alert("อัปเดตสถานะไม่สำเร็จ กรุณาลองใหม่");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   if (loading) return <p className="v-detail-loading">กำลังโหลดข้อมูล…</p>;
   if (!data) return <p className="v-detail-empty">ไม่พบออเดอร์นี้</p>;
 
@@ -71,13 +130,11 @@ export default function VendorOrderDetail() {
       0
     );
 
-  const st = String(data.status || "").trim().toLowerCase();
-  const steps = ["กำลังจัดเตรียม", "กำลังจัดส่ง", "สำเร็จ"];
-  let currentStep = 0;
-  if (["prepare"].includes(st)) currentStep = 0;
-  else if (["ongoing", "on-going", "กำลังจัดส่ง"].includes(st)) currentStep = 1;
-  else if (["success", "completed", "done", "เสร็จสิ้น", "สำเร็จ"].includes(st))
-    currentStep = 2;
+  const currentStep = Math.max(
+    0,
+    statusOrder.indexOf(canonicalStatus(data.status))
+  );
+  const stepsTH = statusOrder.map((k) => statusLabelTH[k]);
 
   return (
     <div className="v-detail-wrap">
@@ -90,11 +147,11 @@ export default function VendorOrderDetail() {
             alt="order-status"
             className="status-gif"
           />
-          <p className="status-text">สถานะปัจจุบัน: {steps[currentStep]}</p>
+          <p className="status-text">สถานะปัจจุบัน: {stepsTH[currentStep]}</p>
         </div>
 
         <div className="tracking-bar">
-          {steps.map((s, idx) => (
+          {stepsTH.map((s, idx) => (
             <div
               key={idx}
               className={`step ${idx <= currentStep ? "active" : ""}`}
@@ -105,6 +162,41 @@ export default function VendorOrderDetail() {
           ))}
         </div>
 
+        {/* ---------- เพิ่ม: ปุ่มอัปเดตสถานะ ---------- */}
+        <div className="v-card status-actions">
+          <h3>อัปเดตสถานะ</h3>
+          <div className="status-buttons">
+            <button
+              className={`btn-status ${
+                currStatus === "prepare" ? "active" : ""
+              }`}
+              disabled={updating || currStatus === "prepare"}
+              onClick={() => updateStatus("prepare")}
+            >
+              {statusLabelTH.prepare}
+            </button>
+            <button
+              className={`btn-status ${
+                currStatus === "ongoing" ? "active" : ""
+              }`}
+              disabled={updating || currStatus === "ongoing"}
+              onClick={() => updateStatus("ongoing")}
+            >
+              {statusLabelTH.ongoing}
+            </button>
+            <button
+              className={`btn-status ${
+                currStatus === "success" ? "active" : ""
+              }`}
+              disabled={updating || currStatus === "success"}
+              onClick={() => updateStatus("success")}
+            >
+              {statusLabelTH.success}
+            </button>
+          </div>
+          {updating && <p className="muted">กำลังอัปเดตสถานะ…</p>}
+        </div>
+
         <div className="v-card summary">
           <div className="row">
             <div>
@@ -113,7 +205,7 @@ export default function VendorOrderDetail() {
             </div>
             <div>
               <p className="label">ลูกค้า</p>
-              <p>{data.customerName || "ไม่ระบุ"}</p>
+              <p>{data.customerName || "ไม่ระบุ"}{data.customerPhone ? ` (${data.customerPhone})` : ""}</p>
             </div>
             <div>
               <p className="label">วันที่</p>
@@ -121,7 +213,7 @@ export default function VendorOrderDetail() {
             </div>
             <div>
               <p className="label">สถานะ</p>
-              <p>{steps[currentStep]}</p>
+              <p>{stepsTH[currentStep]}</p>
             </div>
           </div>
         </div>
@@ -141,7 +233,7 @@ export default function VendorOrderDetail() {
                   <div>{it.name || `เมนูที่ ${idx + 1}`}</div>
                   <div>{it.qty}</div>
                   <div>{currency(it.price)}</div>
-                  <div>{currency(it.qty * it.price)}</div>
+                  <div>{currency((Number(it.qty)||0) * (Number(it.price)||0))}</div>
                 </div>
               ))}
             </div>

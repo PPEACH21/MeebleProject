@@ -134,3 +134,22 @@
   font-size: 1.1rem;
   color: #222;
 }
+.status-actions { margin-top: 16px; }
+.status-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-status {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+}
+.btn-status.active {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 2px rgba(14,165,233,0.15);
+  font-weight: 600;
+}
+.btn-status:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.muted { color: #6b7280; font-size: 0.9rem; margin-top: 8px; }
