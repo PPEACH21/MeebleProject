@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import VendorSidebar from "@/vendor/component/vendorSidebar";
+import VendorSidebar from "@/vendor/component/vendorSideBar";
 import "@css/components/VendorSidebar.css";
 import "@css/pages/vendorHome.css";
 
