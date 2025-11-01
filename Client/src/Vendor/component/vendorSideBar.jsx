@@ -10,6 +10,7 @@ export default function VendorSidebar() {
   const stateShopId = location.state?.shopId || location.state?.shop?.id || "";
   const savedShopId = typeof window !== "undefined" ? localStorage.getItem("currentShopId") || "" : "";
 
+  
   const shopId = paramShopId || stateShopId || savedShopId;
 
   // ถ้าได้ shopId จริง ให้สร้างลิงก์เมนู; ถ้าไม่มีก็ fallback
