@@ -118,3 +118,10 @@ type Order struct {
 	CreatedAt  time.Time  `json:"createdAt" firestore:"createdAt"`
 	CustomerID string     `json:"customerId" firestore:"customerId"`
 }
+
+type orderCore struct {
+	CustomerID string                 `firestore:"customerId"`
+	ShopID     string                 `firestore:"shopId"`
+	Status     string                 `firestore:"status"`
+	Meta       map[string]interface{} `firestore:"meta,omitempty"` // optional
+}

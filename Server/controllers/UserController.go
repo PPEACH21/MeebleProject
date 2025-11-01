@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -233,154 +232,6 @@ func GetUserHistoryByID(c *fiber.Ctx) error {
 	return c.JSON(data)
 }
 
-func userHistoryCol(userID string) *firestore.CollectionRef {
-	return config.Client.Collection("users").Doc(userID).Collection("history")
-}
-
-func shopHistoryCol(vendorID, shopID string) *firestore.CollectionRef {
-	return config.Client.
-		Collection("vendors").Doc(vendorID).
-		Collection("shops").Doc(shopID).
-		Collection("history")
-}
-
-func UpdateOrderStatus(c *fiber.Ctx) error {
-	vendorId := c.Params("vendorId")
-	shopId := c.Params("shopId")
-	orderId := c.Params("orderId")
-	if vendorId == "" || shopId == "" || orderId == "" {
-		return c.Status(400).JSON(fiber.Map{"error": "missing vendorId/shopId/orderId"})
-	}
-
-	var body struct {
-		Status string `json:"status"`
-	}
-	if err := c.BodyParser(&body); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "BodyParser error", "msg": err.Error()})
-	}
-	next := body.Status
-	if next != "prepare" && next != "on-going" && next != "success" {
-		return c.Status(400).JSON(fiber.Map{"error": "invalid status"})
-	}
-
-	ordersRef := ordersCol(vendorId, shopId).Doc(orderId)
-
-	err := config.Client.RunTransaction(config.Ctx, func(ctx context.Context, tx *firestore.Transaction) error {
-		snap, err := tx.Get(ordersRef)
-		if err != nil || !snap.Exists() {
-			return fiber.ErrNotFound
-		}
-
-		// อ่านสถานะปัจจุบัน (ถือว่า "prepare" ถ้ายังไม่มี)
-		current := "prepare"
-		if v, ok := snap.Data()["status"]; ok && v != nil {
-			if s, ok := v.(string); ok && s != "" {
-				current = s
-			}
-		}
-
-		// Idempotent: ถ้าขอสถานะเดิมซ้ำ → ผ่านเลย
-		if current == next {
-			// อัปเดต updatedAt เบา ๆ ก็ได้ (หรือจะไม่อัปเดตก็ได้)
-			return tx.Update(ordersRef, []firestore.Update{
-				{Path: "updatedAt", Value: time.Now()},
-			})
-		}
-
-		// อนุญาตเฉพาะ transition: prepare -> on-going -> success
-		valid := map[string][]string{
-			"prepare":  {"on-going"},
-			"on-going": {"success"},
-			"success":  {}, // end
-		}
-		allowed := valid[current]
-		can := false
-		for _, s := range allowed {
-			if s == next {
-				can = true
-				break
-			}
-		}
-		if !can {
-			return fiber.NewError(fiber.StatusConflict, fmt.Sprintf("invalid transition: %s -> %s", current, next))
-		}
-
-		// อัปเดตสถานะใน orders
-		if err := tx.Update(ordersRef, []firestore.Update{
-			{Path: "status", Value: next},
-			{Path: "updatedAt", Value: time.Now()},
-		}); err != nil {
-			return err
-		}
-
-		// เตรียมอ้างอิงสำหรับ history
-		// (เราควรมี userId ใน order ตั้งแต่ checkout)
-		var userIdFromOrder string
-		if v, ok := snap.Data()["userId"]; ok {
-			if s, ok := v.(string); ok {
-				userIdFromOrder = s
-			}
-		}
-
-		// shop history (/vendors/.../shops/.../history/{orderId})
-		shopHistRef := shopHistoryCol(vendorId, shopId).Doc(orderId)
-		if err := tx.Set(shopHistRef, map[string]interface{}{
-			"status":    next,
-			"updatedAt": time.Now(),
-		}, firestore.MergeAll); err != nil {
-			return err
-		}
-		// ถ้ายังไม่มี createdAt ให้เติม (ครั้งแรก)
-		if err := tx.Set(shopHistRef, map[string]interface{}{
-			"createdAt": time.Now(),
-		}, firestore.Merge([]string{"createdAt"})); err != nil {
-			return err
-		}
-
-		if userIdFromOrder != "" {
-			userHistRef := userHistoryCol(userIdFromOrder).Doc(orderId)
-
-			// ✅ ดึง shop_name จาก order ถ้ามี
-			var shopName string
-			if v, ok := snap.Data()["shop_name"]; ok {
-				if s, ok := v.(string); ok {
-					shopName = s
-				}
-			}
-
-			// ✅ อัปเดตสถานะและชื่อร้านใน user history
-			if err := tx.Set(userHistRef, map[string]interface{}{
-				"status":    next,
-				"shop_name": shopName,
-				"updatedAt": time.Now(),
-			}, firestore.MergeAll); err != nil {
-				return err
-			}
-
-			// ✅ สร้าง createdAt ถ้ายังไม่มี
-			if err := tx.Set(userHistRef, map[string]interface{}{
-				"createdAt": time.Now(),
-			}, firestore.Merge([]string{"createdAt"})); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		if err == fiber.ErrNotFound {
-			return c.Status(404).JSON(fiber.Map{"error": "order not found"})
-		}
-		if fe, ok := err.(*fiber.Error); ok && (fe.Code == 400 || fe.Code == 409) {
-			return c.Status(fe.Code).JSON(fiber.Map{"error": fe.Message})
-		}
-		return c.Status(500).JSON(fiber.Map{"error": "update status failed", "msg": err.Error()})
-	}
-
-	return c.JSON(fiber.Map{"message": "status updated", "status": next})
-}
-
 // ---------- helper ----------
 func getString(m map[string]interface{}, keys ...string) string {
 	for _, k := range keys {
@@ -522,22 +373,21 @@ func GetOrderByID(c *fiber.Ctx) error {
 
 	return c.JSON(data)
 }
-func UpdateProfile(c *fiber.Ctx)error{
+func UpdateProfile(c *fiber.Ctx) error {
 	userID := c.Params("id")
 
-	var newdata models.User;
-	if err := c.BodyParser(&newdata)
-	err != nil{
+	var newdata models.User
+	if err := c.BodyParser(&newdata); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString("cannot parse JSON")
 	}
-	
+
 	docRef := config.User.Doc(userID)
-		docSnap, err := docRef.Get(config.Ctx)
-		if err != nil {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-				"error": "user not found",
-			})
-		}
+	docSnap, err := docRef.Get(config.Ctx)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "user not found",
+		})
+	}
 
 	var dbuser models.User
 	if err := docSnap.DataTo(&dbuser); err != nil {
@@ -545,7 +395,7 @@ func UpdateProfile(c *fiber.Ctx)error{
 			"error": "failed to parse existing data",
 		})
 	}
-	
+
 	updateData := make(map[string]interface{})
 	if newdata.Firstname != "" && newdata.Firstname != dbuser.Firstname {
 		updateData["firstname"] = newdata.Firstname
