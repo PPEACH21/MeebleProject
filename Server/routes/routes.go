@@ -36,8 +36,14 @@ func Routes(app *fiber.App) {
 	app.Post("/api/cart/add", controllers.AddToCart)
 	app.Post("/api/cart/checkout", controllers.CheckoutCartFromDB)
 	app.Patch("/api/cart/qty", controllers.UpdateCartQty)
-	app.Get("/orders", controllers.ListOrdersByUser) // ดึงทั้งหมดตาม userId
+	app.Get("/orders", controllers.ListOrdersByUser)                    // ดึงทั้งหมดตาม userId
+	app.Patch("/orders/:orderId/status", controllers.UpdateOrderStatus) // success → move
+	app.Get("/api/shops/:shopId/history", controllers.ListShopHistory)  // ประวัติร้าน
+	app.Get("/api/shops/:shopId/history/:orderId", controllers.GetShopHistoryDoc)
 	app.Get("/orders/shop", controllers.ListOrdersByShop)
+	// routes.go
+	//app.Get("/shops/by-user/:userId", controllers.GetShopByUser)
+
 	app.Get("/orders/customer/:id", controllers.GetUserNameCustomer)
 	app.Get("/orders/:id", controllers.GetOrderByID) // ดึงรายละเอียดออเดอร์เดียว
 

@@ -115,7 +115,7 @@ export default function VendorMenu() {
       try {
         const j = await resp.json();
         if (j?.error?.message) msg += `: ${j.error.message}`;
-      } catch {}
+      } catch {[]}
       throw new Error(msg);
     }
     const data = await resp.json();

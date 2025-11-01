@@ -1,201 +1,142 @@
+// src/User/page/VHomePage.jsx
 import { useState, useEffect, useContext } from "react";
-import { Link, useNavigate } from "react-router-dom"; // 👈 เพิ่ม
+import { useNavigate } from "react-router-dom";
 import axios from "@/api/axios";
 import { AuthContext } from "@/context/ProtectRoute";
 import "@css/pages/vendorHome.css";
 
 export default function VHomePage() {
   const { auth } = useContext(AuthContext);
-  const navigate = useNavigate(); // 👈 เพิ่ม
+  const navigate = useNavigate();
 
   const [shop, setShop] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ todaySales: 0, orders: 0, reserves: 0 });
   const [updating, setUpdating] = useState(false);
   const [updatingReserve, setUpdatingReserve] = useState(false);
 
-  // ✅ โหลดข้อมูลร้านจาก user_id (vendorId) แล้ว "ตั้งค่า" currentShopId ให้ทั้งแอป
+  const userId = auth?.user_id;
+
+  /* ───────── โหลดร้าน ───────── */
   useEffect(() => {
     const fetchShop = async () => {
       try {
-        const vendorId = auth?.user_id;
-        if (!vendorId) return;
-
-        const res = await axios.get(`/shops/by-vendor/${vendorId}`, {
-          withCredentials: true,
-        });
-
-        // รองรับได้ทั้ง 2 รูปแบบ response:
-        // 1) { hasShop: true, shop: {...} }
-        // 2) { success: true, shops: [ {...}, ... ] }
+        const res = await axios.get(`/shops/by-vendor/${userId}`, { withCredentials: true });
         let resolvedShop = null;
-        if (res.data?.hasShop && res.data.shop) {
-          resolvedShop = res.data.shop;
-        } else if (Array.isArray(res.data?.shops) && res.data.shops.length > 0) {
-          resolvedShop = res.data.shops[0]; // หรือให้ผู้ใช้เลือกถ้ามีหลายร้าน
-        }
+        if (res.data?.hasShop && res.data.shop) resolvedShop = res.data.shop;
+        else if (Array.isArray(res.data?.shops) && res.data.shops.length > 0) resolvedShop = res.data.shops[0];
 
         if (resolvedShop) {
-          // normalize id field
-          const norm = {
-            id: resolvedShop.id || resolvedShop.ID || resolvedShop.Id,
-            shop_name:
-              resolvedShop.shop_name || resolvedShop.name || resolvedShop.shopName,
+          const id = resolvedShop.id || resolvedShop.ID || resolvedShop.Id;
+          localStorage.setItem("currentShopId", id);
+          setShop({
+            id,
+            shop_name: resolvedShop.shop_name || resolvedShop.name,
             status: !!resolvedShop.status,
             reserve_active: !!resolvedShop.reserve_active,
-            ...resolvedShop,
-          };
-
-          if (!norm.id) {
-            console.warn("⚠️ ร้านที่ได้มาไม่มี id:", resolvedShop);
-          } else {
-            // 👉 เก็บไว้ให้ Sidebar / VendorMenu ใช้งาน
-            localStorage.setItem("currentShopId", norm.id);
-          }
-
-          setShop(norm);
-        } else {
-          setShop(null);
+          });
         }
       } catch (err) {
-        console.error("Error fetching shop:", err?.response?.data || err);
-        setShop(null);
+        console.error("Error fetching shop:", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchShop();
-  }, [auth?.user_id]);
+    if (userId) fetchShop();
+  }, [userId]);
 
-  // ✅ เปิด/ปิดร้าน (status)
+  /* ───────── โหลดสถิติ ───────── */
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!shop?.id) return;
+      try {
+        const res = await axios.get(`/api/shops/${shop.id}/stats`, { withCredentials: true });
+        // ตัวอย่าง response: { todaySales: 1530, orders: 12, reserves: 3 }
+        setStats(res.data || { todaySales: 0, orders: 0, reserves: 0 });
+      } catch (err) {
+        console.warn("โหลดสถิติไม่สำเร็จ", err?.response?.data || err.message);
+      }
+    };
+    fetchStats();
+  }, [shop?.id]);
+
+  /* ───────── ปุ่มเปิด/ปิด ───────── */
   const toggleShopStatus = async () => {
     if (!shop?.id) return;
     try {
       setUpdating(true);
       const newStatus = !shop.status;
-
-      await axios.put(
-        `/shops/${shop.id}/status`,
-        { status: newStatus },
-        { withCredentials: true }
-      );
-
-      setShop((prev) => ({
-        ...prev,
-        status: newStatus,
-        order_active: newStatus, // ผูกกับร้าน
-      }));
-    } catch (err) {
-      console.error("Error updating shop status:", err?.response?.data || err);
-      alert("ไม่สามารถเปลี่ยนสถานะร้านได้");
+      await axios.put(`/shops/${shop.id}/status`, { status: newStatus }, { withCredentials: true });
+      setShop((p) => ({ ...p, status: newStatus }));
     } finally {
       setUpdating(false);
     }
   };
 
-  // ✅ เปิด/ปิดการจอง (reserve_active)
   const toggleReserve = async () => {
     if (!shop?.id) return;
     try {
       setUpdatingReserve(true);
       const newReserve = !shop.reserve_active;
-
-      await axios.put(
-        `/shops/${shop.id}/reserve`,
-        { reserve_active: newReserve },
-        { withCredentials: true }
-      );
-
-      setShop((prev) => ({
-        ...prev,
-        reserve_active: newReserve,
-      }));
-    } catch (err) {
-      console.error("Error updating reserve status:", err?.response?.data || err);
-      alert("ไม่สามารถเปลี่ยนสถานะการจองได้");
+      await axios.put(`/shops/${shop.id}/reserve`, { reserve_active: newReserve }, { withCredentials: true });
+      setShop((p) => ({ ...p, reserve_active: newReserve }));
     } finally {
       setUpdatingReserve(false);
     }
   };
 
-  if (loading)
-    return (
-      <div className="dashboard-main">
-        <div className="content">
-          <h2>กำลังโหลดข้อมูลร้าน...</h2>
-        </div>
-      </div>
-    );
-
-  if (!shop)
-    return (
-      <div className="dashboard-main">
-        <div className="content">
-          <h2>ยังไม่มีร้านในระบบ</h2>
-        </div>
-      </div>
-    );
+  if (loading) return <div className="dashboard-main"><h2>กำลังโหลดข้อมูล...</h2></div>;
+  if (!shop) return <div className="dashboard-main"><h2>ยังไม่มีร้านในระบบ</h2></div>;
 
   return (
     <div className="dashboard-main">
       <div className="content">
         <div className="header-row">
-          <h1>{shop.shop_name || `ร้าน (${shop.id})`}</h1>
-
+          <h1>{shop.shop_name}</h1>
           <div className="btn-group">
-            {/* ปุ่มเปิด/ปิดร้าน */}
-            <button
-              className={`status-btn ${shop.status ? "open" : "closed"}`}
-              onClick={toggleShopStatus}
-              disabled={updating}
-            >
-              {updating
-                ? "⏳ กำลังอัปเดต..."
-                : shop.status
-                ? "🔓 ร้านเปิดอยู่ (คลิกเพื่อปิด)"
-                : "🔒 ร้านปิดอยู่ (คลิกเพื่อเปิด)"}
+            <button className={`status-btn ${shop.status ? "open" : "closed"}`} onClick={toggleShopStatus}>
+              {shop.status ? "🔓 ร้านเปิดอยู่" : "🔒 ร้านปิดอยู่"}
             </button>
-
-            {/* ปุ่มเปิด/ปิดจอง */}
-            <button
-              className={`reserve-btn ${shop.reserve_active ? "on" : "off"}`}
-              onClick={toggleReserve}
-              disabled={updatingReserve}
-            >
-              {updatingReserve
-                ? "⏳ กำลังอัปเดต..."
-                : shop.reserve_active
-                ? "📅 เปิดรับการจอง"
-                : "🚫 ปิดรับการจอง"}
+            <button className={`reserve-btn ${shop.reserve_active ? "on" : "off"}`} onClick={toggleReserve}>
+              {shop.reserve_active ? "📅 เปิดรับการจอง" : "🚫 ปิดรับการจอง"}
             </button>
-
-            {/* ✅ ปุ่มไปจัดการเมนู (แน่ใจว่าใช้ shop.id จริง) */}
-            <button
-              className="menu-btn"
-              onClick={() => {
-                if (!shop?.id) return alert("ไม่พบ shopId");
-                // ส่ง state เผื่อหน้า VendorMenu อยากใช้
-                navigate(`/vendor/shops/${shop.id}/menu`, {
-                  state: { shopId: shop.id, shop },
-                });
-              }}
-            >
+            <button className="menu-btn" onClick={() => navigate(`/vendor/shops/${shop.id}/menu`)}>
               🍽️ จัดการเมนู
             </button>
-
-            {/* หรือใช้ลิงก์ก็ได้ */}
-            {/* <Link className="menu-link" to={`/vendor/shops/${shop.id}/menu`} state={{ shopId: shop.id, shop }}>
-              🍽️ จัดการเมนู
-            </Link> */}
           </div>
         </div>
 
-        {/* debug เล็กน้อย */}
-        <div style={{ marginTop: 8, color: "#64748b", fontSize: 13 }}>
-          <div>Shop ID: <code>{shop.id}</code></div>
+        {/* ───────── Dashboard Summary ───────── */}
+        <div className="dashboard-cards">
+          <div className="card summary">
+            <h3>ยอดขายวันนี้</h3>
+            <p className="amount">{stats.todaySales.toLocaleString("th-TH", { style: "currency", currency: "THB" })}</p>
+          </div>
+          <div className="card summary">
+            <h3>จำนวนออเดอร์</h3>
+            <p className="amount">{stats.orders}</p>
+          </div>
+          <div className="card summary">
+            <h3>จำนวนการจอง</h3>
+            <p className="amount">{stats.reserves}</p>
+          </div>
         </div>
 
-        <div className="sale"></div>
-        <div className="sale"></div>
+        {/* ───────── Calendar / Reserve Section ───────── */}
+        <div className="dashboard-lower">
+          <div className="calendar-box">
+            <h3>📅 ปฏิทินการจอง</h3>
+            <iframe
+              src="https://calendar.google.com/calendar/embed?mode=MONTH"
+              title="calendar"
+              className="calendar-frame"
+            />
+          </div>
+          <div className="recent-orders">
+            <h3>🧾 ออเดอร์ล่าสุด</h3>
+            <p>ฟังก์ชันนี้สามารถดึง /shops/{shop.id}/orders ล่าสุดได้</p>
+          </div>
+        </div>
       </div>
     </div>
   );
