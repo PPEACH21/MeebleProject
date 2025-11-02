@@ -180,12 +180,6 @@ func AddMenu(c *fiber.Ctx) error {
 	})
 }
 
-// helper: แปลง error จาก Firestore เป็น code (optional)
-func statusFromErr(err error) (int, bool) {
-	// ใส่ logic ตามที่คุณใช้จัดการ error code/GRPC status ในโปรเจกต์
-	return 0, false
-}
-
 func UpdateShopStatus(c *fiber.Ctx) error {
 	shopId := c.Params("id")
 	if shopId == "" {
@@ -829,4 +823,66 @@ func getUserNameByID(ctx context.Context, db *firestore.Client, userId string) (
 		return s, nil
 	}
 	return "", nil
+}
+
+var allowedTypes = map[string]bool{
+	"Appetizer":   true,
+	"Beverage":    true,
+	"Fast food":   true,
+	"Main course": true,
+	"Dessert":     true,
+}
+
+// PUT /api/shops/:id
+func UpdateShopSettings(c *fiber.Ctx) error {
+	shopId := c.Params("id")
+	if shopId == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "shopId required"})
+	}
+
+	var body struct {
+		ShopName    *string  `json:"shop_name"`
+		Description *string  `json:"description"`
+		Type        *string  `json:"type"`  // one-of: allowedTypes
+		Image       *string  `json:"image"` // URL (ถ้าอัปโหลดไฟล์ ให้ใช้ endpoint /image)
+		PriceMin    *float64 `json:"price_min"`
+		PriceMax    *float64 `json:"price_max"`
+	}
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid body", "msg": err.Error()})
+	}
+
+	var updates []firestore.Update
+	if body.ShopName != nil {
+		updates = append(updates, firestore.Update{Path: "shop_name", Value: *body.ShopName})
+	}
+	if body.Description != nil {
+		updates = append(updates, firestore.Update{Path: "description", Value: *body.Description})
+	}
+	if body.Type != nil {
+		t := strings.TrimSpace(*body.Type)
+		if t != "" && !allowedTypes[t] {
+			return c.Status(400).JSON(fiber.Map{"error": "type must be one of: Appetizer, Beverage, Fast food, Main course, Dessert"})
+		}
+		updates = append(updates, firestore.Update{Path: "type", Value: t})
+	}
+	if body.Image != nil {
+		updates = append(updates, firestore.Update{Path: "image", Value: *body.Image})
+	}
+	if body.PriceMin != nil {
+		updates = append(updates, firestore.Update{Path: "price_min", Value: *body.PriceMin})
+	}
+	if body.PriceMax != nil {
+		updates = append(updates, firestore.Update{Path: "price_max", Value: *body.PriceMax})
+	}
+
+	if len(updates) == 0 {
+		return c.JSON(fiber.Map{"success": true, "message": "nothing to update"})
+	}
+
+	_, err := config.Client.Collection("shops").Doc(shopId).Update(config.Ctx, updates)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "failed to update", "msg": err.Error()})
+	}
+	return c.JSON(fiber.Map{"success": true})
 }
