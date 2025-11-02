@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"os"
 
 	"github.com/PPEACH21/MebleBackend-Web/config"
@@ -46,5 +48,29 @@ func main(){
 	app.Put("/changepassword", service.ChangePassword)
 	app.Use(middlewares.ProtectedCookie())
 		routes.Routes(app)
-	app.Listen(":8080")
+	
+		
+	env := os.Getenv("MODE")
+
+	certFile := os.Getenv("CERT_PATH")
+	keyFile  := os.Getenv("KEY_PATH")
+
+	if env == "prod" {
+		if _, err := os.Stat(certFile); os.IsNotExist(err) {
+			log.Println("No cert found. Falling back to HTTP...")
+			fmt.Println("Local HTTP server running on http://localhost:8080")
+			app.Listen(":8080")
+		} else {
+			fmt.Println("HTTPS server running on Port:8080")
+			if err := app.ListenTLS(":8080", certFile, keyFile); err != nil {
+				log.Fatal("Server failed to start:", err)
+			}
+		}
+	} else {
+		fmt.Println("Local HTTP server running on Port:8080")
+		if err := app.Listen(":8080"); err != nil {
+			log.Fatal("Local server failed to start:", err)
+		}
+	}
+
 }
