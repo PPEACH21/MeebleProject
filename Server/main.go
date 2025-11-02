@@ -48,8 +48,7 @@ func main(){
 	app.Put("/changepassword", service.ChangePassword)
 	app.Use(middlewares.ProtectedCookie())
 		routes.Routes(app)
-	
-		
+
 	env := os.Getenv("MODE")
 
 	certFile := os.Getenv("CERT_PATH")
@@ -72,5 +71,4 @@ func main(){
 			log.Fatal("Local server failed to start:", err)
 		}
 	}
-
 }
