@@ -34,7 +34,7 @@
   background: #fafafa;
 }
 
-/* สองคอลัมน์: ซ้ายรายละเอียด / ขวาแผนที่ */
+
 .vs-layout {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
@@ -154,7 +154,7 @@
   filter: brightness(1.05);
 }
 
-/* ป้ายชื่อเดิม (ถ้าใช้อยู่) */
+
 .vs-oldname {
   background: #f7f7f7;
   padding: 0.5rem 0.75rem;
@@ -163,14 +163,12 @@
   color: #333;
 }
 
-/* ปุ่มบันทึกแบบเก่าไม่ใช้แล้ว (ย้ายไปใต้แผนที่) */
+
 .vs-actions {
   display: none;
 }
 
-/* =========================
-   Coordinates area (ซ้าย)
-   ========================= */
+
 .vs-coord-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -207,7 +205,7 @@
   width: 100%;
 }
 
-/* ใต้แผนที่: คำอธิบาย + Lat/Lng + ปุ่ม */
+
 .vs-map-footer {
   padding: 0.6rem 1rem 1rem 1rem;
   color: #444;
@@ -264,7 +262,7 @@
   display: block;
   width: 100%;
   box-sizing: border-box;
-  min-height: 3rem; /* ให้สูงใกล้เคียงกับ textarea */
+  min-height: 3rem; 
   border-radius: 10px;
   padding: 0.75rem 0.75rem;
   border: 1px solid #e5e7eb;

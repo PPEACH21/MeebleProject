@@ -1,6 +1,8 @@
 // src/User/component/StoreCard.jsx
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
+import "sweetalert2/dist/sweetalert2.min.css";
 
 // --- helpers ---
 const toNum = (v) => (typeof v === "number" ? v : Number(v) || 0);
@@ -26,7 +28,12 @@ function extractLatLngFromShop(shop) {
     if (!obj) continue;
     const lat = obj.latitude ?? obj.lat ?? obj._lat ?? obj.Latitude ?? obj.Lat;
     const lng =
-      obj.longitude ?? obj.lng ?? obj._long ?? obj.Longitude ?? obj.Lng ?? obj.lon;
+      obj.longitude ??
+      obj.lng ??
+      obj._long ??
+      obj.Longitude ??
+      obj.Lng ??
+      obj.lon;
     if (
       typeof lat === "number" &&
       typeof lng === "number" &&
@@ -72,19 +79,27 @@ const StoreCard = ({ datashow }) => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) =>
-        setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude } ),
+        setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       () => setUserPos(null),
       { enableHighAccuracy: true, maximumAge: 60000, timeout: 10000 }
     );
   }, []);
 
-  const handleSelectShop = (shop) => {
+  const goOrder = (shop) => {
     const shopId = getShopId(shop);
     if (!shopId) {
       console.warn("missing shopId on shop item:", shop);
       return;
     }
-    // เก็บไว้เผื่อหน้าเมนู fallback
+    if (!shop.status) {
+      Swal.fire({
+        icon: "info",
+        title: "ไม่สามารถสั่งอาหารได้",
+        text: "ร้านนี้ปิดอยู่ในขณะนี้",
+        confirmButtonText: "เข้าใจแล้ว",
+      });
+      return;
+    }
     if (typeof window !== "undefined") {
       localStorage.setItem("currentShopId", shopId);
     }
@@ -93,22 +108,29 @@ const StoreCard = ({ datashow }) => {
     });
   };
 
-  // 👉 ไปหน้า /reserve/:shopId (ไม่มี popup)
   const goReserve = (shop) => {
     const shopId = getShopId(shop);
     if (!shopId) return;
+    if (!shop.status) {
+      Swal.fire({
+        icon: "info",
+        title: "ไม่สามารถจองได้",
+        text: "ร้านนี้ปิดอยู่ในขณะนี้",
+        confirmButtonText: "เข้าใจแล้ว",
+      });
+      return;
+    }
     if (typeof window !== "undefined") {
       localStorage.setItem("currentShopId", shopId);
     }
     navigate(`/reserve/${encodeURIComponent(shopId)}`, {
-      state: { shop, shopId }, // หน้า Reserve จะมี date picker เอง
+      state: { shop, shopId },
     });
   };
 
   return (
     <div className="card-grid">
       {datashow.map((item, index) => {
-        // รองรับทั้ง min_price/max_price และ price_min/price_max
         const minP =
           item.min_price ?? item.price_min ?? item.Min_price ?? item.Price_min;
         const maxP =
@@ -127,12 +149,12 @@ const StoreCard = ({ datashow }) => {
           distanceText = formatDistanceText(km);
         }
 
-        const shopId = getShopId(item);
+        const cardKey = item.id || item.ID || index;
 
         return (
           <div
             className="card"
-            key={item.id || item.ID || index}
+            key={cardKey}
             style={{ margin: "10px", padding: "10px" }}
           >
             <div
@@ -152,6 +174,8 @@ const StoreCard = ({ datashow }) => {
                   objectFit: "cover",
                   borderRadius: "10px",
                   flex: "0 0 250px",
+                  filter: item.status ? "none" : "grayscale(0.3)",
+                  opacity: item.status ? 1 : 0.85,
                 }}
                 src={
                   item.image ||
@@ -172,6 +196,7 @@ const StoreCard = ({ datashow }) => {
                         whiteSpace: "nowrap",
                         maxWidth: "240px",
                       }}
+                      title={item.shop_name}
                     >
                       {item.shop_name}
                     </h2>
@@ -224,14 +249,6 @@ const StoreCard = ({ datashow }) => {
                         <p>
                           <b>Type:</b> {item.type}
                         </p>
-
-                        {/* ✅ แสดงรหัสร้านค้า */}
-                        <p>
-                          <b>Shop ID:</b>{" "}
-                          <span style={{ fontFamily: "monospace" }}>
-                            {shopId || "—"}
-                          </span>
-                        </p>
                       </div>
                     </div>
                   </div>
@@ -247,16 +264,24 @@ const StoreCard = ({ datashow }) => {
                   flex: "0 0 180px",
                 }}
               >
-                <button className="btn" onClick={() => handleSelectShop(item)}>
+                <button
+                  className="btn"
+                  onClick={() => goOrder(item)}
+                  title={item.status ? "สั่งอาหาร" : "ร้านปิดอยู่"}
+                  style={{
+                    opacity: item.status ? 1 : 0.9,
+                  }}
+                >
                   order
                 </button>
 
-                {/* ปุ่มจอง -> ไปหน้า /reserve/:shopId */}
                 <button
                   className="btn"
                   onClick={() => goReserve(item)}
-                  disabled={!item.status} // ปิดจองถ้าร้านปิด (ปรับตามต้องการ)
-                  title={!item.status ? "ร้านปิดชั่วคราว" : "จองวันที่รับออเดอร์"}
+                  title={item.status ? "จองวันที่รับออเดอร์" : "ร้านปิดอยู่"}
+                  style={{
+                    opacity: item.status ? 1 : 0.9,
+                  }}
                 >
                   reserve
                 </button>
@@ -270,4 +295,3 @@ const StoreCard = ({ datashow }) => {
 };
 
 export default StoreCard;
-  

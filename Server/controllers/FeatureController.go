@@ -613,19 +613,13 @@ func UpdateCartQty(c *fiber.Ctx) error {
 func CreateReservation(c *fiber.Ctx) error {
 	var req models.CreateReservationReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "invalid body", "msg": err.Error(),
-		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid body", "msg": err.Error()})
 	}
 	if req.ShopID == "" || req.UserID == "" || req.CustomerID == "" || req.Date == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "shopId/userId/customerId/date required",
-		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "shopId/userId/customerId/date required"})
 	}
 	if !validateYMD(req.Date) {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "date must be YYYY-MM-DD",
-		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "date must be YYYY-MM-DD"})
 	}
 
 	// ตรวจว่ามีร้านจริง
@@ -636,74 +630,75 @@ func CreateReservation(c *fiber.Ctx) error {
 	shopName, _ := shopDoc.Data()["shop_name"].(string)
 
 	now := time.Now().UTC()
-	lockKey := fmt.Sprintf("%s_%s_%s", req.ShopID, req.UserID, req.Date)
+	uniqueKey := fmt.Sprintf("%s__%s", req.ShopID, req.Date)
+
+	// ✅ pre-check: ถ้าใน reservations มีรายการ shop+date นี้อยู่แล้ว → 409
+	{
+		qs := config.Client.Collection("reservations").
+			Where("shopId", "==", req.ShopID).
+			Where("date", "==", req.Date).
+			Limit(1)
+		exist, err := qs.Documents(config.Ctx).GetAll()
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "precheck failed", "msg": err.Error()})
+		}
+		if len(exist) > 0 {
+			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "ร้านนี้ถูกจองไปแล้วในวันที่เลือก โปรดเลือกวันอื่น"})
+		}
+	}
 
 	var newID string
-
 	err = config.Client.RunTransaction(config.Ctx, func(ctx context.Context, tx *firestore.Transaction) error {
-		// 1) กันจองซ้ำด้วย lock doc (ใช้ Create เพื่อให้ชนถ้ามีอยู่แล้ว)
-		lockRef := config.Client.Collection("reservations_locks").Doc(lockKey)
-		if err := tx.Create(lockRef, map[string]interface{}{
+		// 🔒 unique lock: shop+date
+		uniqueRef := config.Client.Collection("reservations_unique").Doc(uniqueKey)
+		if err := tx.Create(uniqueRef, map[string]interface{}{
 			"shopId":    req.ShopID,
-			"userId":    req.UserID,
 			"date":      req.Date,
 			"createdAt": now,
 		}); err != nil {
-			// มีคนล็อคไว้แล้ว => จองซ้ำ
-			return fiber.NewError(fiber.StatusConflict, "reservation already exists for this user/shop/date")
+			return fiber.NewError(fiber.StatusConflict, "this shop is already reserved for that date")
 		}
 
-		// 2) auto-ID กลาง
+		// เขียน main
 		mainRef := config.Client.Collection("reservations").NewDoc()
 		newID = mainRef.ID
-
-		// payload กลาง (เก็บ id ลงเอกสารด้วย เผื่อฝั่ง client ใช้งานสะดวก)
 		data := map[string]interface{}{
 			"id":         newID,
 			"shopId":     req.ShopID,
 			"shop_name":  shopName,
 			"userId":     req.UserID,
 			"customerId": req.CustomerID,
-			"date":       req.Date, // YYYY-MM-DD
+			"date":       req.Date,
 			"note":       req.Note,
 			"phone":      req.Phone,
 			"createdAt":  now,
 			"updatedAt":  now,
 		}
-
-		// 3) เขียน main
 		if err := tx.Set(mainRef, data); err != nil {
 			return err
 		}
 
-		// 4) เขียน sub ของ user (ใช้ id เดียวกัน)
 		userSub := config.Client.Collection("users").Doc(req.UserID).
 			Collection("reservations").Doc(newID)
 		if err := tx.Set(userSub, data); err != nil {
 			return err
 		}
 
-		// 5) เขียน sub ของ shop (ใช้ id เดียวกัน)
 		shopSub := config.Client.Collection("shops").Doc(req.ShopID).
 			Collection("reservations").Doc(newID)
 		if err := tx.Set(shopSub, data); err != nil {
 			return err
 		}
-
 		return nil
 	})
 
 	if err != nil {
 		if fe, ok := err.(*fiber.Error); ok {
-			// 409 จากการจองซ้ำ
 			return c.Status(fe.Code).JSON(fiber.Map{"error": fe.Message})
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "transaction failed", "msg": err.Error(),
-		})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "transaction failed", "msg": err.Error()})
 	}
 
-	// ตอบกลับด้วย auto-ID ที่เพิ่งสร้าง
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"id":         newID,
 		"shopId":     req.ShopID,

@@ -4,7 +4,6 @@ import LoginPage from "./User/page/Login";
 import HomePage from "./User/page/Home";
 import { NavLayout } from "./User/component/Nav";
 import { ProtectedLayout } from "./context/ProtectRoute";
-import MapPickerButton from "./User/component/MapPickerButton";
 import Register from "./User/page/Register";
 import VerifyEmail from "./User/page/VerifyEmail";
 import StorePage from "./User/page/StorePage";
@@ -53,7 +52,6 @@ function App() {
           <Route element={<NavLayout focus={true} cart={true} />}>
             <Route path="/menu/:id" element={<MenuStore />} />
           </Route>
-          <Route path="/mappick" element={<MapPickerButton />} />
         </Route>
 
         <Route element={<ProtectedLayout role="vendor" />}>

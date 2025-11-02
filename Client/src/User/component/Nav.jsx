@@ -9,6 +9,9 @@ import { Outlet } from "react-router-dom";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 
+// ⬇️ เพิ่มไอคอนปฏิทิน
+import { FaRegCalendarAlt } from "react-icons/fa";
+
 export const NavLayout = ({ focus, cart }) => {
   return (
     <>
@@ -101,6 +104,11 @@ const Navbar = ({ focus = false, cart = false }) => {
   const [dataUser, setDatauser] = useState({}); // ✅ เป็น object
   const navigate = useNavigate();
 
+  // ⬇️ เพิ่ม state สำหรับ Popup ปฏิทิน/รายการจอง
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [loadingResv, setLoadingResv] = useState(false);
+  const [reservations, setReservations] = useState([]); // [{id, date, shop_name, shopId, note, ...}]
+
   const getuserID = async () => {
     try {
       if (!auth?.user_id) return;
@@ -175,10 +183,66 @@ const Navbar = ({ focus = false, cart = false }) => {
     }
   };
 
+  // ⬇️ โหลดรายการจองของ user เมื่อเปิด popup
+  useEffect(() => {
+    const fetchReservations = async () => {
+      if (!showCalendar || !auth?.user_id) return;
+      setLoadingResv(true);
+      try {
+        const res = await axios.get(`/reservations/user/${auth.user_id}`, {
+          withCredentials: true,
+        });
+        const list = Array.isArray(res.data) ? res.data : (res.data?.items || []);
+        // เรียงจากวันที่ใหม่ -> เก่า
+        list.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+        setReservations(list);
+      } catch (e) {
+        console.error("fetch reservations failed", e);
+        setReservations([]);
+      } finally {
+        setLoadingResv(false);
+      }
+    };
+    fetchReservations();
+  }, [showCalendar, auth?.user_id]);
+
   const fmtInt = (n) =>
     (Number(n) || 0).toLocaleString("th-TH", {
       maximumFractionDigits: 0,
     });
+
+  // ⬇️ helper แสดงรายการใน popup
+  const ReservationList = () => {
+    if (loadingResv) return <p style={{ color: "#64748b" }}>กำลังโหลด...</p>;
+    if (!reservations.length) return <p style={{ color: "#64748b" }}>ยังไม่มีรายการจอง</p>;
+
+    return (
+      <div style={{ maxHeight: "60vh", overflowY: "auto", marginTop: 8 }}>
+        {reservations.map((r) => (
+          <div
+            key={r.id || `${r.shopId}_${r.date}`}
+            style={{
+              border: "1px solid #e5e7eb",
+              borderRadius: 12,
+              padding: 12,
+              marginBottom: 10,
+              background: "#fff",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+              <div style={{ fontWeight: 700 }}>{r.shop_name || r.shopId || "-"}</div>
+              <div style={{ fontFamily: "monospace" }}>{r.date}</div>
+            </div>
+            {r.note ? (
+              <div style={{ marginTop: 6, color: "#475569" }}>
+                <b>หมายเหตุ:</b> {r.note}
+              </div>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <nav className="navHomePage">
@@ -227,6 +291,17 @@ const Navbar = ({ focus = false, cart = false }) => {
               <div className="fontcolor">
                 <FaHistory size={25} onClick={() => navigate("/history")} />
               </div>
+
+              {/* ✅ ปุ่มปฏิทิน (Popup) — แค่เพิ่ม ไม่แก้ของเดิม */}
+              <div
+                className="fontcolor"
+                title="ดูวันที่จอง (Popup)"
+                onClick={() => setShowCalendar(true)}
+                style={{ cursor: "pointer" }}
+              >
+                <FaRegCalendarAlt size={24} />
+              </div>
+
               <div className="fontcolor">
                 <TiShoppingCart size={35} onClick={() => navigate("/cart")} />
               </div>
@@ -254,6 +329,62 @@ const Navbar = ({ focus = false, cart = false }) => {
           </div>
         </div>
       </div>
+
+      {/* ⬇️ Popup ปฏิทิน/รายการจอง — overlay ปิดได้ด้วยคลิกนอกกล่อง */}
+      {showCalendar && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,.35)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowCalendar(false);
+          }}
+        >
+          <div
+            style={{
+              width: "min(760px, 96vw)",
+              background: "#fff",
+              borderRadius: 16,
+              boxShadow: "0 10px 30px rgba(0,0,0,.2)",
+              border: "1px solid #e5e7eb",
+              padding: 16,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 8,
+              }}
+            >
+              <h3 style={{ margin: 0 }}>📅 วันที่คุณจองไว้</h3>
+              <button
+                onClick={() => setShowCalendar(false)}
+                style={{
+                  border: "none",
+                  background: "#111827",
+                  color: "#fff",
+                  borderRadius: 10,
+                  padding: "8px 12px",
+                  cursor: "pointer",
+                }}
+              >
+                ปิด
+              </button>
+            </div>
+
+            {/* รายการจองแบบลิสต์เรียงตามวัน (ใหม่→เก่า) */}
+            <ReservationList />
+          </div>
+        </div>
+      )}
     </nav>
   );
 };

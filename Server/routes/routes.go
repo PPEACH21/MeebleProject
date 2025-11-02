@@ -21,7 +21,6 @@ func Routes(app *fiber.App) {
 	app.Patch("/shops/:shopId/menu/:menuId/active", controllers.ToggleMenuActive)
 	app.Delete("/shops/:shopId/menu/:menuId", controllers.DeleteMenu)
 
-	// routes/routes.go
 	app.Get("/users/:userId/history", controllers.GetUserHistory)
 	app.Get("/users/:userId/history/:historyId", controllers.GetUserHistoryByID)
 	app.Put("/shops/:id/status", controllers.UpdateShopStatus)
@@ -31,36 +30,25 @@ func Routes(app *fiber.App) {
 	app.Post("/sendotp", service.OTPvertify())
 
 	app.Post("/logout", service.Logout)
-	//
+
 	app.Get("/api/cart", controllers.GetCart)
 	app.Post("/api/cart/add", controllers.AddToCart)
 	app.Post("/api/cart/checkout", controllers.CheckoutCartFromDB)
 	app.Patch("/api/cart/qty", controllers.UpdateCartQty)
-	app.Get("/orders", controllers.ListOrdersByUser)                    // ดึงทั้งหมดตาม userId
-	app.Patch("/orders/:orderId/status", controllers.UpdateOrderStatus) // success → move
-	app.Get("/api/shops/:shopId/history", controllers.ListShopHistory)  // ประวัติร้าน
+	app.Get("/orders", controllers.ListOrdersByUser)
+	app.Patch("/orders/:orderId/status", controllers.UpdateOrderStatus)
+	app.Get("/api/shops/:shopId/history", controllers.ListShopHistory)
 	app.Get("/api/shops/:shopId/history/:orderId", controllers.GetShopHistoryDoc)
 	app.Get("/orders/shop", controllers.ListOrdersByShop)
-	// routes.go
-	//app.Get("/shops/by-user/:userId", controllers.GetShopByUser)
+
 	app.Post("/user/:id/cost/topup", controllers.TopUpUserCoin)
 	app.Get("/orders/customer/:id", controllers.GetUserNameCustomer)
-	app.Get("/orders/:id", controllers.GetOrderByID)      // ดึงรายละเอียดออเดอร์เดียว
-	app.Put("/shops/:id", controllers.UpdateShopSettings) // อัปเดตร้าน (ชื่อ/คำอธิบาย/ประเภท/รูป-URL/ราคา)
+	app.Get("/orders/:id", controllers.GetOrderByID)
+	app.Put("/shops/:id", controllers.UpdateShopSettings)
 
-	// app.Post("/reservations", controllers.CreateReservation)
-	// app.Get("/reservations/user/:userId", controllers.GetUserReservations)
-	// app.Get("/reservations/shop/:shopId", controllers.GetShopReservations)
-	// app.Patch("/reservations/:id/status", controllers.UpdateReservationStatus)
-
-	app.Post("/reservations", controllers.CreateReservation)
-	app.Get("/reservations/user/:userId", controllers.GetUserReservations)
 	app.Get("/reservations/shop/:shopId", controllers.GetShopReservations)
 	app.Get("/shops/:shopId/reservations", controllers.GetShopReservationsSub)
+	app.Get("/reservations/user/:id", controllers.GetReservationsByUser)
+	app.Post("/reservations", controllers.CreateReservation)
 
-	// ✅ aliases สำหรับ /api (กันกรณี frontend ใช้ baseURL=/api)
-	app.Post("/api/reservations", controllers.CreateReservation)
-	app.Get("/api/reservations/user/:userId", controllers.GetUserReservations)
-	app.Get("/api/reservations/shop/:shopId", controllers.GetShopReservations)
-	app.Get("/api/shops/:shopId/reservations", controllers.GetShopReservationsSub)
 }

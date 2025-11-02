@@ -481,3 +481,40 @@ func TopUpUserCoin(c *fiber.Ctx) error {
 		"success": true,
 	})
 }
+func GetReservationsByUser(c *fiber.Ctx) error {
+	userID := c.Params("id") // ใช้ :id ตาม route ของคุณ
+	date := c.Query("date")  // optional filter: /reservations/user/:id?date=YYYY-MM-DD
+
+	if userID == "" {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "userId required"})
+	}
+	if config.Client == nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "firestore client not initialized"})
+	}
+
+	q := config.Client.Collection("reservations").Where("userId", "==", userID)
+	if date != "" {
+		if !validateYMD(date) {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "date must be YYYY-MM-DD"})
+		}
+		q = q.Where("date", "==", date)
+	}
+
+	docs, err := q.Documents(config.Ctx).GetAll()
+	if err != nil {
+		// ถ้าเป็น index error ของ Firestore จะได้ FAILED_PRECONDITION
+		// แนะนำดู log server จะมีลิงก์สร้าง index ให้
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "query failed",
+			"msg":   err.Error(),
+		})
+	}
+
+	out := make([]map[string]interface{}, 0, len(docs))
+	for _, d := range docs {
+		m := d.Data()
+		m["id"] = d.Ref.ID
+		out = append(out, m)
+	}
+	return c.JSON(out)
+}

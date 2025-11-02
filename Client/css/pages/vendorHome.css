@@ -1,24 +1,24 @@
 .dashboard-layout {
   display: flex;
-  height: 100%; /* สูงเต็มหน้าจอ */
-  overflow: hidden; /* ❌ กันทั้งหน้า scroll */
+  height: 100%;
+  overflow: hidden; 
 }
 
-/* ส่วน sidebar */
+
 .dashboard-layout > aside {
   flex-shrink: 0;
 }
 
-/* ส่วน main — ห้าม scroll */
+
 .dashboard-main {
   flex: 1;
-  height: 100vh; /* สูงเต็มหน้าจอ */
-  overflow: hidden; /* ✅ ห้าม scroll ในส่วน main */
+  height: 100vh; 
+  overflow: hidden; 
   padding: 24px;
   background: #f8f9fb;
 }
 
-/* เนื้อหาภายใน */
+
 .dashboard-main .content {
   max-width: 1200px;
   margin: 0 auto;
@@ -52,12 +52,12 @@
 }
 
 .status-btn.open {
-  background: #10b981; /* เขียว */
+  background: #10b981; 
   color: white;
 }
 
 .status-btn.closed {
-  background: #ef4444; /* แดง */
+  background: #ef4444; 
   color: white;
 }
 
@@ -70,7 +70,7 @@
   gap: 12px;
 }
 
-/* ปุ่มเปิดร้าน */
+
 .status-btn {
   border: none;
   border-radius: 8px;
@@ -89,7 +89,7 @@
   color: white;
 }
 
-/* ปุ่มเปิดการจอง */
+
 .reserve-btn {
   border: none;
   border-radius: 8px;
@@ -100,11 +100,11 @@
   transition: all 0.25s ease;
 }
 .reserve-btn.on {
-  background: #3b82f6; /* น้ำเงิน */
+  background: #3b82f6; 
   color: white;
 }
 .reserve-btn.off {
-  background: #9ca3af; /* เทา */
+  background: #9ca3af; 
   color: white;
 }
 
@@ -304,10 +304,10 @@
 .order-table td:last-child {
   text-align: center;
   vertical-align: middle;
-  border-bottom: 1px solid #dee4f0; /* ✅ เพิ่มเส้นขอบล่างให้เท่าช่องอื่น */
+  border-bottom: 1px solid #dee4f0; 
 }
 
-/* จุดสถานะกลม */
+
 .order-table td:last-child::before {
   content: "";
   display: inline-block;
@@ -317,7 +317,7 @@
   vertical-align: middle;
 }
 
-/* สีของแต่ละสถานะ */
+
 .order-table td:last-child[data-status="prepare"]::before {
   background-color: #ffae00;
 }
@@ -356,7 +356,7 @@
     color: #666;
   }
 }
-/* ====== การ์ดกดได้ (ยอดขายรวมทั้งหมด) ====== */
+
 .summary.clickable {
   cursor: pointer;
   position: relative;
@@ -373,7 +373,7 @@
   margin-top: 0.25rem;
 }
 
-/* ====== Recent Orders Table (ขอบเสมอกัน) ====== */
+
 .recent-orders {
   background: #fff;
   border-radius: 14px;
@@ -406,11 +406,11 @@
   transition: background-color 0.2s;
 }
 
-/* ====== สถานะ: แสดงเฉพาะ “จุดสี” ====== */
+
 .order-table td:last-child {
   text-align: center;
   vertical-align: middle;
-  border-bottom: 1px solid #dee4f0; /* ให้เส้นล่างเท่าช่องอื่น */
+  border-bottom: 1px solid #dee4f0; 
 }
 .order-table td:last-child::before {
   content: "";
@@ -433,7 +433,7 @@
   background-color: #ff4d4f;
 }
 
-/* ====== Modal รายวัน ====== */
+
 .modal-mask {
   position: fixed;
   inset: 0;
@@ -483,7 +483,7 @@
   cursor: pointer;
 }
 
-/* ตารางรายวันใน Modal */
+
 .daily-table {
   width: 100%;
   border-collapse: collapse;
@@ -502,14 +502,14 @@
 .daily-table tbody tr:nth-child(even) {
   background: #fafbff;
 }
-/* subtext ในการ์ด */
+
 .summary .subtext {
   font-size: 0.9rem;
   color: #555;
   margin-top: 0.25rem;
 }
 
-/* คอลัมน์สถานะ: แสดงเฉพาะจุดสี + เส้นขอบล่างเท่าเพื่อน */
+
 .order-table td:last-child {
   text-align: center;
   vertical-align: middle;
@@ -563,7 +563,7 @@
   color: #6b7280;
 }
 
-/* Grid (7 คอลัมน์ = อา–ส) */
+
 .cal-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -576,7 +576,7 @@
   padding: 4px 0;
 }
 
-/* ช่องแต่ละวัน */
+
 .cal-cell {
   position: relative;
   min-height: 30px;
@@ -608,7 +608,7 @@
   font-weight: 700;
 }
 
-/* ตราจำนวนจองต่อวัน (มุมขวาบน) */
+
 .badge {
   position: absolute;
   top: 6px;
@@ -626,7 +626,7 @@
   padding: 0 6px;
 }
 
-/* จุดสถานะแบบไม่มีตัวอักษร (มุมซ้ายล่าง) */
+
 .cal-dots {
   position: absolute;
   left: 8px;
@@ -642,23 +642,23 @@
 }
 .dot.pending {
   background: #f59e0b;
-} /* เหลือง */
+} 
 .dot.confirmed {
   background: #10b981;
-} /* เขียว */
+} 
 .dot.done {
   background: #3b82f6;
-} /* น้ำเงิน */
+} 
 .dot.canceled {
   background: #ef4444;
-} /* แดง */
+} 
 
-/* มีรายการจองแล้วให้ยกพื้นนิดๆ (optional) */
+
 .cal-cell.has {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
 }
 
-/* ตอบสนองหน้าจอเล็ก */
+
 @media (max-width: 640px) {
   .cal-grid {
     gap: 6px;
@@ -682,7 +682,7 @@
   }
 }
 
-/* ช่วยลด motion สำหรับคนที่ตั้งค่า prefer-reduced-motion */
+
 @media (prefers-reduced-motion: reduce) {
   .cal-cell.day {
     transition: none;

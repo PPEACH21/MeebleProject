@@ -140,13 +140,13 @@
 .btn:active { transform: translateY(1px); }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
 
-/* ปุ่มรอง */
+
 .btn-secondary {
   background: #fff;
 }
 .btn-secondary:hover { background: #f9fafb; }
 
-/* ปุ่มขอบ */
+
 .btn-outline {
   background: #fff;
 }

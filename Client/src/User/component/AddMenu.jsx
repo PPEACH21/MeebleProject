@@ -64,7 +64,7 @@ export default function MenuManager() {
       setOpen(false);
       setForm({ name: "", description: "", price: "", image: null });
 
-      fetchMenus(); // 🔄 refresh เมนูทันทีหลังเพิ่ม
+      fetchMenus(); 
     } catch (err) {
       console.error(err);
       alert("เกิดข้อผิดพลาด ❌");
@@ -73,10 +73,10 @@ export default function MenuManager() {
 
   return (
     <div style={{ padding: "20px" }}>
-      {/* ปุ่มเพิ่มเมนู */}
+   
       <button onClick={() => setOpen(true)}>➕ เพิ่มเมนู</button>
 
-      {/* Popup ฟอร์ม */}
+
       {open && (
         <div className="popup">
           <div className="popup-inner">
@@ -114,7 +114,7 @@ export default function MenuManager() {
         </div>
       )}
 
-      {/* แสดงเมนูทั้งหมด */}
+
       <h2 style={{ marginTop: "20px" }}>📋 เมนูทั้งหมด</h2>
       <div
         style={{
@@ -149,7 +149,7 @@ export default function MenuManager() {
         ))}
       </div>
 
-      {/* CSS สำหรับ popup */}
+    
       <style>{`
         .popup {
           position: fixed;
