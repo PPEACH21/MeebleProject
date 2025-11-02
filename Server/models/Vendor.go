@@ -8,7 +8,7 @@ import (
 )
 
 type Shop struct {
-	ID             string                 `json:"id" firestore:"-"` // ✅ เพิ่มบรรทัดนี้
+	ID             string                 `json:"id" firestore:"-"`
 	Address        *latlng.LatLng         `json:"address" firestore:"address"`
 	Create_at      time.Time              `json:"createAt" firestore:"createAt"`
 	Description    string                 `json:"description" firestore:"description"`
@@ -17,7 +17,8 @@ type Shop struct {
 	Reserve_active bool                   `json:"reserve_active" firestore:"reserve_active"`
 	Shop_name      string                 `json:"shop_name" firestore:"shop_name"`
 	Status         bool                   `json:"status" firestore:"status"`
-	Type           string                 `json:"type" firestore:"type"`
+	Type           string                 `json:"type" firestore:"type"`   // เลือกได้ 1 จาก 5 ประเภท
+	Image          string                 `json:"image" firestore:"image"` // ✅ เพิ่ม field รูป
 	Vendor_ref     *firestore.DocumentRef `json:"-" firestore:"vendor_id"`
 	Vendor_id      string                 `json:"vendor_id" firestore:"-"`
 	PriceMin       *float64               `json:"price_min" firestore:"price_min"`

@@ -43,8 +43,9 @@ func Routes(app *fiber.App) {
 	app.Get("/orders/shop", controllers.ListOrdersByShop)
 	// routes.go
 	//app.Get("/shops/by-user/:userId", controllers.GetShopByUser)
-
+	app.Post("/user/:id/cost/topup", controllers.TopUpUserCoin)
 	app.Get("/orders/customer/:id", controllers.GetUserNameCustomer)
-	app.Get("/orders/:id", controllers.GetOrderByID) // ดึงรายละเอียดออเดอร์เดียว
+	app.Get("/orders/:id", controllers.GetOrderByID)      // ดึงรายละเอียดออเดอร์เดียว
+	app.Put("/shops/:id", controllers.UpdateShopSettings) // อัปเดตร้าน (ชื่อ/คำอธิบาย/ประเภท/รูป-URL/ราคา)
 
 }

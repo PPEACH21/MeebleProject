@@ -3,11 +3,11 @@ package models
 import "time"
 
 type User = struct {
-	Email      string   `json:"email" firestore:"email"`
-	Avatar  string    	`json:"avatar" firestore:"avatar"`
-	Firstname  string   `json:"firstname" firestore:"firstname"`
-	Lastname  string    `json:"lastname" firestore:"lastname"`
-	Phone  string    	`json:"phone" firestore:"phone"`
+	Email      string    `json:"email" firestore:"email"`
+	Avatar     string    `json:"avatar" firestore:"avatar"`
+	Firstname  string    `json:"firstname" firestore:"firstname"`
+	Lastname   string    `json:"lastname" firestore:"lastname"`
+	Phone      string    `json:"phone" firestore:"phone"`
 	Username   string    `json:"username" firestore:"username"`
 	Password   string    `json:"password" firestore:"password"`
 	OTP_Verify string    `json:"otp_verify" firestore:"otp_verify"`
@@ -37,4 +37,7 @@ type OrderDTO struct {
 	CreatedAt    interface{}            `json:"createdAt,omitempty"`    // firetore.Timestamp or time.Time or string
 	CustomerName string                 `json:"customerName,omitempty"` // ✅ เพิ่มตรงนี้
 	Raw          map[string]interface{} `json:"raw,omitempty"`
+}
+type TopUpRequest struct {
+	Amount int64 `json:"amount"`
 }

@@ -439,3 +439,45 @@ func UpdateProfile(c *fiber.Ctx) error {
 		"user":    dbuser,
 	})
 }
+
+// POST /api/user/:id/cost/topup
+// เติม Coin แบบ "บวกเพิ่ม" ด้วย Firestore Increment (atomic)
+func TopUpUserCoin(c *fiber.Ctx) error {
+	userID := c.Params("id")
+	if userID == "" {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "user id required"})
+	}
+
+	var body models.TopUpRequest
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "invalid body"})
+	}
+	if body.Amount <= 0 {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "amount must be > 0"})
+	}
+
+	doc := config.Client.Collection("users").Doc(userID)
+
+	// บวกเพิ่มแบบ atomic
+	_, err := doc.Update(config.Ctx, []firestore.Update{
+		{Path: "Cost", Value: firestore.Increment(body.Amount)},
+		{Path: "updatedAt", Value: firestore.ServerTimestamp},
+	})
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "top-up failed", "msg": err.Error()})
+	}
+
+	// อ่านค่าล่าสุดเพื่อตอบกลับเป็น model.User
+	snap, err := doc.Get(config.Ctx)
+	if err != nil || !snap.Exists() {
+		return c.Status(http.StatusOK).JSON(fiber.Map{
+			"success": true,
+			"userId":  userID,
+			"message": "topped up, but failed to fetch new value",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+	})
+}

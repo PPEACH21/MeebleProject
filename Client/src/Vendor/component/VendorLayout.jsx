@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
 import VendorSidebar from "@/Vendor/component/VendorSideBar";
-import "@css/components/VendorSidebar.css";
+import "@css/components/VendorSideBar.css";
 import "@css/pages/vendorHome.css";
 
 export default function VendorLayout() {

@@ -1,0 +1,107 @@
+/* src/css/pages/vendorSettings.css */
+
+.vs-container {
+  max-width: 800px;
+  margin: -50px;;
+  padding: 2rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.vs-title {
+  font-size: 2rem;
+  margin-bottom: 0.25rem;
+}
+
+.vs-subtitle {
+  color: #555;
+  margin-bottom: 1.5rem;
+}
+
+.vs-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.vs-section h3 {
+  margin-bottom: 0.5rem;
+  color: #222;
+}
+
+.vs-image-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.vs-image {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+}
+
+.vs-image-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.vs-section label {
+  font-weight: 500;
+  display: block;
+  margin-top: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.vs-section input,
+.vs-section textarea,
+.vs-section select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.vs-oldname {
+  background: #f7f7f7;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  color: #333;
+}
+
+.vs-actions {
+  text-align: center;
+}
+
+.vs-actions button {
+  padding: 0.6rem 1.5rem;
+  font-size: 1rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.vs-actions button:hover {
+  background: #0056b3;
+}
+
+.vs-loading {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+}
+
+.vs-no-shop {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  background: #fafafa;
+}
