@@ -19,7 +19,7 @@
   "enter_email": "Please Enter youremail",
   "confrimpassword": "Confirm Password",
   "enter_confrimpassword": "Please Enter Comfrim Password",
-  "forgot_password": "forgot_password",
+  "forgot_password": "Forgot password",
   "dont_have_account": "You not have account?",
   "have_account": "You have already account?",
   "cost": "Cost",
@@ -43,5 +43,15 @@
   "or": "or",
   "Signin": "Signin",
   "Signup": "Signup",
-  "Typefood": "Type of food"
+  "Typefood": "Type of food",
+  "Manage_Account": "Manage Account",
+  "Language": "Language",
+  "Address": "Address",
+  "Setting": "Setting",
+  "logout": "Logout",
+  "delete": "Delete",
+  "account": "Account",
+  "Thailand": "Thailand",
+  "UnitedStates": "United States",
+  "favoritesRestarant": "Favorites Restarant"
 }
