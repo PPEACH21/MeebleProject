@@ -12,15 +12,17 @@ import Forgotpassword from "./User/page/Forgotpassword";
 import VendorOrderDetail from "./Vendor/page/vendorOrderDetail";
 import Cart from "./User/page/Cart";
 import History from "./User/page/History";
-import Profile from "./User/page/Profile";
-import SettingPage from "./User/page/Setting";
+import Profile from "./User/page/Setting/Profile";
+import SettingPage from "./User/page/Setting/Setting";
 import VendorHistory from "./Vendor/page/vendorHistory";
 import VendorMenu from "./Vendor/page/vendorMenu";
 import VHomePage from "./Vendor/page/vHome";
 import VendorOrders from "./Vendor/page/vendorOrder";
 import VendorSettings from "./Vendor/page/vendorSetting";
-import VendorLayout from "./Vendor/component/VendorLayout";
 import HistoryDetail from "@/User/page/HistoryDetail.jsx";
+import Language from "./User/page/Setting/Language";
+import VendorLayout from "./Vendor/component/VendorLayout"
+
 
 function App() {
   return (
@@ -41,6 +43,7 @@ function App() {
             <Route path="/history" element={<History />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/settings" element={<SettingPage />} />
+            <Route path="/language" element={<Language/>} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/history/:id" element={<HistoryDetail />} />
           </Route>
@@ -53,7 +56,7 @@ function App() {
 
         <Route element={<ProtectedLayout role="vendor" />}>
           <Route element={<NavLayout />}>
-            <Route element={<VendorLayout />}>
+            <Route element={<VendorLayout/>}>
               <Route path="/vendor/home" element={<VHomePage />} />
               <Route path="/vendor/orders" element={<VendorOrders />} />
               <Route
@@ -73,5 +76,4 @@ function App() {
     </BrowserRouter>
   );
 }
-
 export default App;

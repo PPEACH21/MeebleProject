@@ -1,0 +1,23 @@
+
+    .boxsetting{
+        display: flex;
+        width: 90%;
+        justify-content: space-between;
+        align-self: center;
+        align-items: center;
+        background-color: #f2f2f2;
+        border-radius: 10px;
+        padding: 10px 50px;
+        transition: 0.5s ease;
+        transform-origin: center;
+        font-size: 15px;
+        font-weight: bold;
+        border: none;
+        
+    }
+
+    .boxsetting:hover{
+        scale: calc(1.03);
+        /* transition: 0.5s; */
+        background-color: #e6e6e6;
+    }

@@ -43,5 +43,16 @@
   "or": "หรือ",
   "Signin": "เข้าสู่ระบบ",
   "Signup": "ลงทะเบียน",
-  "Typefood": "ประเภทอาหาร"
+  "Typefood": "ประเภทอาหาร",
+  "Manage_Account": "จัดการบัญชี",
+  "Language": "ภาษา",
+  "Address": "ที่อยู่",
+  "Restarant": "ร้านอาหาร",
+  "Setting": "ตั่งค่า",
+  "logout": "ออกจากระบบ",
+  "delete": "ลบ",
+  "account": "บัญชี",
+  "Thailand": "ไทย",
+  "UnitedStates": "อังกฤษ",
+  "favoritesRestarant": "ร้านอาหารที่ชื่นชอบ"
 }

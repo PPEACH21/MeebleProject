@@ -15,7 +15,7 @@ export const OTPInput=({email=false,state,setState}) =>{
 
     const sendmessage = ()=>{
         if(!email){
-            SendOTP(randomNumber, auth);
+            SendOTP( auth);
         }else{
             SendOTPRepassword(email);
         }

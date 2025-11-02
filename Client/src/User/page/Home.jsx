@@ -45,7 +45,6 @@ const HomePage= () =>{
                     <Link to="/register" className="btn" style={{marginTop:70,width:"20%",height:"5%"}}>{m.register()}</Link>
                 </div>
             </div>
-            {/* <button onClick={()=>{return(getLocale()==="en"?setLocale("th"):setLocale("en"))}}>Change Language</button> */}
         </div>
     )
 }
