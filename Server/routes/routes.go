@@ -48,4 +48,19 @@ func Routes(app *fiber.App) {
 	app.Get("/orders/:id", controllers.GetOrderByID)      // ดึงรายละเอียดออเดอร์เดียว
 	app.Put("/shops/:id", controllers.UpdateShopSettings) // อัปเดตร้าน (ชื่อ/คำอธิบาย/ประเภท/รูป-URL/ราคา)
 
+	// app.Post("/reservations", controllers.CreateReservation)
+	// app.Get("/reservations/user/:userId", controllers.GetUserReservations)
+	// app.Get("/reservations/shop/:shopId", controllers.GetShopReservations)
+	// app.Patch("/reservations/:id/status", controllers.UpdateReservationStatus)
+
+	app.Post("/reservations", controllers.CreateReservation)
+	app.Get("/reservations/user/:userId", controllers.GetUserReservations)
+	app.Get("/reservations/shop/:shopId", controllers.GetShopReservations)
+	app.Get("/shops/:shopId/reservations", controllers.GetShopReservationsSub)
+
+	// ✅ aliases สำหรับ /api (กันกรณี frontend ใช้ baseURL=/api)
+	app.Post("/api/reservations", controllers.CreateReservation)
+	app.Get("/api/reservations/user/:userId", controllers.GetUserReservations)
+	app.Get("/api/reservations/shop/:shopId", controllers.GetShopReservations)
+	app.Get("/api/shops/:shopId/reservations", controllers.GetShopReservationsSub)
 }

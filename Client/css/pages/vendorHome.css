@@ -1,7 +1,7 @@
 .dashboard-layout {
   display: flex;
-  height: 100%;         /* สูงเต็มหน้าจอ */
-  overflow: hidden;       /* ❌ กันทั้งหน้า scroll */
+  height: 100%; /* สูงเต็มหน้าจอ */
+  overflow: hidden; /* ❌ กันทั้งหน้า scroll */
 }
 
 /* ส่วน sidebar */
@@ -12,118 +12,117 @@
 /* ส่วน main — ห้าม scroll */
 .dashboard-main {
   flex: 1;
-  height: 100vh;          /* สูงเต็มหน้าจอ */
-  overflow: hidden;       /* ✅ ห้าม scroll ในส่วน main */
+  height: 100vh; /* สูงเต็มหน้าจอ */
+  overflow: hidden; /* ✅ ห้าม scroll ในส่วน main */
   padding: 24px;
   background: #f8f9fb;
 }
 
+/* เนื้อหาภายใน */
+.dashboard-main .content {
+  max-width: 1200px;
+  margin: 0 auto;
+  flex-direction: row;
 
-  /* เนื้อหาภายใน */
-  .dashboard-main .content {  
-    max-width: 1200px;
-    margin: 0 auto;
-    flex-direction: row;
-    
-    justify-content:flex-end;
-  }
+  justify-content: flex-end;
+}
 
-  .dashboard-main .content h1 {
-    font-size: 28px;
-    font-weight: bold;
-    color: #333;
-    margin-top: -20px;
-    margin-left: -100px;
-  }
-  .header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
+.dashboard-main .content h1 {
+  font-size: 28px;
+  font-weight: bold;
+  color: #333;
+  margin-top: -20px;
+  margin-left: -100px;
+}
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
 
-  .status-btn {
-    border: none;
-    border-radius: 8px;
-    padding: 10px 16px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s ease;
-  }
+.status-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
 
-  .status-btn.open {
-    background: #10b981; /* เขียว */
-    color: white;
-  }
+.status-btn.open {
+  background: #10b981; /* เขียว */
+  color: white;
+}
 
-  .status-btn.closed {
-    background: #ef4444; /* แดง */
-    color: white;
-  }
+.status-btn.closed {
+  background: #ef4444; /* แดง */
+  color: white;
+}
 
-  .status-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-  .btn-group {
-    display: flex;
-    gap: 12px;
-  }
+.status-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.btn-group {
+  display: flex;
+  gap: 12px;
+}
 
-  /* ปุ่มเปิดร้าน */
-  .status-btn {
-    border: none;
-    border-radius: 8px;
-    padding: 10px 18px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.25s ease;
-  }
-  .status-btn.open {
-    background: #10b981;
-    color: white;
-  }
-  .status-btn.closed {
-    background: #ef4444;
-    color: white;
-  }
+/* ปุ่มเปิดร้าน */
+.status-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.status-btn.open {
+  background: #10b981;
+  color: white;
+}
+.status-btn.closed {
+  background: #ef4444;
+  color: white;
+}
 
-  /* ปุ่มเปิดการจอง */
-  .reserve-btn {
-    border: none;
-    border-radius: 8px;
-    padding: 10px 18px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.25s ease;
-  }
-  .reserve-btn.on {
-    background: #3b82f6; /* น้ำเงิน */
-    color: white;
-  }
-  .reserve-btn.off {
-    background: #9ca3af; /* เทา */
-    color: white;
-  }
+/* ปุ่มเปิดการจอง */
+.reserve-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.reserve-btn.on {
+  background: #3b82f6; /* น้ำเงิน */
+  color: white;
+}
+.reserve-btn.off {
+  background: #9ca3af; /* เทา */
+  color: white;
+}
 
-  .shop-status-group {
-    margin-top: 20px;
-    padding: 14px 20px;
-    background: #f3f4f6;
-    border-radius: 10px;
-  }
-  .text-open {
-    color: #059669;
-    font-weight: 600;
-  }
-  .text-closed {
-    color: #dc2626;
-    font-weight: 600;
-  }
-.sale{
+.shop-status-group {
+  margin-top: 20px;
+  padding: 14px 20px;
+  background: #f3f4f6;
+  border-radius: 10px;
+}
+.text-open {
+  color: #059669;
+  font-weight: 600;
+}
+.text-closed {
+  color: #dc2626;
+  font-weight: 600;
+}
+.sale {
   width: 400px;
   height: 250px;
   background-color: #9ca3af;
@@ -165,13 +164,28 @@
   font-weight: 600;
 }
 
-.status-btn.open { background: #16a34a; color: #fff; }
-.status-btn.closed { background: #dc2626; color: #fff; }
+.status-btn.open {
+  background: #16a34a;
+  color: #fff;
+}
+.status-btn.closed {
+  background: #dc2626;
+  color: #fff;
+}
 
-.reserve-btn.on { background: #2563eb; color: #fff; }
-.reserve-btn.off { background: #64748b; color: #fff; }
+.reserve-btn.on {
+  background: #2563eb;
+  color: #fff;
+}
+.reserve-btn.off {
+  background: #64748b;
+  color: #fff;
+}
 
-.menu-btn { background: #f59e0b; color: #fff; }
+.menu-btn {
+  background: #f59e0b;
+  color: #fff;
+}
 
 /* ───────── Dashboard Cards ───────── */
 .dashboard-cards {
@@ -185,10 +199,12 @@
   background: #fff;
   border-radius: 12px;
   padding: 1.2rem 1.5rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease;
 }
-.card.summary:hover { transform: translateY(-4px); }
+.card.summary:hover {
+  transform: translateY(-4px);
+}
 
 .card.summary h3 {
   color: #475569;
@@ -208,11 +224,12 @@
   gap: 1rem;
 }
 
-.calendar-box, .recent-orders {
+.calendar-box,
+.recent-orders {
   background: #fff;
   border-radius: 12px;
   padding: 1.2rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .calendar-frame {
@@ -222,11 +239,452 @@
   border-radius: 8px;
   margin-top: 0.6rem;
 }
-
 .recent-orders {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1rem 1.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease-in-out;
+}
+
+.recent-orders h3 {
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  color: #333;
+}
+
+.order-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 0.5rem;
+  border-radius: 10px;
+  overflow: hidden;
+  font-size: 0.95rem;
+}
+
+.order-table thead {
+  background: linear-gradient(90deg, #f0f4ff, #e9f0ff);
+  color: #222;
+}
+
+.order-table th,
+.order-table td {
+  padding: 10px 14px;
+  text-align: left;
+}
+
+.order-table th {
+  font-weight: 600;
+  border-bottom: 2px solid #dee4f0;
+}
+
+.order-table tbody tr {
+  background: #fff;
+  transition: background 0.15s ease-in-out;
+}
+
+.order-table tbody tr:nth-child(even) {
+  background: #fafafa;
+}
+
+.order-table tbody tr:hover {
+  background: #f2f7ff;
+}
+
+.order-table td {
+  border-bottom: 1px solid #e8ecf3;
+  vertical-align: middle;
+}
+
+/* ─────────────── STATUS COLORS ─────────────── */
+.order-table td:last-child {
   text-align: center;
-  color: #64748b;
+  vertical-align: middle;
+  border-bottom: 1px solid #dee4f0; /* ✅ เพิ่มเส้นขอบล่างให้เท่าช่องอื่น */
+}
+
+/* จุดสถานะกลม */
+.order-table td:last-child::before {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+/* สีของแต่ละสถานะ */
+.order-table td:last-child[data-status="prepare"]::before {
+  background-color: #ffae00;
+}
+.order-table td:last-child[data-status="ongoing"]::before {
+  background-color: #0090ff;
+}
+.order-table td:last-child[data-status="success"]::before {
+  background-color: #28c76f;
+}
+.order-table td:last-child[data-status="cancel"]::before {
+  background-color: #ff4d4f;
+}
+
+/* ─────────────── RESPONSIVE ─────────────── */
+@media (max-width: 768px) {
+  .order-table thead {
+    display: none;
+  }
+  .order-table tr {
+    display: block;
+    margin-bottom: 1rem;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    padding: 10px;
+  }
+  .order-table td {
+    display: flex;
+    justify-content: space-between;
+    border: none;
+    padding: 6px 0;
+  }
+  .order-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #666;
+  }
+}
+/* ====== การ์ดกดได้ (ยอดขายรวมทั้งหมด) ====== */
+.summary.clickable {
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.summary.clickable:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+.summary .hint {
+  display: block;
+  font-size: 0.85rem;
+  color: #667085;
+  margin-top: 0.25rem;
+}
+
+/* ====== Recent Orders Table (ขอบเสมอกัน) ====== */
+.recent-orders {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+.order-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 10px;
+  overflow: hidden;
+  font-size: 0.95rem;
+  margin-top: 0.75rem;
+}
+.order-table thead {
+  background: linear-gradient(90deg, #eaf2ff, #f6f9ff);
+}
+.order-table th,
+.order-table td {
+  border: 1px solid #dee4f0;
+  padding: 10px 14px;
+  text-align: left;
+  vertical-align: middle;
+}
+.order-table tbody tr:nth-child(even) {
+  background-color: #fafbff;
+}
+.order-table tbody tr:hover {
+  background-color: #eef4ff;
+  transition: background-color 0.2s;
+}
+
+/* ====== สถานะ: แสดงเฉพาะ “จุดสี” ====== */
+.order-table td:last-child {
+  text-align: center;
+  vertical-align: middle;
+  border-bottom: 1px solid #dee4f0; /* ให้เส้นล่างเท่าช่องอื่น */
+}
+.order-table td:last-child::before {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+.order-table td:last-child[data-status="prepare"]::before {
+  background-color: #ffae00;
+}
+.order-table td:last-child[data-status="ongoing"]::before {
+  background-color: #0090ff;
+}
+.order-table td:last-child[data-status="success"]::before {
+  background-color: #28c76f;
+}
+.order-table td:last-child[data-status="cancel"]::before {
+  background-color: #ff4d4f;
+}
+
+/* ====== Modal รายวัน ====== */
+.modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-panel {
+  width: min(720px, 92vw);
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e6e8ec;
+}
+.modal-head h3 {
+  margin: 0;
+}
+.close-btn {
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+}
+.modal-body {
+  padding: 12px 16px;
+}
+.modal-foot {
+  padding: 12px 16px;
+  border-top: 1px solid #e6e8ec;
+  text-align: right;
+}
+.modal-foot .primary {
+  background: #2d6cdf;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+/* ตารางรายวันใน Modal */
+.daily-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+.daily-table th,
+.daily-table td {
+  border: 1px solid #dee4f0;
+  padding: 8px 10px;
+  text-align: left;
+}
+.daily-table th {
+  background: linear-gradient(90deg, #eaf2ff, #f6f9ff);
+  font-weight: 600;
+}
+.daily-table tbody tr:nth-child(even) {
+  background: #fafbff;
+}
+/* subtext ในการ์ด */
+.summary .subtext {
+  font-size: 0.9rem;
+  color: #555;
+  margin-top: 0.25rem;
+}
+
+/* คอลัมน์สถานะ: แสดงเฉพาะจุดสี + เส้นขอบล่างเท่าเพื่อน */
+.order-table td:last-child {
+  text-align: center;
+  vertical-align: middle;
+  border-bottom: 1px solid #dee4f0;
+}
+.order-table td:last-child::before {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+.order-table td:last-child[data-status="prepare"]::before {
+  background-color: #ffae00;
+}
+.order-table td:last-child[data-status="ongoing"]::before {
+  background-color: #0090ff;
+}
+.order-table td:last-child[data-status="success"]::before {
+  background-color: #28c76f;
+}
+.order-table td:last-child[data-status="cancel"]::before {
+  background-color: #ff4d4f;
+}
+
+/* ===== Calendar (ReservationCalendar) ===== */
+.calendar-box h3 {
+  margin-bottom: 8px;
+}
+
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.cal-title {
+  font-weight: 700;
+}
+.cal-nav {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 10px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.cal-loading {
+  padding: 8px;
+  color: #6b7280;
+}
+
+/* Grid (7 คอลัมน์ = อา–ส) */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+.cal-colhead {
+  text-align: center;
+  font-weight: 600;
+  color: #6b7280;
+  padding: 4px 0;
+}
+
+/* ช่องแต่ละวัน */
+.cal-cell {
+  position: relative;
+  min-height: 30px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 8px;
+  text-align: left;
+}
+.cal-cell.blank {
+  background: transparent;
+  border: none;
+}
+.cal-cell.day {
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, transform 0.02s ease;
+}
+.cal-cell.day:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+.cal-cell.day:active {
+  transform: translateY(1px);
+}
+.cal-cell.day.today {
+  outline: 2px solid #111827;
+}
+
+.cal-date {
+  font-weight: 700;
+}
+
+/* ตราจำนวนจองต่อวัน (มุมขวาบน) */
+.badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  border-radius: 999px;
+  min-width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  background: #111827;
+  color: #fff;
+  padding: 0 6px;
+}
+
+/* จุดสถานะแบบไม่มีตัวอักษร (มุมซ้ายล่าง) */
+.cal-dots {
+  position: absolute;
+  left: 8px;
+  bottom: 6px;
+  display: flex;
+  gap: 6px;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d1d5db; /* default */
+}
+.dot.pending {
+  background: #f59e0b;
+} /* เหลือง */
+.dot.confirmed {
+  background: #10b981;
+} /* เขียว */
+.dot.done {
+  background: #3b82f6;
+} /* น้ำเงิน */
+.dot.canceled {
+  background: #ef4444;
+} /* แดง */
+
+/* มีรายการจองแล้วให้ยกพื้นนิดๆ (optional) */
+.cal-cell.has {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+/* ตอบสนองหน้าจอเล็ก */
+@media (max-width: 640px) {
+  .cal-grid {
+    gap: 6px;
+  }
+  .cal-cell {
+    min-height: 66px;
+    border-radius: 10px;
+    padding: 6px;
+  }
+  .badge {
+    top: 4px;
+    right: 4px;
+    min-width: 20px;
+    height: 20px;
+    font-size: 11px;
+  }
+  .cal-dots {
+    left: 6px;
+    bottom: 4px;
+    gap: 5px;
+  }
+}
+
+/* ช่วยลด motion สำหรับคนที่ตั้งค่า prefer-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .cal-cell.day {
+    transition: none;
+  }
 }

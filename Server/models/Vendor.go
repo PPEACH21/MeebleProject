@@ -120,9 +120,31 @@ type Order struct {
 	CustomerID string     `json:"customerId" firestore:"customerId"`
 }
 
-type orderCore struct {
-	CustomerID string                 `firestore:"customerId"`
-	ShopID     string                 `firestore:"shopId"`
-	Status     string                 `firestore:"status"`
-	Meta       map[string]interface{} `firestore:"meta,omitempty"` // optional
+type Reservation struct {
+	ID         string                 `json:"id,omitempty"`
+	ShopID     string                 `json:"shopId"`
+	ShopName   string                 `json:"shop_name,omitempty"`
+	UserID     string                 `json:"userId"`
+	CustomerID string                 `json:"customerId"`
+	Date       string                 `json:"date"`   // YYYY-MM-DD
+	Status     string                 `json:"status"` // pending|confirmed|canceled|done
+	Note       string                 `json:"note,omitempty"`
+	Phone      string                 `json:"phone,omitempty"`
+	CreatedAt  time.Time              `json:"createdAt"`
+	UpdatedAt  time.Time              `json:"updatedAt"`
+	Raw        map[string]interface{} `json:"raw,omitempty"`
+}
+
+// ----- DTO (request bodies) -----
+type CreateReservationReq struct {
+	ShopID     string `json:"shopId"`
+	UserID     string `json:"userId"`
+	CustomerID string `json:"customerId"`
+	Date       string `json:"date"` // YYYY-MM-DD
+	Note       string `json:"note"`
+	Phone      string `json:"phone"`
+}
+
+type UpdateReservationReq struct {
+	Status string `json:"status"` // pending|confirmed|canceled|done
 }

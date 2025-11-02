@@ -72,7 +72,7 @@ const StoreCard = ({ datashow }) => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) =>
-        setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude } ),
       () => setUserPos(null),
       { enableHighAccuracy: true, maximumAge: 60000, timeout: 10000 }
     );
@@ -88,9 +88,20 @@ const StoreCard = ({ datashow }) => {
     if (typeof window !== "undefined") {
       localStorage.setItem("currentShopId", shopId);
     }
-    // ✅ ให้ match กับ <Route path="/menu/:id" element={<MenuStore/>} />
     navigate(`/menu/${encodeURIComponent(shopId)}`, {
       state: { shop, shopId },
+    });
+  };
+
+  // 👉 ไปหน้า /reserve/:shopId (ไม่มี popup)
+  const goReserve = (shop) => {
+    const shopId = getShopId(shop);
+    if (!shopId) return;
+    if (typeof window !== "undefined") {
+      localStorage.setItem("currentShopId", shopId);
+    }
+    navigate(`/reserve/${encodeURIComponent(shopId)}`, {
+      state: { shop, shopId }, // หน้า Reserve จะมี date picker เอง
     });
   };
 
@@ -237,10 +248,17 @@ const StoreCard = ({ datashow }) => {
                 }}
               >
                 <button className="btn" onClick={() => handleSelectShop(item)}>
-                  reserve
-                </button>
-                <button className="btn" onClick={() => handleSelectShop(item)}>
                   order
+                </button>
+
+                {/* ปุ่มจอง -> ไปหน้า /reserve/:shopId */}
+                <button
+                  className="btn"
+                  onClick={() => goReserve(item)}
+                  disabled={!item.status} // ปิดจองถ้าร้านปิด (ปรับตามต้องการ)
+                  title={!item.status ? "ร้านปิดชั่วคราว" : "จองวันที่รับออเดอร์"}
+                >
+                  reserve
                 </button>
               </div>
             </div>
@@ -252,3 +270,4 @@ const StoreCard = ({ datashow }) => {
 };
 
 export default StoreCard;
+  

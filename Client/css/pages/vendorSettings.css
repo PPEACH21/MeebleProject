@@ -1,95 +1,23 @@
 /* src/css/pages/vendorSettings.css */
-
+/* =========================
+   Layout & Container
+   ========================= */
 .vs-container {
-  max-width: 800px;
-  margin: -50px;;
-  padding: 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 3rem 1rem;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .vs-title {
-  font-size: 2rem;
+  font-size: 1.8rem;
   margin-bottom: 0.25rem;
+  font-weight: 700;
 }
 
 .vs-subtitle {
   color: #555;
-  margin-bottom: 1.5rem;
-}
-
-.vs-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-.vs-section h3 {
-  margin-bottom: 0.5rem;
-  color: #222;
-}
-
-.vs-image-box {
-  display: flex;
-  align-items: flex-start;
-  gap: 1.5rem;
-}
-
-.vs-image {
-  width: 200px;
-  height: 200px;
-  object-fit: cover;
-  border-radius: 12px;
-  border: 1px solid #ccc;
-}
-
-.vs-image-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.vs-section label {
-  font-weight: 500;
-  display: block;
-  margin-top: 1rem;
-  margin-bottom: 0.25rem;
-}
-
-.vs-section input,
-.vs-section textarea,
-.vs-section select {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 1rem;
-}
-
-.vs-oldname {
-  background: #f7f7f7;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  border: 1px solid #e0e0e0;
-  color: #333;
-}
-
-.vs-actions {
-  text-align: center;
-}
-
-.vs-actions button {
-  padding: 0.6rem 1.5rem;
-  font-size: 1rem;
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.vs-actions button:hover {
-  background: #0056b3;
+  margin-bottom: 1.25rem;
 }
 
 .vs-loading {
@@ -104,4 +32,249 @@
   padding: 1rem;
   text-align: center;
   background: #fafafa;
+}
+
+/* สองคอลัมน์: ซ้ายรายละเอียด / ขวาแผนที่ */
+.vs-layout {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 1.5rem;
+}
+@media (max-width: 1024px) {
+  .vs-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.vs-left{
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.vs-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-left: 10px;
+  margin-top: -50px;
+}
+
+/* =========================
+   Sections & Typography
+   ========================= */
+.vs-section h3 {
+  margin-bottom: 0.5rem;
+  color: #222;
+}
+
+.vs-section label {
+  font-weight: 500;
+  display: block;
+  margin-top: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+/* =========================
+   Image Box
+   ========================= */
+.vs-image-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+}
+
+.vs-image {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.vs-image-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* =========================
+   Inputs & Buttons
+   ========================= */
+.vs-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.vs-section input[type="text"],
+.vs-section input[type="url"],
+.vs-section input[type="number"],
+.vs-section select,
+.vs-section textarea {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  outline: none;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  font-size: 1rem;
+  background: #fff;
+}
+
+.vs-section textarea {
+  resize: vertical;
+}
+
+.vs-section input:focus,
+.vs-section select:focus,
+.vs-section textarea:focus {
+  border-color: #111827;
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.08);
+}
+
+.vs-section button {
+  padding: 0.55rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: background-color 0.15s ease, filter 0.15s ease;
+}
+
+.vs-section button:hover {
+  background: #f3f4f6;
+}
+
+.vs-primary {
+  background: #111827;
+  color: #fff;
+  border: 1px solid #111827;
+}
+.vs-primary:hover {
+  filter: brightness(1.05);
+}
+
+/* ป้ายชื่อเดิม (ถ้าใช้อยู่) */
+.vs-oldname {
+  background: #f7f7f7;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  color: #333;
+}
+
+/* ปุ่มบันทึกแบบเก่าไม่ใช้แล้ว (ย้ายไปใต้แผนที่) */
+.vs-actions {
+  display: none;
+}
+
+/* =========================
+   Coordinates area (ซ้าย)
+   ========================= */
+.vs-coord-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+@media (max-width: 520px) {
+  .vs-coord-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+   Map Card (ขวา)
+   ========================= */
+.vs-map-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(16, 24, 40, 0.06);
+}
+
+.vs-map-header {
+  padding: 0.9rem 1rem 0.25rem 1rem;
+  border-bottom: 1px dashed #e5e7eb;
+}
+
+.vs-map-wrap {
+  height: 420px;
+}
+
+.vs-map {
+  height: 100%;
+  width: 100%;
+}
+
+/* ใต้แผนที่: คำอธิบาย + Lat/Lng + ปุ่ม */
+.vs-map-footer {
+  padding: 0.6rem 1rem 1rem 1rem;
+  color: #444;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.vs-map-coords {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+@media (max-width: 520px) {
+  .vs-map-coords {
+    grid-template-columns: 1fr;
+  }
+}
+
+.vs-map-coord {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.vs-map-coord label {
+  font-size: 0.9rem;
+  color: #333;
+  min-width: 30px;
+}
+
+.vs-map-coord input {
+  width: 80%;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.5rem 0.6rem;
+  background: #fafafa;
+}
+
+.vs-map-coord button {
+  padding: 0.45rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  cursor: pointer;
+}
+.vs-map-coord button:hover {
+  background: #f3f4f6;
+}
+.vs-section input[placeholder="ชื่อร้าน"],
+.vs-section input[placeholder="Shop Name"],
+.vs-section input[type="text"]:first-of-type {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 3rem; /* ให้สูงใกล้เคียงกับ textarea */
+  border-radius: 10px;
+  padding: 0.75rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  font-size: 1rem;
+  background: #fff;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.vs-section input[placeholder="ชื่อร้าน"]:focus,
+.vs-section input[placeholder="Shop Name"]:focus {
+  border-color: #111827;
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.08);
 }

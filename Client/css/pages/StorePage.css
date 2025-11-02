@@ -125,3 +125,29 @@
   border-radius: 10px;
   background-color: red;
 }
+.btn {
+  appearance: none;
+  border: none;
+  background: #111827;
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: filter .15s ease, transform .02s ease;
+}
+.btn:hover { filter: brightness(1.05); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ปุ่มรอง */
+.btn-secondary {
+  background: #fff;
+}
+.btn-secondary:hover { background: #f9fafb; }
+
+/* ปุ่มขอบ */
+.btn-outline {
+  background: #fff;
+}
+.btn-outline:hover { background: #f9fafb; }

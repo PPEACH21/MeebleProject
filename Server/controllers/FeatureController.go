@@ -13,6 +13,7 @@ import (
 	"github.com/PPEACH21/MebleBackend-Web/config"
 	"github.com/PPEACH21/MebleBackend-Web/models"
 	"github.com/gofiber/fiber/v2"
+	"google.golang.org/api/iterator"
 	"google.golang.org/genproto/googleapis/type/latlng"
 )
 
@@ -607,4 +608,275 @@ func UpdateCartQty(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "update qty failed", "msg": err.Error()})
 	}
 	return c.JSON(fiber.Map{"message": "ok"})
+}
+
+func CreateReservation(c *fiber.Ctx) error {
+	var req models.CreateReservationReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "invalid body", "msg": err.Error(),
+		})
+	}
+	if req.ShopID == "" || req.UserID == "" || req.CustomerID == "" || req.Date == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "shopId/userId/customerId/date required",
+		})
+	}
+	if !validateYMD(req.Date) {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "date must be YYYY-MM-DD",
+		})
+	}
+
+	// ตรวจว่ามีร้านจริง
+	shopDoc, err := config.Client.Collection("shops").Doc(req.ShopID).Get(config.Ctx)
+	if err != nil || !shopDoc.Exists() {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "shop not found"})
+	}
+	shopName, _ := shopDoc.Data()["shop_name"].(string)
+
+	now := time.Now().UTC()
+	lockKey := fmt.Sprintf("%s_%s_%s", req.ShopID, req.UserID, req.Date)
+
+	var newID string
+
+	err = config.Client.RunTransaction(config.Ctx, func(ctx context.Context, tx *firestore.Transaction) error {
+		// 1) กันจองซ้ำด้วย lock doc (ใช้ Create เพื่อให้ชนถ้ามีอยู่แล้ว)
+		lockRef := config.Client.Collection("reservations_locks").Doc(lockKey)
+		if err := tx.Create(lockRef, map[string]interface{}{
+			"shopId":    req.ShopID,
+			"userId":    req.UserID,
+			"date":      req.Date,
+			"createdAt": now,
+		}); err != nil {
+			// มีคนล็อคไว้แล้ว => จองซ้ำ
+			return fiber.NewError(fiber.StatusConflict, "reservation already exists for this user/shop/date")
+		}
+
+		// 2) auto-ID กลาง
+		mainRef := config.Client.Collection("reservations").NewDoc()
+		newID = mainRef.ID
+
+		// payload กลาง (เก็บ id ลงเอกสารด้วย เผื่อฝั่ง client ใช้งานสะดวก)
+		data := map[string]interface{}{
+			"id":         newID,
+			"shopId":     req.ShopID,
+			"shop_name":  shopName,
+			"userId":     req.UserID,
+			"customerId": req.CustomerID,
+			"date":       req.Date, // YYYY-MM-DD
+			"note":       req.Note,
+			"phone":      req.Phone,
+			"createdAt":  now,
+			"updatedAt":  now,
+		}
+
+		// 3) เขียน main
+		if err := tx.Set(mainRef, data); err != nil {
+			return err
+		}
+
+		// 4) เขียน sub ของ user (ใช้ id เดียวกัน)
+		userSub := config.Client.Collection("users").Doc(req.UserID).
+			Collection("reservations").Doc(newID)
+		if err := tx.Set(userSub, data); err != nil {
+			return err
+		}
+
+		// 5) เขียน sub ของ shop (ใช้ id เดียวกัน)
+		shopSub := config.Client.Collection("shops").Doc(req.ShopID).
+			Collection("reservations").Doc(newID)
+		if err := tx.Set(shopSub, data); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		if fe, ok := err.(*fiber.Error); ok {
+			// 409 จากการจองซ้ำ
+			return c.Status(fe.Code).JSON(fiber.Map{"error": fe.Message})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "transaction failed", "msg": err.Error(),
+		})
+	}
+
+	// ตอบกลับด้วย auto-ID ที่เพิ่งสร้าง
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"id":         newID,
+		"shopId":     req.ShopID,
+		"shop_name":  shopName,
+		"userId":     req.UserID,
+		"customerId": req.CustomerID,
+		"date":       req.Date,
+		"note":       req.Note,
+		"phone":      req.Phone,
+		"createdAt":  now,
+		"updatedAt":  now,
+	})
+}
+
+// GET /reservations/user/:userId  [?date=YYYY-MM-DD]
+func GetUserReservations(c *fiber.Ctx) error {
+	userId := c.Params("userId")
+	if userId == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "userId required"})
+	}
+	date := c.Query("date")
+
+	q := config.Client.Collection("reservations").Where("userId", "==", userId)
+	if date != "" {
+		if !validateYMD(date) {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "date must be YYYY-MM-DD"})
+		}
+		q = q.Where("date", "==", date)
+	}
+
+	iter := q.OrderBy("createdAt", firestore.Desc).Limit(200).Documents(config.Ctx)
+	defer iter.Stop()
+
+	var out []models.Reservation
+	for {
+		snap, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "iterate failed", "msg": err.Error()})
+		}
+		m := snap.Data()
+		out = append(out, models.Reservation{
+			ID:         snap.Ref.ID,
+			ShopID:     str(m["shopId"]),
+			ShopName:   str(m["shop_name"]),
+			UserID:     str(m["userId"]),
+			CustomerID: str(m["customerId"]),
+			Date:       str(m["date"]),
+			Status:     "", // ไม่มีสถานะแล้ว
+			Note:       str(m["note"]),
+			Phone:      str(m["phone"]),
+			CreatedAt:  toTime(m["createdAt"]),
+			UpdatedAt:  toTime(m["updatedAt"]),
+			Raw:        m,
+		})
+	}
+	return c.JSON(out)
+}
+
+// GET /reservations/shop/:shopId  [?date=YYYY-MM-DD]
+func GetShopReservations(c *fiber.Ctx) error {
+	shopId := c.Params("shopId")
+	if shopId == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "shopId required"})
+	}
+	date := c.Query("date")
+
+	q := config.Client.Collection("reservations").Where("shopId", "==", shopId)
+	if date != "" {
+		if !validateYMD(date) {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "date must be YYYY-MM-DD"})
+		}
+		q = q.Where("date", "==", date)
+	}
+
+	iter := q.OrderBy("createdAt", firestore.Desc).Limit(300).Documents(config.Ctx)
+	defer iter.Stop()
+
+	var out []models.Reservation
+	for {
+		snap, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "iterate failed", "msg": err.Error()})
+		}
+		m := snap.Data()
+		out = append(out, models.Reservation{
+			ID:         snap.Ref.ID,
+			ShopID:     str(m["shopId"]),
+			ShopName:   str(m["shop_name"]),
+			UserID:     str(m["userId"]),
+			CustomerID: str(m["customerId"]),
+			Date:       str(m["date"]),
+			Status:     "",
+			Note:       str(m["note"]),
+			Phone:      str(m["phone"]),
+			CreatedAt:  toTime(m["createdAt"]),
+			UpdatedAt:  toTime(m["updatedAt"]),
+			Raw:        m,
+		})
+	}
+	return c.JSON(out)
+}
+
+// GET /shops/:shopId/reservations   (อ่านจาก subcollection ของร้าน)
+func GetShopReservationsSub(c *fiber.Ctx) error {
+	shopId := c.Params("shopId")
+	if shopId == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "shopId required"})
+	}
+	// อนาคตอยากกรอง date ก็เพิ่ม ?date=YYYY-MM-DD ได้ (ตอนนี้อ่านทั้งเดือนแล้วไปกรุ๊ปใน frontend)
+	iter := config.Client.Collection("shops").Doc(shopId).Collection("reservations").
+		OrderBy("createdAt", firestore.Desc).Limit(300).
+		Documents(config.Ctx)
+	defer iter.Stop()
+
+	var out []models.Reservation
+	for {
+		snap, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "iterate failed", "msg": err.Error()})
+		}
+		m := snap.Data()
+		out = append(out, models.Reservation{
+			ID:         snap.Ref.ID,
+			ShopID:     shopId,
+			ShopName:   str(m["shop_name"]),
+			UserID:     str(m["userId"]),
+			CustomerID: str(m["customerId"]),
+			Date:       str(m["date"]),
+			Status:     "",
+			Note:       str(m["note"]),
+			Phone:      str(m["phone"]),
+			CreatedAt:  toTime(m["createdAt"]),
+			UpdatedAt:  toTime(m["updatedAt"]),
+			Raw:        m,
+		})
+	}
+	return c.JSON(out)
+}
+
+/* -------- helpers -------- */
+func validateYMD(s string) bool {
+	if len(s) != 10 {
+		return false
+	}
+	_, err := time.Parse("2006-01-02", s)
+	return err == nil
+}
+func str(v interface{}) string {
+	if v == nil {
+		return ""
+	}
+	if s, ok := v.(string); ok {
+		return s
+	}
+	return ""
+}
+func toTime(v interface{}) time.Time {
+	switch t := v.(type) {
+	case time.Time:
+		return t
+	case *time.Time:
+		if t != nil {
+			return *t
+		}
+	}
+	return time.Time{}
 }
