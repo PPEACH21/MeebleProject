@@ -66,7 +66,7 @@ export const ProtectRoute =({ children , role})=>{
   // console.log("ProtectRoute",auth)
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div></div>;
   }
   if (!auth) {
     console.log("NO Auth",auth)

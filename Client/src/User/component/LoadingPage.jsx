@@ -1,6 +1,7 @@
 
 import {m} from "@/paraglide/messages.js"
 import { useState, useEffect } from "react";
+import logo from "@/assets/LOGO.jpg";
 
 export const runloadting =(delay = 2000)=>{
     const [loading, setLoading] = useState(true);
@@ -11,6 +12,7 @@ export const runloadting =(delay = 2000)=>{
 
     return { loading, setLoading, LoadingPage };
 }
+
 
 const LoadingPage = () => {
   return (
@@ -31,7 +33,7 @@ const LoadingPage = () => {
         backdropFilter: "blur(3px)",
         gap:"10px"
     }}>
-      <img className="spinner" src="https://i.ibb.co/yK3GcbS/LOGO.jpg" />
+      <img className="spinner" src={logo} />
       <h3>{m.loading()}...</h3>
     </div>
   );

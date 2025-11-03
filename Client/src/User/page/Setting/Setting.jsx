@@ -33,7 +33,7 @@ const SettingPage = ()=>{
     const getdata=()=>{
         setFirstname(Profile.Firstname)
         setLastname(Profile.Lastname)
-        setUsername(Profile.username)
+        setUsername(Profile.Username)
         setEmail(Profile.Email)
         setPhone(Profile.Phone)
         if (Profile.Avatar) setPhotoURL(Profile.Avatar);
@@ -59,9 +59,7 @@ const SettingPage = ()=>{
                 </div>
                 <Buttonselect name={m.Manage_Account()} path="/profile"/>
                 <Buttonselect name={m.Language()} path="/language"/>
-                <Buttonselect name={m.Address()} path="/addressSetting"/>
-                <Buttonselect name={m.favoritesRestarant()} path="/shopFavorite"/>
-                
+
                 <h2 style={{color:'red' ,margin:'30px 70px'}} >sensitive</h2>
                 <button className="boxsetting" style={{justifyContent:"center",color:"red"}} onClick={()=>logout()}> 
                     <p>{m.logout()}</p>
