@@ -12,7 +12,6 @@ func Routes(app *fiber.App) {
 	app.Get("/profile", middlewares.Profile)
 	app.Get("/Shop", controllers.GetShop)
 	app.Post("/Shop", controllers.CreateShop)
-	app.Get("/user/:id", controllers.UserProfile)
 	app.Put("/setLocation/:ID", controllers.SetLocation)
 	app.Get("/shops/:shopId/menu", controllers.GetMenus)
 	app.Post("/shops/:shopId/menu", controllers.AddMenu)

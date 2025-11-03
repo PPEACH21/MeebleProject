@@ -3,6 +3,7 @@ package middlewares
 import (
 	"os"
 
+	"github.com/PPEACH21/MebleBackend-Web/config"
 	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -20,13 +21,29 @@ func ProtectedCookie() fiber.Handler {
 func Profile(c *fiber.Ctx) error {
     user := c.Locals("user").(*jwt.Token)
     claims := user.Claims.(jwt.MapClaims)
+	userID := claims["user_id"].(string)
+	role := claims["role"].(string)
 
+	doc, err := config.User.Doc(userID).Get(config.Ctx)
+    if err != nil {
+        // fmt.Println("Error fetching user:", err)
+        return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+            "error": "User not found",
+        })
+    }
+	data := doc.Data()
+	
     return c.JSON(fiber.Map{
-		"email": claims["email"],
-		"verified": claims["verified"],
-		"user_id": claims["user_id"],  
-        "username": claims["username"],
-        "role": claims["role"],
+        "user_id":  userID,
+        "email":    data["email"],
+        "username": data["username"],
+        "firstname": data["firstname"],
+        "lastname":  data["lastname"],
+        "avatar":   data["avatar"],
+        "phone":   data["phone"],
+        "coin":   data["Cost"],
+        "role":     role,
+        "verified": data["verified"],
     })
 }
 
