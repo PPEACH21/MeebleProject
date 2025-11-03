@@ -27,26 +27,19 @@ const Profile = ()=>{
     const [photoURL, setPhotoURL] = useState("https://i.ibb.co/ZpCpKSMG/image.png");
     const [loadingUpload, setLoadingUpload] = useState(false);
     const fileInputRef = useRef(null);
-    const {auth} =  useContext(AuthContext)
+    const {Profile,auth} =  useContext(AuthContext)
     
     useEffect(()=>{
         getdata();  
     },[])
 
     const getdata=async()=>{
-        try{
-            const res = await axios.get(`/user/${auth.user_id}`,{ withCredentials: true }); 
-            setFirstname(res.data.firstname)
-            setLastname(res.data.lastname)
-            setUsername(res.data.username)
-            setEmail(res.data.email)
-            setPhone(res.data.phone)
-            setPhotoURL(res.data.avatar)
-            if (res.data.avatar) setPhotoURL(res.data.avatar);
-            // console.log(res)
-        }catch(err){
-             console.error("fetch data error:", err);
-        }
+        setFirstname(Profile.Firstname)
+        setLastname(Profile.Lastname)
+        setUsername(Profile.Username)
+        setEmail(Profile.Email)
+        setPhone(Profile.Phone)
+        setPhotoURL(Profile.Avatar)
     }
 
     const handleSave = async () => {
@@ -70,13 +63,39 @@ const Profile = ()=>{
         }
     };
 
+       const compressImage =async(file, quality = 0.7) =>{
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0, img.width, img.height);
+
+                canvas.toBlob(
+                (blob) => resolve(blob),
+                "image/jpeg",
+                quality
+                );
+            };
+            };
+        });
+    }
+
     const UploadPicture = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
+        const compressed = await compressImage(file, 0.4);
         setLoadingUpload(true);
         const formData = new FormData();
-        formData.append("image", file);
+        formData.append("image", compressed);
 
         try {
             // console.log("IMGBB KEY:", apiKey);
