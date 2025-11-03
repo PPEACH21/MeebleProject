@@ -306,6 +306,7 @@
   font-size: 20px;
   cursor: pointer;
 }
+.icon-his-btn { background:transparent; border:none; font-size:20px; cursor:pointer; }
 
 /* Modal body – header grid inside popup */
 .his-modal-body .his-grid2 {
@@ -363,23 +364,9 @@
 /* .his-total { ... } */
 
 /* Footer buttons */
-.his-modal-footer {
-  margin-top: 10px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-.btn {
-  background: #111827;
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  padding: 8px 14px;
-  cursor: pointer;
-}
-.btn:hover {
-  opacity: 0.9;
-}
+.his-modal-footer { margin-top:10px; display:flex; justify-content:flex-end; gap:8px; }
+.his-btn { background:#111827; color:#fff; border:none; border-radius:12px; padding:8px 14px; cursor:pointer; }
+.his-btn:hover { opacity:.9; }
 
 /* Mobile tune for table */
 @media (max-width: 420px) {

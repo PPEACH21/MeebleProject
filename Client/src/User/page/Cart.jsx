@@ -186,40 +186,40 @@ export default function Cart() {
   };
 
   if (!customerId)
-    return <p className="cartPage">ไม่พบ customerId — โปรดเข้าสู่ระบบ</p>;
+    return <p className="CP_cartPage">ไม่พบ customerId — โปรดเข้าสู่ระบบ</p>;
 
   return (
-    <div className="cartPage">
+    <div className="CP_cartPage">
       <h2>ชื่อร้าน : {cart.items?.length < 1 ? `ไม่มีร้านที่เลือกขณะนี้` : cart.shop_name}</h2>
       <h2>ตะกร้าสินค้า</h2>
 
       {loading ? (
         <p>กำลังโหลด...</p>
       ) : (cart.items?.length || 0) === 0 ? (
-        <div className="emptyCart">
+        <div className="CP_emptyCart">
           <p>ตะกร้ายังว่าง</p>
-          <button className="btn" onClick={goBackToShop}>
+          <button className="CP_btn" onClick={goBackToShop}>
             เลือกซื้อสินค้าต่อ
           </button>
         </div>
       ) : (
         <>
-          <div className="cartList">
+          <div className="CP_cartList">
             {cart.items.map((it) => (
-              <div className="cartItem" key={it.id}>
+              <div className="CP_cartItem" key={it.id}>
                 <img
                   src={it.image || "https://placehold.co/80x80"}
                   alt={it.name}
-                  className="thumb"
+                  className="CP_cartItem"
                 />
-                <div className="info">
+                <div className="CP_info">
                   <div className="name">{it.name}</div>
                   <div className="desc line-clamp-2">{it.description}</div>
                   <div className="meta">
-                    <span className="price">{currency(it.price)}</span>
+                    <span className="CP_price">{currency(it.CP_price)}</span>
                     <span className="x">x</span>
 
-                    <div className="qtyBox">
+                    <div className="CP_qtyBox">
                       {/* − : ยิง API ทุกครั้ง */}
                       <button
                         className="btn1"
@@ -231,7 +231,7 @@ export default function Cart() {
 
                       {/* พิมพ์เลข: อัปเดต state ทันที, ยิง API ตอน blur */}
                       <input
-                        className="qtyInput"
+                        className="CP_qtyInput"
                         min={0}
                         value={toNum(it.qty)}
                         onChange={(e) => {
@@ -265,29 +265,29 @@ export default function Cart() {
                       </button>
                     </div>
 
-                    <span className="subtotal">
+                    <span className="CP_subtotal">
                       {currency(toNum(it.qty) * toNum(it.price))}
                     </span>
                   </div>
                 </div>
 
-                <button className="removeBtn" onClick={() => removeItem(it.id)} aria-label="remove">
+                <button className="CP_subtotal" onClick={() => removeItem(it.id)} aria-label="remove">
                   <MdDelete color="#e00" size={30} />
                 </button>
               </div>
             ))}
           </div>
 
-          <div className="cartSummary">
+          <div className="CP_cartSummary">
             <div className="row">
               <span>ยอดรวม</span>
               <strong>{currency(cart.total)}</strong>
             </div>
-            <div className="actions">
-              <button className="btn ghost" onClick={goBackToShop}>
+            <div className="CP_actions">
+              <button className="CP_btn ghost" onClick={goBackToShop}>
                 เลือกซื้อสินค้าต่อ
               </button>
-              <button className="btn primary" disabled={!canCheckout} onClick={onCheckout}>
+              <button className="CP_btn primary" disabled={!canCheckout} onClick={onCheckout}>
                 ชำระเงิน
               </button>
             </div>

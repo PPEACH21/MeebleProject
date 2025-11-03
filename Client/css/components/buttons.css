@@ -1,9 +1,9 @@
 .btn,.btn1{
-  display: flex;                /* ✅ ใช้ flex ในปุ่ม */
-  align-items: center;          /* ✅ จัดกลางแนวตั้ง */
-  justify-content: center;      /* ✅ จัดกลางแนวนอน */
+  display: flex;                
+  align-items: center;          
+  justify-content: center;  
   text-align: center;
-
+  
   font-weight:bold;
   border-radius: 20px;
   padding: 10px 20px;
@@ -44,6 +44,7 @@
 .foodBtn:hover {
   background-color: #FFA467;
 }
+
 
 
 

@@ -6,7 +6,11 @@ import { m } from "@/paraglide/messages.js";
 import StoreCard from "../component/StoreCard.jsx";
 import { FaSearch } from "react-icons/fa";
 import "@css/pages/StorePage.css";
-
+import { IoRestaurantOutline } from "react-icons/io5";
+import { IoFastFoodOutline } from "react-icons/io5";
+import { RiDrinksLine } from "react-icons/ri";
+import { MdOutlineCookie } from "react-icons/md";
+import { RiCake3Fill } from "react-icons/ri";
 // ----- helpers -----
 const getShopId = (shop) =>
   shop?.id || shop?.ID || shop?.shop_id || shop?.shopId || "";
@@ -31,11 +35,11 @@ export default function StorePage() {
   const [search, setSearch] = useState("");
 
   const [type, setType] = useState([
-    { name: "Appetizer", active: false },
-    { name: "Beverage", active: false },
-    { name: "Fast food", active: false },
-    { name: "Main course", active: false },
-    { name: "Dessert", active: false },
+    { name: m.Maincourse(), active: false,icon:<IoRestaurantOutline />},
+    { name: m.Fastfood(), active: false ,icon: <IoFastFoodOutline />},
+    { name: m.Dessert(), active: false,icon: <RiCake3Fill /> },
+    { name: m.Appetizer(), active: false ,icon: <MdOutlineCookie />},
+    { name: m.Beverage(), active: false ,icon: <RiDrinksLine />},
   ]);
 
   const [shopOpen, setshopOpen] = useState(false);

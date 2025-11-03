@@ -163,11 +163,11 @@ export default function VendorOrderDetail() {
         </div>
 
         {/* ---------- เพิ่ม: ปุ่มอัปเดตสถานะ ---------- */}
-        <div className="v-card status-actions">
+        <div className="v-card status-CP_actions">
           <h3>อัปเดตสถานะ</h3>
           <div className="status-buttons">
             <button
-              className={`btn-status ${
+              className={`vdorder-btn-status  ${
                 currStatus === "prepare" ? "active" : ""
               }`}
               disabled={updating || currStatus === "prepare"}
@@ -176,7 +176,7 @@ export default function VendorOrderDetail() {
               {statusLabelTH.prepare}
             </button>
             <button
-              className={`btn-status ${
+              className={`vdorder-btn-status  ${
                 currStatus === "ongoing" ? "active" : ""
               }`}
               disabled={updating || currStatus === "ongoing"}
@@ -185,7 +185,7 @@ export default function VendorOrderDetail() {
               {statusLabelTH.ongoing}
             </button>
             <button
-              className={`btn-status ${
+              className={`vdorder-btn-status  ${
                 currStatus === "success" ? "active" : ""
               }`}
               disabled={updating || currStatus === "success"}

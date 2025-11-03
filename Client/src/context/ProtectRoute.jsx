@@ -8,18 +8,32 @@ export const AuthProvider = ({children})=>{
   const [auth,setAuth]=useState(null);
   const [loading, setLoading] = useState(true); 
   
+  const [Profile,setProfile] =useState([]);
+  
+  const getId = async () => {
+    try{
+      const res = await axios.get("/profile", { withCredentials: true });
+
+      console.log("API Response:", res.data);
+      setAuth(res.data);
+
+      setProfile({
+        Firstname:res.data.firstname,
+        Lastname:res.data.lastname,
+        Phone:res.data.phone,
+        Coin:res.data.coin,
+        Username:res.data.username,
+        Avatar:res.data.avatar,
+        Email:res.data.email,
+      })
+    }catch{
+      setAuth(null);
+      }finally{
+        setLoading(false);
+      }
+  };
+
   useEffect(() => {
-    const getId = async () => {
-      try{
-        const res = await axios.get("/profile", { withCredentials: true });
-        console.log("API Response:", res.data);
-        setAuth(res.data);
-      }catch{
-        setAuth(null);
-        }finally{
-          setLoading(false);
-        }
-    };
     getId();
   }, []);
 
@@ -40,7 +54,7 @@ export const AuthProvider = ({children})=>{
   };
 
   return (
-    <AuthContext.Provider value={{ auth ,setAuth, login, logout ,loading}}>
+    <AuthContext.Provider value={{ auth ,setAuth,getId,Profile,setProfile, login, logout ,loading}}>
       {children}
     </AuthContext.Provider>
   );

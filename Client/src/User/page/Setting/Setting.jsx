@@ -2,9 +2,9 @@ import "@css/pages/Setting.css"
 import {m} from '@/paraglide/messages.js'
 import { BiChevronRight } from "react-icons/bi";
 import { useContext ,useEffect,useState} from "react";
-import axios from "@/api/axios"
 import {AuthContext} from "@/context/ProtectRoute"
 import { useNavigate } from "react-router-dom";
+import "@css/pages/StorePage.css";
 
 export const Buttonselect=({name="button" ,path="/"})=>{
     return(
@@ -25,24 +25,18 @@ const SettingPage = ()=>{
 
     Navigation = useNavigate();
 
-    const {auth,logout} =  useContext(AuthContext)
+    const {Profile,logout} =  useContext(AuthContext)
     useEffect(()=>{
         getdata();  
     },[])
     
-    const getdata=async()=>{
-        try{
-            const res = await axios.get(`/user/${auth.user_id}`,{ withCredentials: true }); 
-            setFirstname(res.data.firstname)
-            setLastname(res.data.lastname)
-            setUsername(res.data.username)
-            setEmail(res.data.email)
-            setPhone(res.data.phone)
-            if (res.data.avatar) setPhotoURL(res.data.avatar);
-            // console.log(res)
-        }catch(err){
-                console.error("fetch data error:", err);
-        }
+    const getdata=()=>{
+        setFirstname(Profile.Firstname)
+        setLastname(Profile.Lastname)
+        setUsername(Profile.username)
+        setEmail(Profile.Email)
+        setPhone(Profile.Phone)
+        if (Profile.Avatar) setPhotoURL(Profile.Avatar);
     }
 
     const maskPhone = (phone) => {

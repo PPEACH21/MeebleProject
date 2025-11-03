@@ -1,5 +1,5 @@
 // src/component/Nav.jsx
-import { useContext, useState } from "react";
+import { useContext , useState } from "react";
 import { AuthContext } from "@/context/ProtectRoute";
 import { FaRegUserCircle, FaHistory } from "react-icons/fa";
 import { TiShoppingCart } from "react-icons/ti";
@@ -22,7 +22,7 @@ export const NavLayout = ({ focus, cart }) => {
   );
 };
 
-const DropdownProfile = ({ logout, avatar, username, email }) => {
+const DropdownProfile =({logout,avatar,username,email})=> {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -38,29 +38,18 @@ const DropdownProfile = ({ logout, avatar, username, email }) => {
         onClick={() => setOpen(!open)}
         onMouseEnter={() => setOpen(true)}
       >
-        {avatar ? (
-          <img
-            src={avatar}
-            style={{
-              width: "40px",
-              height: "40px",
-              borderRadius: "50px",
-              border: "5px solid rgba(255, 214, 177, 0.7)",
-            }}
-          />
-        ) : (
+        {avatar?
+          <img src={avatar} style={{width:'40px',height:'40px', borderRadius:'50px', border: '5px solid rgba(255, 214, 177, 0.7)'}}/>
+          :
           <FaRegUserCircle size={30} />
-        )}
+        }
         <span>{username || "Guest"}</span>
       </div>
 
       {open && (
         <div
           className={`dropdownSelect ${open ? "fade-slideDown" : ""}`}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "#fff";
-            setOpen(false);
-          }}
+          onMouseLeave={(e) => {e.currentTarget.style.background = "#fff";setOpen(false);}}
         >
           <div
             style={{
@@ -72,20 +61,12 @@ const DropdownProfile = ({ logout, avatar, username, email }) => {
             }}
           >
             <div className="dropdownProfile">
-              {avatar ? (
-                <img
-                  src={avatar}
-                  style={{
-                    width: "55px",
-                    height: "55px",
-                    borderRadius: "50px",
-                    border: "5px solid rgba(255, 214, 177, 0.7)",
-                  }}
-                />
-              ) : (
+              {avatar?
+                <img src={avatar} style={{width:'55px',height:'55px', borderRadius:'50px', border: '5px solid rgba(255, 214, 177, 0.7)'}}/>
+                :
                 <FaRegUserCircle size={55} />
-              )}
-              <div style={{ fontWeight: "bold" }}>
+              }
+              <div style={{fontWeight:'bold'}} >
                 <p>{username || "Guest"}</p>
                 <p>{email || "Guest@gmail.com"}</p>
               </div>
