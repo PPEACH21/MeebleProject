@@ -252,7 +252,7 @@ export default function History() {
           <div className="his-modal" onClick={(e) => e.stopPropagation()}>
             <div className="his-modal-header">
               <h3>รายละเอียดคำสั่งซื้อ {loadingOne ? "(กำลังโหลด…)" : ""}</h3>
-              <button className="icon-btn" onClick={closeDetail} aria-label="close">✕</button>
+              <button className="icon-his-btn" onClick={closeDetail} aria-label="close">✕</button>
             </div>
 
             {errOne && <div className="his-error" style={{ marginBottom: 8 }}>{String(errOne)}</div>}
@@ -314,7 +314,7 @@ export default function History() {
             </div>
 
             <div className="his-modal-footer">
-              <button className="btn" onClick={closeDetail}>ปิด</button>
+              <button className="his-btn" onClick={closeDetail}>ปิด</button>
             </div>
           </div>
         </div>
