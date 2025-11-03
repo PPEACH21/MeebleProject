@@ -5,7 +5,7 @@ import { useContext ,useEffect,useState} from "react";
 import axios from "@/api/axios"
 import {AuthContext} from "@/context/ProtectRoute"
 import { useNavigate } from "react-router-dom";
-import "@css/pages/StorePage.module.css";
+import "@css/pages/StorePage.css";
 import { IoRestaurantOutline } from "react-icons/io5";
 import { IoFastFoodOutline } from "react-icons/io5";
 import { RiDrinksLine } from "react-icons/ri";
