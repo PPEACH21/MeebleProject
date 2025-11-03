@@ -125,7 +125,7 @@
   border-radius: 10px;
   background-color: red;
 }
-.btn {
+.SP_btn {
   appearance: none;
   border: none;
   background: #111827;
@@ -136,18 +136,18 @@
   cursor: pointer;
   transition: filter .15s ease, transform .02s ease;
 }
-.btn:hover { filter: brightness(1.05); }
-.btn:active { transform: translateY(1px); }
-.btn:disabled { opacity: .5; cursor: not-allowed; }
+.SP_btn:hover { filter: brightness(1.05); }
+.SP_btn:active { transform: translateY(1px); }
+.SP_btn:disabled { opacity: .5; cursor: not-allowed; }
 
 
-.btn-secondary {
+.SP_btn-secondary {
   background: #fff;
 }
-.btn-secondary:hover { background: #f9fafb; }
+.SP_btn-secondary:hover { background: #f9fafb; }
 
 
-.btn-outline {
+.SP_btn-outline {
   background: #fff;
 }
-.btn-outline:hover { background: #f9fafb; }
+.SP_btn-outline:hover { background: #f9fafb; }
