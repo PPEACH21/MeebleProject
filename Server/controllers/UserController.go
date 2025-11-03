@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -417,4 +418,125 @@ func UpdateProfile(c *fiber.Ctx) error {
 		"message": "profile updated successfully",
 		"user":    dbuser,
 	})
+}
+
+// POST /api/user/:id/cost/topup
+// เติม Coin แบบ "บวกเพิ่ม" ด้วย Firestore Increment (atomic)
+func TopUpUserCoin(c *fiber.Ctx) error {
+	userID := strings.TrimSpace(c.Params("id"))
+	if userID == "" {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "user id required"})
+	}
+
+	// รองรับทั้ง number และ string
+	var raw map[string]interface{}
+	if err := c.BodyParser(&raw); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "invalid body", "msg": err.Error()})
+	}
+	var amountInt int64
+	switch v := raw["amount"].(type) {
+	case float64:
+		amountInt = int64(v)
+	case string:
+		n, err := strconv.ParseInt(strings.TrimSpace(v), 10, 64)
+		if err != nil {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "amount must be a number"})
+		}
+		amountInt = n
+	default:
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "amount is required"})
+	}
+	if amountInt <= 0 {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "amount must be > 0"})
+	}
+
+	doc := config.Client.Collection("users").Doc(userID)
+
+	// ใช้ทรานแซคชัน: ถ้ายังไม่มี doc -> สร้างใหม่, ถ้ามี -> increment
+	err := config.Client.RunTransaction(config.Ctx, func(ctx context.Context, tx *firestore.Transaction) error {
+		snap, err := tx.Get(doc)
+		if err != nil {
+			// ถ้า error อื่นที่ไม่ใช่ not found ให้โยนต่อ
+			if status.Code(err) != codes.NotFound {
+				return err
+			}
+		}
+
+		if !snap.Exists() {
+			// upsert: สร้าง doc ใหม่ พร้อมตั้งค่าเริ่มต้น
+			return tx.Set(doc, map[string]interface{}{
+				"Cost":      amountInt,
+				"createdAt": firestore.ServerTimestamp,
+				"updatedAt": firestore.ServerTimestamp,
+			}, firestore.MergeAll)
+		}
+
+		// มีอยู่แล้ว → increment
+		return tx.Update(doc, []firestore.Update{
+			{Path: "Cost", Value: firestore.Increment(amountInt)},
+			{Path: "updatedAt", Value: firestore.ServerTimestamp},
+		})
+	})
+	if err != nil {
+		// แจ้งรายละเอียด id ให้เช็คง่าย ๆ
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "top-up failed",
+			"id":    userID,
+			"msg":   err.Error(),
+		})
+	}
+
+	// อ่านค่าล่าสุดกลับไป
+	snap, err := doc.Get(config.Ctx)
+	if err != nil || !snap.Exists() {
+		return c.Status(http.StatusOK).JSON(fiber.Map{
+			"success": true,
+			"userId":  userID,
+			"message": "topped up, but failed to fetch new value",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"userId":  userID,
+		"cost":    snap.Data()["Cost"],
+	})
+}
+
+func GetReservationsByUser(c *fiber.Ctx) error {
+	userID := c.Params("id") // ใช้ :id ตาม route ของคุณ
+	date := c.Query("date")  // optional filter: /reservations/user/:id?date=YYYY-MM-DD
+
+	if userID == "" {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "userId required"})
+	}
+	if config.Client == nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "firestore client not initialized"})
+	}
+
+	q := config.Client.Collection("reservations").Where("userId", "==", userID)
+	if date != "" {
+		if !validateYMD(date) {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "date must be YYYY-MM-DD"})
+		}
+		q = q.Where("date", "==", date)
+	}
+
+	docs, err := q.Documents(config.Ctx).GetAll()
+	if err != nil {
+		// ถ้าเป็น index error ของ Firestore จะได้ FAILED_PRECONDITION
+		// แนะนำดู log server จะมีลิงก์สร้าง index ให้
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "query failed",
+			"msg":   err.Error(),
+		})
+	}
+
+	out := make([]map[string]interface{}, 0, len(docs))
+	for _, d := range docs {
+		m := d.Data()
+		m["id"] = d.Ref.ID
+		out = append(out, m)
+	}
+	return c.JSON(out)
 }

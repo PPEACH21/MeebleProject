@@ -1,0 +1,441 @@
+// src/User/page/CreateShopWithMap.jsx
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import axios from "@/api/axios";
+import Swal from "sweetalert2";
+import "sweetalert2/dist/sweetalert2.min.css";
+import "@css/pages/vendorSettings.css"; // ใช้สไตล์เดิม (คลาส vs-*)
+
+import { AuthContext } from "@/context/ProtectRoute";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
+
+// ✅ Leaflet core + CSS
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+// ✅ ให้ Vite จัดการ asset ไอคอน
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
+// 🔧 รีเซ็ต path ปริยาย
+delete L.Icon.Default.prototype._getIconUrl;
+
+// ✅ ตั้ง default icon ให้ Marker ทั้งแอป
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
+
+const CATEGORIES = ["restaurant", "cafe", "dessert", "drink", "street"];
+const BANGKOK = [13.7563, 100.5018];
+
+/* ---------------- helpers ---------------- */
+const toNum = (v, d = NaN) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : d;
+};
+
+// คลิกแผนที่เพื่อวางหมุด
+function ClickToPlace({ onPlace }) {
+  useMapEvents({
+    click(e) {
+      onPlace([e.latlng.lat, e.latlng.lng]);
+    },
+  });
+  return null;
+}
+
+// ลากหมุดเพื่อเปลี่ยนพิกัด
+function DraggableMarker({ position, onDragEnd }) {
+  const [pos, setPos] = useState(position);
+  useEffect(() => setPos(position), [position]);
+  return (
+    <Marker
+      position={pos}
+      draggable
+      eventHandlers={{
+        dragend: (e) => {
+          const ll = e.target.getLatLng();
+          const p = [ll.lat, ll.lng];
+          setPos(p);
+          onDragEnd(p);
+        },
+      }}
+    >
+      <Popup>ลากเพื่อเปลี่ยนตำแหน่ง</Popup>
+    </Marker>
+  );
+}
+
+function MapFlyTo({ center, zoom = 15 }) {
+  const map = useMap();
+  useEffect(() => {
+    if (Array.isArray(center) && Number.isFinite(center[0]) && Number.isFinite(center[1])) {
+      map.flyTo(center, zoom, { duration: 0.8 });
+    }
+  }, [center, zoom, map]);
+  return null;
+}
+
+// ช่องค้นหาสถานที่
+function MapSearchBox({ onPick }) {
+  const [q, setQ] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [items, setItems] = useState([]);
+  const fetchIdRef = useRef(0);
+
+  useEffect(() => {
+    const handle = setTimeout(async () => {
+      const query = q.trim();
+      if (!query) {
+        setItems([]);
+        return;
+      }
+      setLoading(true);
+      const myId = ++fetchIdRef.current;
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=8&q=${encodeURIComponent(
+          query
+        )}`;
+        const res = await fetch(url, { headers: { "Accept-Language": "th,en" } });
+        const data = await res.json();
+        if (myId === fetchIdRef.current) {
+          setItems(
+            (Array.isArray(data) ? data : []).map((d) => ({
+              key: `${d.lat},${d.lon}`,
+              name: d.display_name,
+              lat: Number(d.lat),
+              lng: Number(d.lon),
+            }))
+          );
+        }
+      } catch {
+        // เงียบไว้
+      } finally {
+        if (myId === fetchIdRef.current) setLoading(false);
+      }
+    }, 350);
+    return () => clearTimeout(handle);
+  }, [q]);
+
+  return (
+    <div className="vs-search">
+      <div className="vs-search-row">
+        <input
+          className="vs-search-input"
+          type="text"
+          placeholder="ค้นหาสถานที่ (ถนน, ซอย, ตำบล, จังหวัด)"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+        {q && (
+          <button
+            type="button"
+            className="vs-search-clear"
+            onClick={() => {
+              setQ("");
+              setItems([]);
+            }}
+          >
+            ✕
+          </button>
+        )}
+      </div>
+      {!!items.length && (
+        <ul className="vs-search-list">
+          {items.map((it) => (
+            <li
+              key={it.key}
+              className="vs-search-item"
+              onClick={() => {
+                onPick([it.lat, it.lng], it);
+                setQ(it.name);
+                setItems([]);
+              }}
+            >
+              {it.name}
+            </li>
+          ))}
+        </ul>
+      )}
+      {loading && <div className="vs-search-loading">กำลังค้นหา…</div>}
+    </div>
+  );
+}
+
+export default function CreateShopWithMap() {
+  const { auth } = useContext(AuthContext);
+  const vendorId = auth?.user_id || "";
+
+  // ฟอร์ม
+  const [shopName, setShopName] = useState("");
+  const [description, setDescription] = useState("");
+  const [type, setType] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+
+  // อัปโหลดรูป
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState("");
+  const [uploading, setUploading] = useState(false);
+
+  // พิกัด
+  const [lat, setLat] = useState(null);
+  const [lng, setLng] = useState(null);
+
+  const [submitting, setSubmitting] = useState(false);
+
+  const mapCenter = useMemo(() => {
+    if (Number.isFinite(toNum(lat)) && Number.isFinite(toNum(lng))) {
+      return [toNum(lat), toNum(lng)];
+    }
+    return BANGKOK;
+  }, [lat, lng]);
+
+  const validate = () => {
+    if (!shopName.trim()) return "กรุณากรอกชื่อร้าน";
+    if (!description.trim()) return "กรุณากรอกคำอธิบายร้าน";
+    if (!type.trim()) return "กรุณาเลือกประเภทร้าน";
+    if (!vendorId) return "ไม่พบ vendor_id (กรุณาเข้าสู่ระบบใหม่)";
+    if (!Number.isFinite(toNum(lat)) || !Number.isFinite(toNum(lng)))
+      return "กรุณาเลือกตำแหน่งร้านบนแผนที่";
+    return null;
+  };
+
+  const useMyLocation = () => {
+    if (!("geolocation" in navigator)) {
+      return Swal.fire("ไม่รองรับ", "เบราว์เซอร์ไม่รองรับ Geolocation", "warning");
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLat(pos.coords.latitude);
+        setLng(pos.coords.longitude);
+        Swal.fire("สำเร็จ", "ตั้งตำแหน่งจากอุปกรณ์แล้ว", "success");
+      },
+      (err) => {
+        Swal.fire("ไม่สำเร็จ", err.message || "ไม่สามารถอ่านตำแหน่งได้", "error");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  // ---------------- Upload image to imgbb ----------------
+  const onFileChange = (e) => {
+    const f = e.target.files?.[0];
+    setFile(f || null);
+    setPreview(f ? URL.createObjectURL(f) : "");
+  };
+
+  const uploadImage = async () => {
+    if (!file) return Swal.fire("ยังไม่ได้เลือกไฟล์", "กรุณาเลือกไฟล์รูปก่อน", "info");
+
+    // เช็คขนาดไฟล์ (เช่น <= 5MB)
+    const MAX_MB = 5;
+    if (file.size > MAX_MB * 1024 * 1024) {
+      return Swal.fire("ไฟล์ใหญ่เกินไป", `จำกัด ${MAX_MB}MB`, "warning");
+    }
+
+    try {
+      const apiKey = import.meta.env.VITE_IMGBB_API_KEY;
+      if (!apiKey) {
+        return Swal.fire(
+          "ยังไม่ได้ตั้งค่า",
+          "กรุณาตั้งค่า VITE_IMGBB_API_KEY ใน .env",
+          "warning"
+        );
+      }
+
+      setUploading(true);
+
+      const form = new FormData();
+      form.append("key", apiKey);
+      form.append("image", file);
+
+      const res = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: form });
+      const data = await res.json();
+
+      if (!data?.success || !data?.data?.url) {
+        return Swal.fire("อัปโหลดไม่สำเร็จ", "ไม่สามารถอัปโหลดไป imgbb", "error");
+      }
+
+      setImageUrl(data.data.url);
+      setFile(null);
+      setPreview("");
+      Swal.fire("สำเร็จ", "อัปโหลดรูปแล้ว! ระบบใส่ URL ให้เรียบร้อย", "success");
+    } catch (e) {
+      Swal.fire("อัปโหลดไม่สำเร็จ", e.message || "เกิดข้อผิดพลาด", "error");
+    } finally {
+      setUploading(false);
+    }
+  };
+  // -------------------------------------------------------
+
+  const submit = async (e) => {
+    e.preventDefault();
+    const msg = validate();
+    if (msg) return Swal.fire("กรอกไม่ครบ", msg, "warning");
+
+    const payload = {
+      shop_name: shopName.trim(),
+      description: description.trim(),
+      type: type.trim(),
+      image: imageUrl.trim(), // ✅ ได้จากอัปโหลดหรือกรอกเอง
+      vendor_id: vendorId,
+      address: { latitude: toNum(lat), longitude: toNum(lng) },
+      order_active: false,
+      reserve_active: false,
+      status: false,
+    };
+
+    try {
+      setSubmitting(true);
+      await axios.post("/Shops", payload, { withCredentials: true });
+      Swal.fire("สำเร็จ", "สร้างร้านเรียบร้อยแล้ว", "success");
+      // เคลียร์ฟอร์ม
+      setShopName(""); setDescription(""); setType(""); setImageUrl("");
+      setLat(null); setLng(null); setFile(null); setPreview("");
+    } catch (e) {
+      Swal.fire(
+        "ไม่สำเร็จ",
+        e?.response?.data?.error || e?.response?.data?.message || "สร้างร้านไม่สำเร็จ",
+        "error"
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="vs-container">
+      <h1 className="vs-title">Create Shop</h1>
+      <p className="vs-subtitle">กรอกข้อมูลให้ครบถ้วนและปักหมุดตำแหน่งร้านบนแผนที่</p>
+
+      <form className="vs-layout" onSubmit={submit}>
+        {/* LEFT: รายละเอียดร้าน */}
+        <div className="vs-left">
+          <div className="vs-section">
+            <h3>ข้อมูลร้าน</h3>
+
+            <label>ชื่อร้าน <span className="req">*</span></label>
+            <input
+              value={shopName}
+              onChange={(e) => setShopName(e.target.value)}
+              placeholder="เช่น Fin CAFEEE"
+            />
+
+            <label>คำอธิบาย <span className="req">*</span></label>
+            <textarea
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="จุดเด่น / เมนูแนะนำ / เวลาเปิด-ปิด"
+            />
+
+            <label>ประเภท <span className="req">*</span></label>
+            <select value={type} onChange={(e) => setType(e.target.value)}>
+              <option value="">— เลือกประเภท —</option>
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+
+            {/* อัปโหลดรูปภาพ */}
+            <label>รูปภาพหน้าร้าน</label>
+            <div className="vs-image-box" style={{alignItems:"center"}}>
+              <img
+                src={preview || imageUrl || "https://via.placeholder.com/200x200?text=No+Image"}
+                alt="preview"
+                className="vs-image"
+                style={{ width: 200, height: 200, objectFit: "cover", borderRadius: 12, border: "1px solid #ddd" }}
+              />
+              <div className="vs-image-controls">
+                <input type="file" accept="image/*" onChange={onFileChange} />
+                <div className="vs-row">
+                  <button type="button" onClick={uploadImage} disabled={!file || uploading}>
+                    {uploading ? "กำลังอัปโหลด..." : "Upload รูป"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFile(null);
+                      setPreview("");
+                    }}
+                  >
+                    ล้างไฟล์
+                  </button>
+                </div>
+                <small>หรือวาง URL เอง:</small>
+                <input
+                  type="url"
+                  placeholder="https://..."
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT: แผนที่ปักหมุด */}
+        <div className="vs-right">
+          <div className="vs-map-card">
+            <div className="vs-map-header">
+              <h3>แผนที่ร้าน — คลิกเพื่อวางหมุด / ลากเพื่อเปลี่ยนตำแหน่ง</h3>
+              <MapSearchBox
+                onPick={([la, ln]) => {
+                  setLat(la);
+                  setLng(ln);
+                }}
+              />
+            </div>
+
+            <div className="vs-map-wrap">
+              <MapContainer center={mapCenter} zoom={13} scrollWheelZoom className="vs-map">
+                <MapFlyTo center={mapCenter} zoom={15} />
+                <TileLayer
+                  attribution='&copy; OpenStreetMap'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <ClickToPlace onPlace={([la, ln]) => { setLat(la); setLng(ln); }} />
+                {Number.isFinite(toNum(lat)) && Number.isFinite(toNum(lng)) && (
+                  <DraggableMarker
+                    position={[toNum(lat), toNum(lng)]}
+                    onDragEnd={([la, ln]) => { setLat(la); setLng(ln); }}
+                  />
+                )}
+              </MapContainer>
+            </div>
+
+            <div className="vs-map-footer">
+              <small>คลิกแผนที่เพื่อวางหมุด หรือ ลากหมุดเพื่อเปลี่ยนตำแหน่ง</small>
+              <div className="vs-map-coords">
+                <div className="vs-map-coord">
+                  <label>Lat</label>
+                  <input type="text" readOnly value={Number.isFinite(Number(lat)) ? Number(lat).toFixed(6) : ""} />
+                </div>
+                <div className="vs-map-coord">
+                  <label>Lng</label>
+                  <input type="text" readOnly value={Number.isFinite(Number(lng)) ? Number(lng).toFixed(6) : ""} />
+                </div>
+              </div>
+
+              <div className="vs-row" style={{ marginTop: ".25rem" }}>
+                <button type="button" onClick={useMyLocation}>ใช้ตำแหน่งฉันตอนนี้</button>
+                <button type="submit" className="vs-primary" disabled={submitting}>
+                  {submitting ? "กำลังสร้าง..." : "สร้างร้าน"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+}

@@ -24,6 +24,7 @@ export const AuthProvider = ({children})=>{
         Username:res.data.username,
         Avatar:res.data.avatar,
         Email:res.data.email,
+        User_id:res.data.user_id
       })
     }catch{
       setAuth(null);

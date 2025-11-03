@@ -43,10 +43,10 @@
   flex-direction: column;
   justify-content: flex-start;
   text-align: left;
-  overflow: hidden; /* ป้องกันล้น */
-  word-wrap: break-word; /* ตัดคำอัตโนมัติ */
-  word-break: break-word; /* รองรับข้อความภาษาไทย/อังกฤษยาว */
-  max-width: 100%; /* จำกัดไม่ให้เกินกล่อง */
+  overflow: hidden; 
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%; 
 }
 
 .storeTitle {
@@ -59,7 +59,6 @@
 .storeRate {
   font-size: 16px;
   color: #ff9d00;
-  /* margin-bottom: 10px; */
 }
 
 .storeSubtitle {
@@ -84,7 +83,7 @@
   border-radius: 15px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
   padding: 15px;
-  width: 350px; /* ✅ เท่ากับ storeBox */
+  width: 350px; 
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -154,7 +153,7 @@
   background: #bbb;
 }
 
-/* ===== เลย์เอาต์รายการเมนู ===== */
+/* ===== MenuLayout ===== */
 .menu {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
