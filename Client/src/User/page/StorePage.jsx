@@ -35,17 +35,16 @@ export default function StorePage() {
   const [search, setSearch] = useState("");
 
   const [type, setType] = useState([
-    { name: m.Maincourse(), active: false,icon:<IoRestaurantOutline />},
-    { name: m.Fastfood(), active: false ,icon: <IoFastFoodOutline />},
-    { name: m.Dessert(), active: false,icon: <RiCake3Fill /> },
-    { name: m.Appetizer(), active: false ,icon: <MdOutlineCookie />},
-    { name: m.Beverage(), active: false ,icon: <RiDrinksLine />},
+    { name: "Maincourse", active: false,icon:<IoRestaurantOutline />},
+    { name: "FastFoods" , active: false ,icon: <IoFastFoodOutline />},
+    { name: "Appetizer", active: false,icon: <RiCake3Fill /> },
+    { name: "Dessert", active: false ,icon: <MdOutlineCookie />},
+    { name: "Beverage", active: false ,icon: <RiDrinksLine />},
   ]);
 
   const [shopOpen, setshopOpen] = useState(false);
   const [rate, setRate] = useState(false);
   const [near, setNear] = useState(false);
-  const [favorites, setFavorites] = useState(false);
 
   // โหลดร้าน + normalize + log สวย ๆ
   const getshop = async () => {
@@ -123,7 +122,7 @@ export default function StorePage() {
     const activeType = type.find((t) => t.active)?.name || "";
     filterData(search, activeType);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shopOpen, rate, near, favorites, type]);
+  }, [shopOpen, rate, near, type]);
 
   const filterData = (searchValue, selectedType) => {
     let filtered = data;
@@ -145,6 +144,10 @@ export default function StorePage() {
     }
 
     if (rate) {
+      filtered = [...filtered].sort((a, b) => (b.rate || 0) - (a.rate || 0));
+    }
+
+    if (near) {
       filtered = [...filtered].sort((a, b) => (b.rate || 0) - (a.rate || 0));
     }
 
@@ -210,6 +213,7 @@ export default function StorePage() {
                   className="btn1"
                   onClick={() => setshopOpen(!shopOpen)}
                   style={{
+                    padding : "0px 40px",
                     backgroundColor: shopOpen ? "#FFA467" : "#fff",
                     color: shopOpen ? "#fff" : "#FFA467",
                   }}
@@ -221,6 +225,7 @@ export default function StorePage() {
                   className="btn1"
                   onClick={() => setRate(!rate)}
                   style={{
+                    padding : "0px 40px",
                     backgroundColor: rate ? "#FFA467" : "#fff",
                     color: rate ? "#fff" : "#FFA467",
                   }}
@@ -232,22 +237,12 @@ export default function StorePage() {
                   className="btn1"
                   onClick={() => setNear(!near)}
                   style={{
+                    padding : "0px 40px",
                     backgroundColor: near ? "#FFA467" : "#fff",
                     color: near ? "#fff" : "#FFA467",
                   }}
                 >
                   {m.near()}
-                </button>
-
-                <button
-                  className="btn1"
-                  onClick={() => setFavorites(!favorites)}
-                  style={{
-                    backgroundColor: favorites ? "#FFA467" : "#fff",
-                    color: favorites ? "#fff" : "#FFA467",
-                  }}
-                >
-                  {m.favorites()}
                 </button>
 
                 <button className="btn1" style={{ width: "30%" }}>

@@ -56,9 +56,9 @@
   "UnitedStates": "อังกฤษ",
   "favoritesRestarant": "ร้านอาหารที่ชื่นชอบ",
   "Maincourse": "อาหารหลัก",
-  "Fastfood": "อาหารจานด่วน",
   "Dessert": "ของหวาน",
   "Appetizer": "ของกินเล่น",
   "Beverage": "น้ำดื่ม",
-  "loading": "กำลังโหลด"
+  "loading": "กำลังโหลด",
+  "Fastfood": "อาหารจานด่วน"
 }

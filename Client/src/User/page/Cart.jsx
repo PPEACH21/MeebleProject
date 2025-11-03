@@ -7,6 +7,7 @@ import { AuthContext } from "@/context/ProtectRoute";
 import { useNavigate, useLocation } from "react-router-dom";
 import "@css/pages/CartPage.css";
 import { MdDelete } from "react-icons/md";
+import LoadingPage from "../component/LoadingPage";
 
 const currency = (n) =>
   (Number(n) || 0).toLocaleString("th-TH", { style: "currency", currency: "THB" });
@@ -194,7 +195,7 @@ export default function Cart() {
       <h2>ตะกร้าสินค้า</h2>
 
       {loading ? (
-        <p>กำลังโหลด...</p>
+        <LoadingPage/>
       ) : (cart.items?.length || 0) === 0 ? (
         <div className="CP_emptyCart">
           <p>ตะกร้ายังว่าง</p>
