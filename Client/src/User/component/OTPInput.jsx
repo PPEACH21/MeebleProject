@@ -2,12 +2,14 @@ import { useState,useRef,useEffect, useContext } from "react";
 import axios from "@/api/axios";
 import { AuthContext } from "@/context/ProtectRoute";
 import {  useNavigate } from "react-router-dom";
+import LoadingPage from "./LoadingPage";
 
 export const OTPInput=({email=false,state,setState}) =>{
     const {auth,setAuth} = useContext(AuthContext);
     const [otp,setOTP]= useState(new Array(6).fill(""));
     const navigate= useNavigate(); 
     const inputRef = useRef([])
+    const [Loading ,setLoading] = useState(false);
 
     useEffect (()=>{
         sendmessage()
@@ -83,7 +85,7 @@ export const OTPInput=({email=false,state,setState}) =>{
     const handleSubmit = async() => {
         const otpCode = otp.join("");
         console.log("OTP submitted:", otpCode);
-        
+        setLoading(true)
         try {
             if(!email){
                 const checkOTP = await axios.post(`/checkotp`,{otp:otpCode,email:auth.email})
@@ -98,7 +100,7 @@ export const OTPInput=({email=false,state,setState}) =>{
 
                 const updatedAuth = { ...auth, verified: true };
                 setAuth(updatedAuth);
-                
+                setLoading(false)
                 console.log("Updated Auth:", updatedAuth);
                 navigate("/home")
             }else{
@@ -112,6 +114,7 @@ export const OTPInput=({email=false,state,setState}) =>{
         }
     }
 
+    if(Loading) return<LoadingPage/>
     return(
         <div>
             {

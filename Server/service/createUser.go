@@ -29,32 +29,57 @@ func CreateUser(c *fiber.Ctx) error {
 	if err == nil{
 		return c.Status(fiber.StatusBadRequest).SendString("Username have been Already")
 	}
-	
+	_,err = config.Vendor.Where("email","==",user.Email).Limit(1).Documents(config.Ctx).Next()
+	if err == nil{
+		return c.Status(fiber.StatusBadRequest).SendString("email has already")
+	}
+
+	_,err = config.Vendor.Where("username","==",user.Username).Limit(1).Documents(config.Ctx).Next()
+	if err == nil{
+		return c.Status(fiber.StatusBadRequest).SendString("Username have been Already")
+	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString("Error hashing password")
 	}
-
 	user.Password = string(hashedPassword)
 
-	_, _, err = config.User.Add(config.Ctx,map[string]interface{}{
-		"email":     user.Email,
-		"firstname": "",
-		"lastname": "",
-		"username": 	user.Username,
-		"password":   user.Password,
-		"otp_verify": "",
-		"verified": false,
-		"Cost": 0,
-		"createdat": firestore.ServerTimestamp,
-	})
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString("Error saving user")
+	if(user.Role=="vendor"){
+		_, _, err = config.Vendor.Add(config.Ctx,map[string]interface{}{
+			"email":     user.Email,
+			"firstname": "",
+			"lastname": "",
+			"username": 	user.Username,
+			"password":   user.Password,
+			"verified": false,
+			"Cost": 0,
+			"createdat": firestore.ServerTimestamp,
+		})
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).SendString("Error saving user")
+		}
+	}else{
+		_, _, err = config.User.Add(config.Ctx,map[string]interface{}{
+			"email":     user.Email,
+			"firstname": "",
+			"lastname": "",
+			"username": 	user.Username,
+			"password":   user.Password,
+			"verified": false,
+			"Cost": 0,
+			"createdat": firestore.ServerTimestamp,
+		})
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).SendString("Error saving user")
+		}
 	}
+	
 
 	return c.JSON(fiber.Map{
 		"email":     user.Email,
 		"username": 	user.Username,
+		"role": 	user.Role,
 		"message" : "Create success",
 	})
 }

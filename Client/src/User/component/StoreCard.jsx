@@ -1,9 +1,12 @@
 // src/User/component/StoreCard.jsx
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import LoadingPage, { runloadting } from "./LoadingPage";
 
 // --- helpers ---
 const toNum = (v) => (typeof v === "number" ? v : Number(v) || 0);
+
+
 
 function formatPriceRange(min, max) {
   if (min == null || max == null) return "–";
@@ -78,6 +81,11 @@ const StoreCard = ({ datashow }) => {
     );
   }, []);
 
+  useEffect(()=>{
+    setTimeout(() => {
+      setLoading(false);
+    }, 1000);
+  })
   const handleSelectShop = (shop) => {
     const shopId = getShopId(shop);
     if (!shopId) {
@@ -94,6 +102,9 @@ const StoreCard = ({ datashow }) => {
     });
   };
 
+  const {loading,LoadingPage} = runloadting(1000);
+  if(loading) return<LoadingPage/>
+  
   return (
     <div className="card-grid">
       {datashow.map((item, index) => {
