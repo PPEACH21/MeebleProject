@@ -74,7 +74,7 @@ function formatDistanceText(km) {
 const getShopId = (shop) =>
   shop?.id || shop?.ID || shop?.shop_id || shop?.shopId || "";
 
-const StoreCard = ({ datashow }) => {
+export default StoreCard = ({ datashow }) => {
   const navigate = useNavigate();
   const [userPos, setUserPos] = useState(null);
 
@@ -306,4 +306,3 @@ const StoreCard = ({ datashow }) => {
   );
 };
 
-export default StoreCard;
