@@ -9,7 +9,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [errMsg, setErrMsg] = useState("");
   const navigate = useNavigate(); 
-  const { auth,setAuth } = useContext(AuthContext);
+  const {getId, auth,setAuth } = useContext(AuthContext);
 
   useEffect(()=>{
     console.log("LoginPage Auth:",auth);
@@ -38,6 +38,7 @@ const LoginPage = () => {
       });
       console.log("login Success")
 
+
       const userData = {
         user_id: res.data.user_id,
         email: res.data.email,
@@ -49,6 +50,7 @@ const LoginPage = () => {
       setAuth(userData)
       setUserkey("");
       setPassword("");
+      getId()
       
       if(!res.data.verified){
         navigate("/verifyemail",{ replace: true })
