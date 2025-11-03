@@ -215,33 +215,26 @@ export default function VHomePage() {
 
   /* ---------- การจอง (calendar) ---------- */
   useEffect(() => {
-  const loadReservations = async () => {
-    if (!shop?.id) return;
-    setReservationsLoading(true);
-    try {
-      // ดึงจาก subcollection ของร้านโดยตรง
-      const res = await axios.get(`/shops/${shop.id}/reservations`, { withCredentials: true });
-      const normalized = normalizeReservationList(res.data);
-
-      setReservations(normalized);
-
-      // ✅ อัปเดตการ์ด "จำนวนการจอง" ให้เป็นจำนวนทั้งหมดที่โหลดมา
-      setStats(prev => ({ ...prev, reserves: normalized.length }));
-    } catch (err) {
-      const status = err?.response?.status;
-      const data = err?.response?.data;
-      console.warn("[reservations] load failed", { status, data, message: err?.message });
-
-      setReservations([]);
-
-      // ✅ ถ้าโหลดไม่สำเร็จ ให้แสดง 0
-      setStats(prev => ({ ...prev, reserves: 0 }));
-    } finally {
-      setReservationsLoading(false);
-    }
-  };
-  loadReservations();
-}, [shop?.id]);
+    const loadReservations = async () => {
+      if (!shop?.id) return;
+      setReservationsLoading(true);
+      try {
+        const res = await axios.get(`/shops/${shop.id}/reservations`, { withCredentials: true });
+        const normalized = normalizeReservationList(res.data);
+        setReservations(normalized);
+        setStats(prev => ({ ...prev, reserves: normalized.length }));
+      } catch (err) {
+        const status = err?.response?.status;
+        const data = err?.response?.data;
+        console.warn("[reservations] load failed", { status, data, message: err?.message });
+        setReservations([]);
+        setStats(prev => ({ ...prev, reserves: 0 }));
+      } finally {
+        setReservationsLoading(false);
+      }
+    };
+    loadReservations();
+  }, [shop?.id]);
 
   /* ---------- ปุ่มเปิด/ปิด ---------- */
   const toggleShopStatus = async () => {
@@ -328,7 +321,7 @@ export default function VHomePage() {
             />
           </div>
 
-          <div className="recent-orders">
+          <div className="recent-orders" >
             <h3>🧾 ออเดอร์ล่าสุด</h3>
             {ordersLoading ? (
               <p>กำลังโหลด...</p>
@@ -419,35 +412,33 @@ function ReservationCalendar({ loading, reservations }) {
     return `${frag}-${date || ""}`;
   };
 
-  // ✅ ดึงชื่อจาก /orders/customer/:id → ถ้าไม่ได้ค่อยลอง /user/:id
+  // ✅ (แก้แล้ว) ดึงชื่อจากหลังบ้าน /api/users/:id/name และ cache กันยิงซ้ำ
   const [nameCache, setNameCache] = useState(new Map());
+  const inflight = useMemo(() => new Map(), []);
   const getDisplayName = async (uid) => {
     if (!uid) return "";
     if (nameCache.has(uid)) return nameCache.get(uid);
+    if (inflight.has(uid)) return inflight.get(uid);
 
-    const tryFetch = async (url) => {
+    const p = (async () => {
       try {
-        const res = await axios.get(url, { withCredentials: true });
-        return (
-          res?.data?.name ||
-          res?.data?.displayName ||
-          res?.data?.username ||
-          res?.data?.user?.name ||
-          res?.data?.user?.displayName ||
-          ""
-        );
+        const res = await axios.get(`/api/users/${uid}/name`, { withCredentials: true });
+        const name = res?.data?.name || uid;
+        setNameCache((prev) => {
+          const m = new Map(prev);
+          m.set(uid, name);
+          return m;
+        });
+        return name;
       } catch {
-        return "";
+        return uid;
+      } finally {
+        inflight.delete(uid);
       }
-    };
+    })();
 
-    let name =
-      (await tryFetch(`/orders/customer/${uid}`)) ||
-      (await tryFetch(`/user/${uid}`)) ||
-      uid;
-
-    setNameCache((p) => new Map(p).set(uid, name));
-    return name;
+    inflight.set(uid, p);
+    return p;
   };
 
   const [month, setMonth] = useState(() => {

@@ -1,44 +1,44 @@
-
+/* ===== Layout หลัก ===== */
 .vm-container {
   margin: 0 auto;
   padding: 16px;
   box-sizing: border-box;
 }
 
-
+/* หัวข้อห่างจากปุ่ม/คอนเทนต์ถัดไป */
 .vm-title {
   margin: 0;
 }
 .vm-CP_actions {
-  margin-top: 12px; 
+  margin-top: 12px; /* เพิ่ม gap ระหว่างหัวข้อกับปุ่ม */
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
 }
 
-
+/* ===== กล่องฟอร์ม (ทั้งหน้า + ใน popup) ===== */
 .vm-form {
   display: grid;
-  gap: 12px; 
+  gap: 12px; /* ระยะห่างระหว่างฟิลด์ */
 }
 .vm-field {
   display: grid;
-  gap: 6px;
+  gap: 6px; /* ระยะห่างระหว่าง label กับ input */
 }
 .vm-input,
 .vm-textarea {
   width: 100%;
-  min-width: 0; 
+  min-width: 0; /* กันล้นเมื่ออยู่ใน grid/flex */
   padding: 10px;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
-  box-sizing: border-box; 
+  box-sizing: border-box; /* ขอบ+padding ไม่ดันให้ล้น */
 }
 .vm-textarea {
   resize: vertical;
 }
 
-
+/* ปุ่มแอ็คชัน */
 .vm-buttons {
   display: flex;
   gap: 12px;
@@ -46,27 +46,27 @@
   flex-wrap: wrap;
 }
 
-
+/* ===== ตาราง + กันล้นแนวนอน ===== */
 .vm-table-wrap {
-  overflow-x: auto; 
+  overflow-x: auto; /* ถ้าจอแคบ ให้เลื่อนซ้ายขวาแทนล้น */
 }
 .vm-table {
   width: 100%;
   border-collapse: collapse;
   background: #fff;
   border-radius: 8px;
-  overflow: hidden; 
-  table-layout: fixed; 
+  overflow: hidden; /* กัน border-radius ไม่ทำงาน */
+  table-layout: fixed; /* ช่วยตัดคำ/กันล้น */
 }
 .vm-table th,
 .vm-table td {
   padding: 10px 12px;
   border-bottom: 1px solid #f1f5f9;
   vertical-align: top;
-  word-break: break-word; 
+  word-break: break-word; /* ตัดคำยาว ๆ กันล้นคอลัมน์ */
 }
 
-
+/* รูปภาพในตาราง/พรีวิว */
 .vm-img {
   width: 64px;
   height: 64px;
@@ -77,13 +77,13 @@
 .vm-preview {
   width: 160px;
   height: 160px;
-  max-width: 100%; 
+  max-width: 100%; /* กันพรีวิวล้นในจอเล็ก */
   object-fit: cover;
   border-radius: 12px;
   border: 1px solid #e5e7eb;
 }
 
-
+/* ===== Popup กลางจอ ===== */
 .vm-modal {
   position: fixed;
   inset: 0;
@@ -95,7 +95,7 @@
   z-index: 1000;
 }
 .vm-modal__panel {
-  width: min(720px, 96vw); 
+  width: min(720px, 96vw); /* พอดีกับขอบจอ */
   max-height: 90vh;
   background: #fff;
   border-radius: 12px;
@@ -116,7 +116,7 @@
   overscroll-behavior: contain;
 }
 
-
+/* สถานะแท็ก */
 .vm-badge {
   display: inline-block;
   padding: 4px 10px;
@@ -207,7 +207,7 @@
   height: 0;
 }
 
-
+/* แทร็ก: OFF = แดง, ON = เขียว (flat) */
 .vm-slider {
   position: absolute;
   inset: 0;
@@ -219,7 +219,7 @@
     transform var(--vm-dur) var(--vm-ease);
 }
 
-
+/* ปุ่มกลม (knob) ไม่มีเงา */
 .vm-slider::before {
   content: "";
   position: absolute;
@@ -233,7 +233,7 @@
   transition: transform var(--vm-dur) var(--vm-ease);
 }
 
-
+/* ON state: เขียว + knob เลื่อนขวา */
 .vm-switch input:checked + .vm-slider {
   background: #22c55e;                /* green-500 (ON) */
 }
@@ -241,20 +241,20 @@
   transform: translateX(calc(var(--vm-w) - var(--vm-knob) - var(--vm-pad) * 2));
 }
 
-
+/* โหมดโฟกัส (ไม่ใช้เงา ใช้กรอบแทน) */
 .vm-switch input:focus-visible + .vm-slider {
   outline: 2px solid #93c5fd;         /* blue-300 */
   outline-offset: 2px;
 }
 
-
+/* ปิดการใช้งาน */
 .vm-switch input:disabled + .vm-slider {
   cursor: not-allowed;
   opacity: 0.6;
 }
 
 
-
+/* ขณะโหลด: แสดงวงแหวนหมุนบน knob (ไม่มีเงา) */
 .vm-switch.is-loading .vm-slider::before {
   background:
     conic-gradient(from 0deg, rgba(0,0,0,0) 0 75%, rgba(0,0,0,.25) 76% 100%),
@@ -264,12 +264,12 @@
   animation: vm-spin 900ms linear infinite;
 }
 
-
+/* ON + Loading: รักษาตำแหน่ง knob ขณะหมุน */
 .vm-switch.is-loading input:checked + .vm-slider::before {
   transform: translateX(calc(var(--vm-w) - var(--vm-knob) - var(--vm-pad) * 2));
 }
 
-
+/* ลดแอนิเมชันสำหรับผู้ใช้ที่ลด motion */
 @media (prefers-reduced-motion: reduce) {
   .vm-slider,
   .vm-slider::before {

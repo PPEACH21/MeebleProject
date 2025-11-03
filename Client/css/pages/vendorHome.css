@@ -1,60 +1,66 @@
 .dashboard-layout {
   display: flex;
-  height: 100%;
-  overflow: hidden; 
+  height: 100%;         /* สูงเต็มหน้าจอ */
+  overflow: hidden;       /* ❌ กันทั้งหน้า scroll */
 }
 
-
+/* ส่วน sidebar */
 .dashboard-layout > aside {
   flex-shrink: 0;
 }
 
-
+/* ส่วน main — ห้าม scroll */
 .dashboard-main {
   flex: 1;
-  height: 100vh; 
-  overflow: hidden; 
+  height: 100vh;          /* สูงเต็มหน้าจอ */
+  overflow: hidden;       /* ✅ ห้าม scroll ในส่วน main */
   padding: 24px;
   background: #f8f9fb;
 }
 
 
-.dashboard-main .content {
-  max-width: 1200px;
-  margin: 0 auto;
-  flex-direction: row;
+  /* เนื้อหาภายใน */
+  .dashboard-main .content {  
+    max-width: 1200px;
+    margin: 0 auto;
+    flex-direction: row;
+    
+    justify-content:flex-end;
+  }
 
-  justify-content: flex-end;
-}
+  .dashboard-main .content h1 {
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
+    margin-top: -20px;
+    margin-left: -100px;
+  }
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
 
-.dashboard-main .content h1 {
-  font-size: 28px;
-  font-weight: bold;
-  color: #333;
-  margin-top: -20px;
-  margin-left: -100px;
-}
-.header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
+  .status-btn {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
 
-.status-btn {
-  border: none;
-  border-radius: 8px;
-  padding: 10px 16px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
+  .status-btn.open {
+    background: #10b981; /* เขียว */
+    color: white;
+  }
 
-.status-btn.open {
-  background: #10b981; 
-  color: white;
-}
+  .status-btn.closed {
+    background: #ef4444; /* แดง */
+    color: white;
+  }
 
   .status-btn:disabled {
     opacity: 0.6;
@@ -62,68 +68,59 @@
   }
 
 
-.status-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.btn-group {
-  display: flex;
-  gap: 12px;
-}
+  /* ปุ่มเปิดร้าน */
+  .status-btn {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+  .status-btn.open {
+    background: #10b981;
+    color: white;
+  }
+  .status-btn.closed {
+    background: #ef4444;
+    color: white;
+  }
 
+  /* ปุ่มเปิดการจอง */
+  .reserve-btn {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+  .reserve-btn.on {
+    background: #3b82f6; /* น้ำเงิน */
+    color: white;
+  }
+  .reserve-btn.off {
+    background: #9ca3af; /* เทา */
+    color: white;
+  }
 
-.status-btn {
-  border: none;
-  border-radius: 8px;
-  padding: 10px 18px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-.status-btn.open {
-  background: #10b981;
-  color: white;
-}
-.status-btn.closed {
-  background: #ef4444;
-  color: white;
-}
-
-
-.reserve-btn {
-  border: none;
-  border-radius: 8px;
-  padding: 10px 18px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-.reserve-btn.on {
-  background: #3b82f6; 
-  color: white;
-}
-.reserve-btn.off {
-  background: #9ca3af; 
-  color: white;
-}
-
-.shop-status-group {
-  margin-top: 20px;
-  padding: 14px 20px;
-  background: #f3f4f6;
-  border-radius: 10px;
-}
-.text-open {
-  color: #059669;
-  font-weight: 600;
-}
-.text-closed {
-  color: #dc2626;
-  font-weight: 600;
-}
-.sale {
+  .shop-status-group {
+    margin-top: 20px;
+    padding: 14px 20px;
+    background: #f3f4f6;
+    border-radius: 10px;
+  }
+  .text-open {
+    color: #059669;
+    font-weight: 600;
+  }
+  .text-closed {
+    color: #dc2626;
+    font-weight: 600;
+  }
+.sale{
   width: 400px;
   height: 250px;
   background-color: #9ca3af;
@@ -160,28 +157,13 @@
   font-weight: 600;
 }
 
-.status-btn.open {
-  background: #16a34a;
-  color: #fff;
-}
-.status-btn.closed {
-  background: #dc2626;
-  color: #fff;
-}
+.status-btn.open { background: #16a34a; color: #fff; }
+.status-btn.closed { background: #dc2626; color: #fff; }
 
-.reserve-btn.on {
-  background: #2563eb;
-  color: #fff;
-}
-.reserve-btn.off {
-  background: #64748b;
-  color: #fff;
-}
+.reserve-btn.on { background: #2563eb; color: #fff; }
+.reserve-btn.off { background: #64748b; color: #fff; }
 
-.menu-btn {
-  background: #f59e0b;
-  color: #fff;
-}
+.menu-btn { background: #f59e0b; color: #fff; }
 
 /* ───────── Dashboard Cards ───────── */
 .dashboard-cards {
@@ -195,12 +177,10 @@
   background: #fff;
   border-radius: 12px;
   padding: 1.2rem 1.5rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   transition: transform 0.2s ease;
 }
-.card.summary:hover {
-  transform: translateY(-4px);
-}
+.card.summary:hover { transform: translateY(-4px); }
 
 .card.summary h3 {
   color: #475569;
@@ -220,12 +200,11 @@
   gap: 1rem;
 }
 
-.calendar-box,
-.recent-orders {
+.calendar-box, .recent-orders {
   background: #fff;
   border-radius: 12px;
   padding: 1.2rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 .calendar-frame {
@@ -235,67 +214,15 @@
   border-radius: 8px;
   margin-top: 0.6rem;
 }
+
 .recent-orders {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 1rem 1.5rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-  transition: all 0.2s ease-in-out;
-}
-
-.recent-orders h3 {
-  font-size: 1.3rem;
-  margin-bottom: 0.5rem;
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #333;
+  flex-direction: column;
+  justify-content: flex-start;
+  text-align: center;
+  color: #64748b;
 }
-
-.order-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  margin-top: 0.5rem;
-  border-radius: 10px;
-  overflow: hidden;
-  font-size: 0.95rem;
-}
-
-.order-table thead {
-  background: linear-gradient(90deg, #f0f4ff, #e9f0ff);
-  color: #222;
-}
-
-.order-table th,
-.order-table td {
-  padding: 10px 14px;
-  text-align: left;
-}
-
-.order-table th {
-  font-weight: 600;
-  border-bottom: 2px solid #dee4f0;
-}
-
-.order-table tbody tr {
-  background: #fff;
-  transition: background 0.15s ease-in-out;
-}
-
-.order-table tbody tr:nth-child(even) {
-  background: #fafafa;
-}
-
-.order-table tbody tr:hover {
-  background: #f2f7ff;
-}
-
-.order-table td {
-  border-bottom: 1px solid #e8ecf3;
-  vertical-align: middle;
-}
-
+/* ───────── Calendar (เฉพาะส่วนนี้) ───────── */
 /* ─────────────── STATUS COLORS ─────────────── */
 .order-table td:last-child {
   text-align: center;

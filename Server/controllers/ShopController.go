@@ -15,54 +15,98 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"google.golang.org/api/iterator"
 	"google.golang.org/genproto/googleapis/type/latlng"
+	latlngpb "google.golang.org/genproto/googleapis/type/latlng"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 func CreateShop(c *fiber.Ctx) error {
-	shop := new(models.Shop)
-	if err := c.BodyParser(shop); err != nil {
-		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+	var in models.Shop
+	if err := c.BodyParser(&in); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "invalid body",
+			"msg":   err.Error(),
+		})
 	}
 
-	if shop.Shop_name == "" {
-		return c.Status(fiber.StatusBadRequest).SendString("You must Have Shopname first")
+	// --------- Validation: บังคับกรอกครบ ----------
+	if in.Shop_name == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "shop_name is required"})
+	}
+	if in.Description == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "description is required"})
+	}
+	if in.Type == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "type is required"})
+	}
+	if in.Vendor_id == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "vendor_id is required"})
+	}
+	if in.Address == nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "address is required"})
+	}
+	lat := in.Address.Latitude
+	lng := in.Address.Longitude
+	// ต้องเลือกพิกัด และต้องอยู่ในช่วงที่ถูกต้อง
+	if lat < -90 || lat > 90 || lng < -180 || lng > 180 || math.IsNaN(lat) || math.IsNaN(lng) {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid latitude/longitude"})
+	}
+	// ถ้าต้องการ “บังคับห้าม (0,0)” เพราะถือว่ายังไม่ได้เลือก ให้เปิดบรรทัดนี้
+	if lat == 0 && lng == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "please pick a location on the map"})
+	}
+	// ตรวจช่วงราคา (ถ้ามีส่งมา)
+	if in.PriceMin != nil && in.PriceMax != nil && *in.PriceMin > *in.PriceMax {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "price_min must be <= price_max",
+		})
 	}
 
-	if shop.Description == "" {
-		shop.Description = "This shop has no description."
-	}
-
+	// สร้าง DocumentRef ของ vendor
 	var vendorRef *firestore.DocumentRef
-	if shop.Vendor_id != "" {
-		vendorRef = config.Vendor.Doc(shop.Vendor_id)
-	} else {
-		vendorRef = nil
+	if in.Vendor_id != "" {
+		vendorRef = config.Vendor.Doc(in.Vendor_id)
 	}
 
-	_, _, err := config.Shops.Add(config.Ctx, map[string]interface{}{
+	// ค่าเริ่มต้นของ flag (ใช้ค่าจาก body ถ้าส่งมา)
+	orderActive := in.Order_active
+	reserveActive := in.Reserve_active
+	status := in.Status
+
+	// --------- เตรียม payload สำหรับ Firestore ----------
+	payload := map[string]interface{}{
+		"shop_name":   in.Shop_name,
+		"description": in.Description,
+		"type":        in.Type,
+		"image":       in.Image, // อนุโลมค่าว่างได้
+		"price_min":   in.PriceMin,
+		"price_max":   in.PriceMax,
+		"vendor_id":   vendorRef, // เก็บเป็น DocumentReference
 		"address": &latlng.LatLng{
-			Latitude:  0,
-			Longitude: 0,
+			Latitude:  lat,
+			Longitude: lng,
 		},
+		"order_active":   orderActive,
+		"reserve_active": reserveActive,
+		"status":         status,
+		"rate":           in.Rate, // หรือ 0 ถ้ายังไม่ใช้คะแนน
 		"createAt":       firestore.ServerTimestamp,
-		"description":    shop.Description,
-		"order_active":   false,
-		"rate":           0,
-		"reserve_active": false,
-		"shop_name":      shop.Shop_name,
-		"status":         false,
-		"type":           "default",
-		"vendor_id":      vendorRef,
-	})
-
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString("Error saving user")
 	}
-	return c.JSON(fiber.Map{
-		"Shop_name":     shop.Shop_name,
-		"Shop_vendorID": shop.Vendor_id,
-		"message":       "Create success",
+
+	// เขียนลง Firestore (collection shops)
+	doc, _, err := config.Shops.Add(config.Ctx, payload)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "failed to create shop",
+			"message": err.Error(),
+		})
+	}
+
+	// ตอบกลับ (แนบ id คืนไปให้ frontend ใช้ต่อ)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Create success",
+		"id":      doc.ID,
+		"shop":    payload,
 	})
 }
 
@@ -826,42 +870,53 @@ func getUserNameByID(ctx context.Context, db *firestore.Client, userId string) (
 }
 
 var allowedTypes = map[string]bool{
-	"Appetizer":   true,
+	"Main Course": true,
 	"Beverage":    true,
-	"Fast food":   true,
-	"Main course": true,
+	"Fast Foods":  true,
+	"Appetizer":   true,
 	"Dessert":     true,
 }
 
 // PUT /api/shops/:id
+
 func UpdateShopSettings(c *fiber.Ctx) error {
 	shopId := c.Params("id")
 	if shopId == "" {
 		return c.Status(400).JSON(fiber.Map{"error": "shopId required"})
 	}
 
+	type geoIn struct {
+		Latitude  *float64 `json:"latitude"`
+		Longitude *float64 `json:"longitude"`
+	}
 	var body struct {
 		ShopName    *string  `json:"shop_name"`
 		Description *string  `json:"description"`
-		Type        *string  `json:"type"`  // one-of: allowedTypes
-		Image       *string  `json:"image"` // URL (ถ้าอัปโหลดไฟล์ ให้ใช้ endpoint /image)
+		Type        *string  `json:"type"`
+		Image       *string  `json:"image"`
 		PriceMin    *float64 `json:"price_min"`
 		PriceMax    *float64 `json:"price_max"`
+		Address     *geoIn   `json:"address"`  // ⬅️ ถ้าส่งมาเท่านั้นถึงอัปเดต
+		Location    any      `json:"location"` // ⬅️ รับไว้เฉย ๆ เผื่อของเก่า (ไม่ใช้)
 	}
+
 	if err := c.BodyParser(&body); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "invalid body", "msg": err.Error()})
 	}
 
-	var updates []firestore.Update
+	updates := make([]firestore.Update, 0, 8)
+
+	// text fields
 	if body.ShopName != nil {
-		updates = append(updates, firestore.Update{Path: "shop_name", Value: *body.ShopName})
+		updates = append(updates, firestore.Update{Path: "shop_name", Value: strings.TrimSpace(*body.ShopName)})
 	}
 	if body.Description != nil {
 		updates = append(updates, firestore.Update{Path: "description", Value: *body.Description})
 	}
+	// ✅ ดูข้อ 2 ด้านล่างเรื่อง type
 	if body.Type != nil {
-		t := strings.TrimSpace(*body.Type)
-		if t != "" && !allowedTypes[t] {
+		t := normalizeType(*body.Type) // "MainCourse" -> "Main course"
+		if !allowedTypes[t] {
 			return c.Status(400).JSON(fiber.Map{"error": "type must be one of: Appetizer, Beverage, Fast food, Main course, Dessert"})
 		}
 		updates = append(updates, firestore.Update{Path: "type", Value: t})
@@ -876,6 +931,28 @@ func UpdateShopSettings(c *fiber.Ctx) error {
 		updates = append(updates, firestore.Update{Path: "price_max", Value: *body.PriceMax})
 	}
 
+	if body.Address != nil && body.Address.Latitude != nil && body.Address.Longitude != nil {
+		lat, lng := *body.Address.Latitude, *body.Address.Longitude
+		if lat < -90 || lat > 90 || lng < -180 || lng > 180 || math.IsNaN(lat) || math.IsNaN(lng) {
+			return c.Status(400).JSON(fiber.Map{"error": "invalid coordinate range"})
+		}
+
+		// ✅ ใช้ protobuf LatLng -> Firestore จะเก็บเป็น GeoPoint จริง
+		updates = append(updates, firestore.Update{
+			Path: "address",
+			Value: &latlngpb.LatLng{
+				Latitude:  lat,
+				Longitude: lng,
+			},
+		})
+
+		// (ทางเลือก) เก็บ format เดิมเพื่อความเข้ากันได้ย้อนหลัง
+		updates = append(updates,
+			firestore.Update{Path: "location", Value: map[string]float64{"lat": lat, "lng": lng}},
+			firestore.Update{Path: "lat", Value: lat},
+			firestore.Update{Path: "lng", Value: lng},
+		)
+	}
 	if len(updates) == 0 {
 		return c.JSON(fiber.Map{"success": true, "message": "nothing to update"})
 	}
@@ -885,4 +962,43 @@ func UpdateShopSettings(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to update", "msg": err.Error()})
 	}
 	return c.JSON(fiber.Map{"success": true})
+}
+
+func normalizeType(s string) string {
+	s = strings.TrimSpace(s)
+	switch s {
+	case "Main Course", "maincourse", "Main course", "main course":
+		return "Main course"
+	case "FastFoods", "fastfoods", "Fast food", "Fastfood", "fast food":
+		return "Fast food"
+	}
+	// คืนค่าตามเดิมสำหรับค่าอื่น ๆ เพื่อเช็ค allowedTypes ต่อ
+	// หรือจะแม็พเพิ่มตาม category จริงในระบบคุณ
+	return s
+}
+func GetUserName(c *fiber.Ctx) error {
+	uid := c.Params("id")
+	if uid == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "id required"})
+	}
+
+	doc, err := config.Client.Collection("users").Doc(uid).Get(config.Ctx)
+	if err != nil || !doc.Exists() {
+		return c.Status(404).JSON(fiber.Map{"error": "user not found"})
+	}
+
+	data := doc.Data()
+	// หา field ไหนก็ได้ที่มีชื่อ
+	var name string
+	if v, ok := data["displayName"]; ok {
+		name = v.(string)
+	} else if v, ok := data["name"]; ok {
+		name = v.(string)
+	} else if v, ok := data["username"]; ok {
+		name = v.(string)
+	} else {
+		name = uid // fallback
+	}
+
+	return c.JSON(fiber.Map{"name": name})
 }

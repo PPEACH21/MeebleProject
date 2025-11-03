@@ -35,10 +35,10 @@ L.Icon.Default.mergeOptions({
 
 // หมวดหมู่ตัวอย่าง
 const CATEGORIES = [
-  "Appetizer",
+  "MainCourse",
   "Beverage",
-  "Fast food",
-  "Main course",
+  "Fast Foods",
+  "Appetizer",
   "Dessert",
 ];
 
@@ -367,14 +367,17 @@ export default function VendorSettings() {
     const _lat = toNum(lat, NaN);
     const _lng = toNum(lng, NaN);
     if (Number.isFinite(_lat) && Number.isFinite(_lng)) {
-      payload.lat = _lat;
-      payload.lng = _lng;
       payload.location = { lat: _lat, lng: _lng };
+      payload.address = {
+        latitude: _lat,
+        longitude: _lng,
+      };
     }
 
     try {
       await axios.put(`/shops/${shopId}`, payload, { withCredentials: true });
       Swal.fire("Saved", "บันทึกการตั้งค่าร้าน + ตำแหน่ง เรียบร้อย", "success");
+      console.log(payload);
       setPlaceholderName(shopName || placeholderName);
       setShopName("");
     } catch (e) {
