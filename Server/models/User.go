@@ -10,7 +10,7 @@ type User = struct {
 	Phone      string    `json:"phone" firestore:"phone"`
 	Username   string    `json:"username" firestore:"username"`
 	Password   string    `json:"password" firestore:"password"`
-	OTP_Verify string    `json:"otp_verify" firestore:"otp_verify"`
+	Role string    		`json:"role" firestore:"role"`
 	Verified   bool      `json:"verified" firestore:"verified"`
 	Cost       int       `json:"cost" firestore:"cost"`
 	CreatedAt  time.Time `json:"createdAt" firestore:"createdAt"`

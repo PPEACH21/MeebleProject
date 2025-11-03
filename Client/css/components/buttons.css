@@ -14,16 +14,39 @@
 .btn {
   background-color: #ffa467;
   color: white;
+  transform: 2s;
   border: none;
+  
 }
+
+.btn:hover {
+  background-color: #ff8a2b;
+}
+
+.btn:active {
+  transform: scale(0.9);
+  background-color: #fff;
+  color: #ffa467;
+  border: 2px solid #ffa467;
+}
+
 .btn1 {
   background-color: #fff;
   color: #ffa467;
   border: 2px solid #ff8a2b;
 }
 
-.btn:hover {
+.btn1:hover {
+  color: #fff;
+  background-color: #ffa467;
+  
+}
+
+.btn1:active {
+  transform: scale(0.9);
   background-color: #ff8a2b;
+  color: #fff;
+  border: 2px solid #ff8a2b;
 }
 
 .filter .btn1 {
@@ -47,8 +70,3 @@
 
 
 
-
-.btn1:hover {
-  color: #fff;
-  background-color: #ff8a2b;
-}

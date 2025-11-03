@@ -2,11 +2,14 @@ import { useState} from "react";
 import axios from "@/api/axios";
 import { useNavigate } from "react-router-dom";
 import { m } from "@/paraglide/messages";
-
+import { MdStoreMallDirectory } from "react-icons/md";
+import { FaUser } from "react-icons/fa";
 const Register = () => {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [chooserole, setChooserole] = useState(false);
+  const [role, setRole] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errMsg, setErrMsg] = useState("");
   const navigate = useNavigate(); 
@@ -25,7 +28,7 @@ const Register = () => {
         return;
       }
 
-      const res = await axios.post("/createaccount", { email,username, password }, {
+      const res = await axios.post("/createaccount", { email,username, password ,role}, {
         headers: { "Content-Type": "application/json" },
         withCredentials: true,
       });
@@ -51,9 +54,34 @@ const Register = () => {
     }
   };
 
+  const Setuprole=({role="user"})=>{
+    setRole(role)
+    setUsername("")
+    setEmail("")
+    setPassword("")
+    setConfirmPassword("")
+    setChooserole(true)
+    console.log(role)
+  }
   return (
     <div className="container bg-image2">
       <div className="setcenter ">
+        {!chooserole?
+          <div className="box" style={{justifyContent:'space-evenly',gap:30}}>
+            <h1>เลือกบทบาท</h1>
+            <div className="rowset" style={{gap:50}}>
+              <div className="columnset btn1" onClick={()=> Setuprole({ role: "user" })} style={{width:'200px',height:'200px',justifyContent:'space-evenly'}}>
+                  <h3>ลูกค้า</h3>
+                  <FaUser size={80}/>
+              </div>
+              <div className="columnset  btn1" onClick={()=> Setuprole({ role: "vendor" })} style={{width:'200px',height:'200px',justifyContent:'space-evenly'}}>
+                  <h3>ผู้ประกอบการ</h3>
+                  <MdStoreMallDirectory size={100}/>
+              </div>
+            </div>
+          </div>
+        
+        :
         <div className="box">
 
           <h1 style={{marginTop:0}} >Register</h1>
@@ -73,6 +101,7 @@ const Register = () => {
               type="text"
               onChange={(e) => setUsername(e.target.value)}
               value={username}
+              autoComplete="new-password" 
               required
             />
             <label>{m.password()}</label>
@@ -81,7 +110,7 @@ const Register = () => {
               type="password"
               onChange={(e) => setPassword(e.target.value)}
               value={password}
-              
+              autoComplete="new-password" 
               required
             />
         
@@ -91,6 +120,7 @@ const Register = () => {
               type="password"
               onChange={(e) => setConfirmPassword(e.target.value)}
               value={confirmPassword}
+              autoComplete="new-password" 
               required
               />
               {errMsg && <p style={{ color: "red" }}>{errMsg}</p>}
@@ -103,6 +133,7 @@ const Register = () => {
             </div>
           </form>
         </div>
+        }
       </div>
     </div>
   );

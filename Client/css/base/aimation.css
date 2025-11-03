@@ -12,3 +12,30 @@
     transform: translateY(0);
   }
 }
+
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 5px solid #f3f3f3;
+  border-radius: 50%;
+  animation: spinLogo 2s cubic-bezier(0.7, 0.8, 0.2, 1) infinite;
+}
+
+@keyframes spinLogo {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(360deg)  scale(1.3);; }
+  100% { transform: rotate(720deg)  scale(1);; }
+}
+
+
+.page {
+  transition: opacity 1s ease;
+}
+
+.fade-in {
+  opacity: 1;
+}
+
+.fade-out {
+  opacity: 0;
+}

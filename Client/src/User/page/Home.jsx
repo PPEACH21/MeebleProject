@@ -7,7 +7,7 @@ const HomePage= () =>{
                 <div className="setcenter" >
                     <div className="columnset" style={{width:"60%",height:"60%",justifyContent: "space-between",}}>
                         <div>
-
+        
                             <h1 style={{color:'white', fontSize:70}}>{m.projectname().toUpperCase()}</h1>
                             <h4 style={{marginLeft:50,color:'white',fontSize:30}}>{m.project_description01()}</h4>
                         </div>

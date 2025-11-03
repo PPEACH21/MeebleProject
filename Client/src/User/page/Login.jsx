@@ -75,7 +75,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="contrainer bg-image2">
+    <div className="container bg-image2">
       <div className="setcenter" >
         <div className="box">
           <h1 style={{marginTop:0}}>Login</h1>
