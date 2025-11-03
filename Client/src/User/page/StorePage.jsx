@@ -5,7 +5,7 @@ import SidebarType from "../component/SidebarType.jsx";
 import { m } from "@/paraglide/messages.js";
 import StoreCard from "../component/StoreCard.jsx";
 import { FaSearch } from "react-icons/fa";
-import "@css/pages/StorePage.module.css";
+import "@css/pages/StorePage.css";
 import { IoRestaurantOutline } from "react-icons/io5";
 import { IoFastFoodOutline } from "react-icons/io5";
 import { RiDrinksLine } from "react-icons/ri";
