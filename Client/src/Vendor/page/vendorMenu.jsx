@@ -289,7 +289,7 @@ export default function VendorMenu() {
     <div className="vm-container">
       <h1 className="vm-title">จัดการเมนูร้าน</h1>
 
-      <div className="vm-actions">
+      <div className="vm-CP_actions">
         <button type="button" onClick={() => setIsAddPopupOpen(true)}>
           ➕ เพิ่มเมนู
         </button>

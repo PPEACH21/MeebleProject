@@ -247,7 +247,7 @@ export default function VendorHistory() {
           </p>
         )}
         <div style={{ marginTop: 8 }}>
-          <button className="btn" onClick={loadList} disabled={loading || !shopId}>
+          <button className=".vhis-btn" onClick={loadList} disabled={loading || !shopId}>
             รีเฟรช
           </button>
         </div>
@@ -301,7 +301,7 @@ export default function VendorHistory() {
           <div className="vh-modal" onClick={(e) => e.stopPropagation()}>
             <div className="vh-modal-header">
               <h3>รายละเอียดออเดอร์ {loadingOne ? "(กำลังโหลด…)" : ""}</h3>
-              <button className="icon-btn" onClick={() => setSelected(null)}>
+              <button className="icon-vhis-btn" onClick={() => setSelected(null)}>
                 ✕
               </button>
             </div>
@@ -357,7 +357,7 @@ export default function VendorHistory() {
               </div>
             </div>
             <div className="vh-modal-footer">
-              <button className="btn" onClick={() => setSelected(null)}>ปิด</button>
+              <button className="vhis-btn" onClick={() => setSelected(null)}>ปิด</button>
             </div>
           </div>
         </div>

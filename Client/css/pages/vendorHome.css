@@ -66,10 +66,7 @@
     opacity: 0.6;
     cursor: not-allowed;
   }
-  .btn-group {
-    display: flex;
-    gap: 12px;
-  }
+
 
   /* ปุ่มเปิดร้าน */
   .status-btn {
@@ -148,11 +145,6 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
-}
-
-.btn-group {
-  display: flex;
-  gap: 0.6rem;
 }
 
 .status-btn,

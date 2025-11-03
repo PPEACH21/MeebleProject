@@ -33,7 +33,7 @@ const Profile = ()=>{
         getdata();  
     },[])
 
-    const getdata=async()=>{
+    const getdata=()=>{
         setFirstname(Profile.Firstname)
         setLastname(Profile.Lastname)
         setUsername(Profile.Username)
@@ -54,16 +54,17 @@ const Profile = ()=>{
         const res = await axios.put(`/profile/${auth.user_id}`, updatedData, {
             withCredentials: true,
         });
-
+        
         console.log("Profile updated:", res.data);
         alert("Profile updated successfully!");
+        getdata();
         } catch (err) {
         console.error("Update failed:", err);
         alert("Failed to update profile!");
         }
     };
 
-       const compressImage =async(file, quality = 0.7) =>{
+    const compressImage =async(file, quality = 0.3) =>{
         return new Promise((resolve) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);

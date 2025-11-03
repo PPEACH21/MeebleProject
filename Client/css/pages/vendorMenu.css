@@ -9,7 +9,7 @@
 .vm-title {
   margin: 0;
 }
-.vm-actions {
+.vm-CP_actions {
   margin-top: 12px; /* เพิ่ม gap ระหว่างหัวข้อกับปุ่ม */
   display: flex;
   gap: 12px;

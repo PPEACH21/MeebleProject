@@ -1,16 +1,16 @@
-.cartPage {
+.CP_cartPage {
   max-width: 920px;
   margin: 24px auto;
   padding: 0 16px;
 }
 
-.cartList {
+.CP_cartList {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.cartItem {
+.CP_cartItem {
   display: grid;
   grid-template-columns: 80px 1fr 40px;
   gap: 12px;
@@ -21,32 +21,32 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
 }
 
-.thumb {
+.CP_cartItem {
   width: 80px;
   height: 80px;
   object-fit: cover;
   border-radius: 10px;
 }
 
-.info .name {
+.CP_info .name {
   font-weight: 700;
   margin-bottom: 4px;
 }
 
-.info .desc {
+.CP_info .desc {
   font-size: 13px;
   color: #666;
   margin-bottom: 8px;
 }
 
-.info .meta {
+.CP_info .meta {
   display: flex;
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
 }
 
-.price {
+.CP_price {
   font-weight: 600;
 }
 
@@ -54,7 +54,7 @@
   opacity: 0.6;
 }
 
-.qtyBox {
+.CP_qtyBox {
   display: inline-flex;
   align-items: center;
   /* border: 1px solid #eee; */
@@ -63,7 +63,7 @@
   gap: 10px;
 }
 
-.qty  {
+.CP_qty  {
   width: 32px;
   height: 32px;
   border: none;
@@ -71,7 +71,7 @@
   cursor: pointer;
 }
 
-.qtyInput {
+.CP_qtyInput {
   width: 56px;
   height: 32px;
   border: none;
@@ -80,18 +80,18 @@
   font-weight: 600;
 }
 
-.subtotal {
+.CP_subtotal {
   margin-left: auto;
 }
 
-.removeBtn {
+.CP_subtotal {
   border: none;
   background: transparent;
   cursor: pointer;
   font-size: 18px;
 }
 
-.cartSummary {
+.CP_cartSummary {
   margin-top: 16px;
   padding: 16px;
   border-radius: 14px;
@@ -99,41 +99,41 @@
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
-.cartSummary .row {
+.CP_cartSummary .row {
   display: flex;
   justify-content: space-between;
   font-size: 18px;
   margin-bottom: 12px;
 }
 
-.actions {
+.CP_actions {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
 }
 
-.btn {
+.CP_btn {
   border: none;
   border-radius: 10px;
   padding: 10px 14px;
   cursor: pointer;
 }
 
-.btn.ghost {
+.CP_btn.ghost {
   background: #878787;
 }
 
-.btn.primary {
+.CP_btn.primary {
   background: #ff8a3d;
   color: #fff;
 }
 
-.btn:disabled {
+.CP_btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.emptyCart {
+.CP_emptyCart {
   background: #fff;
   border-radius: 14px;
   padding: 24px;
