@@ -278,7 +278,7 @@ const StoreCard = ({ datashow }) => {
                 }}
               >
                 <button
-                  className="btn"
+                  className="SP_btn"
                   onClick={() => goOrder(item)}
                   title={item.status ? "สั่งอาหาร" : "ร้านปิดอยู่"}
                   style={{
@@ -289,7 +289,7 @@ const StoreCard = ({ datashow }) => {
                 </button>
 
                 <button
-                  className="btn"
+                  className="SP_btn"
                   onClick={() => goReserve(item)}
                   title={item.status ? "จองวันที่รับออเดอร์" : "ร้านปิดอยู่"}
                   style={{
