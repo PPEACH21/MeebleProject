@@ -94,27 +94,28 @@ const StoreCard = ({ datashow }) => {
     }, 1000);
   })
   const handleSelectShop = (shop) => {
-  const goOrder = (shop) => {
-    const shopId = getShopId(shop);
-    if (!shopId) {
-      console.warn("missing shopId on shop item:", shop);
-      return;
-    }
-    if (!shop.status) {
-      Swal.fire({
-        icon: "info",
-        title: "ไม่สามารถสั่งอาหารได้",
-        text: "ร้านนี้ปิดอยู่ในขณะนี้",
-        confirmButtonText: "เข้าใจแล้ว",
-      });
-      return;
-    }
+    const goOrder = (shop) => {
+      const shopId = getShopId(shop);
+      if (!shopId) {
+        console.warn("missing shopId on shop item:", shop);
+        return;
+      }
+      if (!shop.status) {
+        Swal.fire({
+          icon: "info",
+          title: "ไม่สามารถสั่งอาหารได้",
+          text: "ร้านนี้ปิดอยู่ในขณะนี้",
+          confirmButtonText: "เข้าใจแล้ว",
+        });
+        return;
+      }
     if (typeof window !== "undefined") {
       localStorage.setItem("currentShopId", shopId);
     }
     navigate(`/menu/${encodeURIComponent(shopId)}`, {
       state: { shop, shopId },
     });
+    };
   };
 
   const {loading,LoadingPage} = runloadting(1000);
