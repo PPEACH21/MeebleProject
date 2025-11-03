@@ -1,7 +1,6 @@
 // src/component/Nav.jsx
-import { useContext, useEffect, useState } from "react";
+import { useContext , useState } from "react";
 import { AuthContext } from "@/context/ProtectRoute";
-import axios from "@/api/axios";
 import { FaRegUserCircle, FaHistory } from "react-icons/fa";
 import { TiShoppingCart } from "react-icons/ti";
 import { useNavigate } from "react-router-dom";
@@ -18,7 +17,7 @@ export const NavLayout = ({focus,cart}) => {
   );
 };
 
-const DropdownProfile =({logout,username,email})=> {
+const DropdownProfile =({logout,avatar,username,email})=> {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -35,18 +34,26 @@ const DropdownProfile =({logout,username,email})=> {
         onClick={() => setOpen(!open)}
         onMouseEnter={() => setOpen(true)}
       >
-        <FaRegUserCircle size={30} />
+        {avatar?
+          <img src={avatar} style={{width:'40px',height:'40px', borderRadius:'50px', border: '5px solid rgba(255, 214, 177, 0.7)'}}/>
+          :
+          <FaRegUserCircle size={30} />
+        }
         <span>{username || "Guest"}</span>
       </div>
       
       {open && (
         <div
-          className={`dropdownSelect ${open ? "fade-in" : "fade-out"}`}
-          onMouseLeave={(e) => {(e.currentTarget.style.background = "#fff"); setOpen(false)}}
+          className={`dropdownSelect ${open ? "fade-slideDown" : ""}`}
+          onMouseLeave={(e) => {e.currentTarget.style.background = "#fff";setOpen(false);}}
         >
           <div style={{width:"300px",height:"100px",display:'flex',flexDirection:'column',justifyContent:'space-evenly'}}>
             <div className="dropdownProfile">
-              <FaRegUserCircle size={55} />
+              {avatar?
+                <img src={avatar} style={{width:'55px',height:'55px', borderRadius:'50px', border: '5px solid rgba(255, 214, 177, 0.7)'}}/>
+                :
+                <FaRegUserCircle size={55} />
+              }
               <div style={{fontWeight:'bold'}} >
                 <p>{username || "Guest"}</p>
                 <p>{email || "Guest@gmail.com"}</p>
@@ -87,29 +94,13 @@ const DropdownProfile =({logout,username,email})=> {
 }
 
 const Navbar = ({ focus=false ,cart=false}) => {
-  const { auth,logout } = useContext(AuthContext);
+  const {Profile,logout } = useContext(AuthContext);
 
-  const getuserID = async () => {
-    try {
-      const res = await axios.get(`/user/${auth.user_id}`, {
-        withCredentials: true,
-      });
-      setDatauser(res.data);
-      // console.log("API Response:", res.data);
-    } catch (err) {
-      console.error("Error fetching user:", err);
-    }
-  };
-  
-  const [dataUser, setDatauser] = useState([]);
+ 
   const navigate = useNavigate();
-  
-  useEffect(() => {
-    getuserID();
-  }, []);
-  
+
   const goHome = () => {
-    navigate("/home"); // ✅ เปลี่ยน path ไปหน้า Home
+    navigate("/home"); 
   };
   
   return (
@@ -124,14 +115,9 @@ const Navbar = ({ focus=false ,cart=false}) => {
             fontSize: "20px",
           }}
         >
-          {focus?(
-            <p onClick={() => navigate(-1)} style={{ cursor: "pointer" }}>
-              Back
-            </p>
-          ):(
-            <>
+         <div className="rowset icon">
               <img
-                src="https://i.ibb.co/MyMPRx3P/Chat-GPT-Image-Sep-23-2025-10-01-38-PM.jpg"
+                src="https://i.ibb.co/N2d4z7cY/LOGO.png"
                 alt="Logo"
                 onClick={goHome}
                 style={{ cursor: "pointer" ,height:'60px', width:'60px'}}
@@ -139,8 +125,8 @@ const Navbar = ({ focus=false ,cart=false}) => {
               <p onClick={goHome} style={{ cursor: "pointer" }}>
                 MEEBLE PROJECT
               </p>
-            </>
-          )}
+            </div>
+
         </div>
         <div className="navMenu">
           {focus?
@@ -165,13 +151,13 @@ const Navbar = ({ focus=false ,cart=false}) => {
             </>
           }
           <div className="rowset fontcolor">
-            <p>Coin:{dataUser.Cost}.-</p>
+            <p>Coin:{Profile.Coin} .-</p>
           </div>
           <div
             style={{ gap: 10, alignItems: "center" ,cursor:'pointer'}}
             // onClick={()=>console.log("Click")}
           >
-            <DropdownProfile logout={logout} username={dataUser.username} email={dataUser.email}/>
+            <DropdownProfile logout={logout} avatar={Profile.Avatar} username={Profile.Username} email={Profile.Email}/>
           </div>
         </div>
       </div>

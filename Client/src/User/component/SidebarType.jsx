@@ -2,7 +2,7 @@ import { m } from "@/paraglide/messages";
 
 const SidebarType = ({type,TypeClick})=>{
     return(
-        <div className="navVertical fade-slideDown">
+         <div className="navVertical fade-slideDown">
             <h2>{m.Typefood()}</h2>
             <div className="columnset" style={{width:"100%",alignItems:'center',gap:10}}>
                 
