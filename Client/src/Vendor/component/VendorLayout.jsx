@@ -3,15 +3,13 @@ import VendorSidebar from "@/Vendor/component/VendorSideBar";
 import "@css/components/vendorSideBar.css";
 import "@css/pages/vendorHome.css";
 
-const VendorLayout = ()=> {
+export default function VendorLayout() {
   return (
     <div className="dashboard-layout">
       <VendorSidebar />
       <main className="dashboard-main">
-        <Outlet />
+        <Outlet /> {/* ✅ ใช้แสดงหน้าแต่ละ route */}
       </main>
     </div>
   );
 }
-
-export default VendorLayout

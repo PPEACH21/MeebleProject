@@ -4,7 +4,6 @@ import LoginPage from "./User/page/Login";
 import HomePage from "./User/page/Home";
 import { NavLayout } from "./User/component/Nav";
 import { ProtectedLayout } from "./context/ProtectRoute";
-import MapPickerButton from "./User/component/MapPickerButton";
 import Register from "./User/page/Register";
 import VerifyEmail from "./User/page/VerifyEmail";
 import StorePage from "./User/page/StorePage";
@@ -22,6 +21,8 @@ import VendorSettings from "./Vendor/page/vendorSetting";
 import HistoryDetail from "@/User/page/HistoryDetail.jsx";
 import Language from "./User/page/Setting/Language";
 import VendorLayout from "./Vendor/component/VendorLayout"
+import Reserve from "./User/page/Reserve";
+import CreateShopPage from "./Vendor/page/vendorCreateNewShop";
 
 
 function App() {
@@ -46,12 +47,12 @@ function App() {
             <Route path="/language" element={<Language/>} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/history/:id" element={<HistoryDetail />} />
+             <Route path="/reserve/:id" element={<Reserve/>} />
           </Route>
 
           <Route element={<NavLayout focus={true} cart={true} />}>
             <Route path="/menu/:id" element={<MenuStore />} />
           </Route>
-          <Route path="/mappick" element={<MapPickerButton />} />
         </Route>
 
         <Route element={<ProtectedLayout role="vendor" />}>
@@ -69,6 +70,7 @@ function App() {
                 path="/vendor/shops/:shopId/menu"
                 element={<VendorMenu />}
               />
+               <Route path="/vendor/create" element={<CreateShopPage/>} />
             </Route>
           </Route>
         </Route>

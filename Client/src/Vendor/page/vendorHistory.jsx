@@ -221,7 +221,7 @@ export default function VendorHistory() {
             });
             const nm = pickUserName(prof.data || {});
             if (nm) doc = { ...doc, customerName: nm };
-          } catch (_) { /* เงียบ ๆ ไป */ }
+          } catch {[]} { /* เงียบ ๆ ไป */ }
         }
       }
 

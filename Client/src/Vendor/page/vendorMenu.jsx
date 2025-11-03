@@ -47,7 +47,7 @@ export default function VendorMenu() {
   const [togglingId, setTogglingId] = useState("");
 
   const menuListRef = useRef(null);
-  const IMGBB_KEY = import.meta.env.VITE_IMGBB_KEY;
+  const IMGBB_KEY = import.meta.env.VITE_IMGBB_API_KEY;
 
   // --- fetch menus only ---
   const fetchMenus = async () => {

@@ -8,7 +8,7 @@ import (
 )
 
 type Shop struct {
-	ID             string                 `json:"id" firestore:"-"` // ✅ เพิ่มบรรทัดนี้
+	ID             string                 `json:"id" firestore:"-"`
 	Address        *latlng.LatLng         `json:"address" firestore:"address"`
 	Create_at      time.Time              `json:"createAt" firestore:"createAt"`
 	Description    string                 `json:"description" firestore:"description"`
@@ -17,7 +17,8 @@ type Shop struct {
 	Reserve_active bool                   `json:"reserve_active" firestore:"reserve_active"`
 	Shop_name      string                 `json:"shop_name" firestore:"shop_name"`
 	Status         bool                   `json:"status" firestore:"status"`
-	Type           string                 `json:"type" firestore:"type"`
+	Type           string                 `json:"type" firestore:"type"`   // เลือกได้ 1 จาก 5 ประเภท
+	Image          string                 `json:"image" firestore:"image"` // ✅ เพิ่ม field รูป
 	Vendor_ref     *firestore.DocumentRef `json:"-" firestore:"vendor_id"`
 	Vendor_id      string                 `json:"vendor_id" firestore:"-"`
 	PriceMin       *float64               `json:"price_min" firestore:"price_min"`
@@ -119,9 +120,31 @@ type Order struct {
 	CustomerID string     `json:"customerId" firestore:"customerId"`
 }
 
-type orderCore struct {
-	CustomerID string                 `firestore:"customerId"`
-	ShopID     string                 `firestore:"shopId"`
-	Status     string                 `firestore:"status"`
-	Meta       map[string]interface{} `firestore:"meta,omitempty"` // optional
+type Reservation struct {
+	ID         string                 `json:"id,omitempty"`
+	ShopID     string                 `json:"shopId"`
+	ShopName   string                 `json:"shop_name,omitempty"`
+	UserID     string                 `json:"userId"`
+	CustomerID string                 `json:"customerId"`
+	Date       string                 `json:"date"`   // YYYY-MM-DD
+	Status     string                 `json:"status"` // pending|confirmed|canceled|done
+	Note       string                 `json:"note,omitempty"`
+	Phone      string                 `json:"phone,omitempty"`
+	CreatedAt  time.Time              `json:"createdAt"`
+	UpdatedAt  time.Time              `json:"updatedAt"`
+	Raw        map[string]interface{} `json:"raw,omitempty"`
+}
+
+// ----- DTO (request bodies) -----
+type CreateReservationReq struct {
+	ShopID     string `json:"shopId"`
+	UserID     string `json:"userId"`
+	CustomerID string `json:"customerId"`
+	Date       string `json:"date"` // YYYY-MM-DD
+	Note       string `json:"note"`
+	Phone      string `json:"phone"`
+}
+
+type UpdateReservationReq struct {
+	Status string `json:"status"` // pending|confirmed|canceled|done
 }
