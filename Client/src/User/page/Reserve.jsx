@@ -5,8 +5,8 @@ import axios from "@/api/axios";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 import { AuthContext } from "@/context/ProtectRoute";
+import { m } from "@/paraglide/messages.js";
 
-// ใช้วันที่ตามเวลาเครื่อง (หลีกเลี่ยง UTC เพี้ยนวัน)
 const todayLocal = () => {
   const d = new Date();
   const yyyy = d.getFullYear();
@@ -15,7 +15,7 @@ const todayLocal = () => {
   return `${yyyy}-${mm}-${dd}`;
 };
 
-// helper: จำแนกข้อความ 409 จาก backend เดิม
+// จำแนกข้อความ 409 จาก backend เดิม
 const classify409 = (rawMsg = "") => {
   const msg = rawMsg.toString();
   if (/this shop is already reserved/i.test(msg) || /ถูกจองไปแล้ว/.test(msg)) {
@@ -38,7 +38,10 @@ export default function Reserve() {
 
   const navState = location.state || {};
   const shopId =
-    shopIdParam || navState.shopId || localStorage.getItem("currentShopId") || "";
+    shopIdParam ||
+    navState.shopId ||
+    localStorage.getItem("currentShopId") ||
+    "";
   const [shopName, setShopName] = useState(
     navState.shop?.shop_name || navState.shop?.name || ""
   );
@@ -51,17 +54,17 @@ export default function Reserve() {
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // ป้องกันจองซ้ำ (ฝั่ง client — จองทับตัวเอง)
+  // ป้องกันจองซ้ำ(ฝั่งclient—จองทับตัวเอง)
   const [alreadyReserved, setAlreadyReserved] = useState(false);
   const userId = auth?.user_id || "";
 
-  // key สำหรับ local lock
+  //keyสำหรับ local lock
   const lockKey = useMemo(() => {
     if (!shopId || !userId || !date) return "";
     return `reserve_lock_${shopId}_${userId}_${date}`;
   }, [shopId, userId, date]);
 
-  // โหลดชื่อร้าน (ถ้ายังไม่มี)
+  //โหลดชื่อร้าน(ถ้ายังไม่มี)
   useEffect(() => {
     if (!shopName && shopId) {
       axios
@@ -122,27 +125,23 @@ export default function Reserve() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!auth?.user_id) {
-      Swal.fire("ต้องเข้าสู่ระบบ", "กรุณาเข้าสู่ระบบก่อนทำการจอง", "warning");
+      Swal.fire(m.MustLogin(), m.PleaseLogin(), "warning");
       return;
     }
     if (!shopId || !date) {
-      Swal.fire("ข้อมูลไม่ครบ", "กรุณาเลือกวันที่ให้เรียบร้อย", "warning");
+      Swal.fire(m.IncompleteInfo(), m.selectDate(), "warning");
       return;
     }
 
     // กันซ้ำอีกชั้นก่อนยิง (ทั้ง local lock และ flag จาก server-check)
     if (alreadyReserved) {
-      Swal.fire(
-        "คุณจองวันนี้ไว้แล้ว",
-        "ระบบพบว่าคุณมีการจองร้านนี้ในวันที่เลือกอยู่แล้ว",
-        "info"
-      );
+      Swal.fire(m.selectDateAlready(), m.systemDateAlready(), "info");
       return;
     }
 
     // กันดับเบิลคลิกเฉพาะหน้าเครื่อง
     if (lockKey && localStorage.getItem(lockKey)) {
-      Swal.fire("การจองกำลังดำเนินการ", "โปรดลองอีกครั้งภายหลังเล็กน้อย", "info");
+      Swal.fire(m.processing(), m.tryagain(), "info");
       return;
     }
 
@@ -166,8 +165,8 @@ export default function Reserve() {
       localStorage.removeItem("latestReserve");
 
       await Swal.fire(
-        "จองสำเร็จ 🎉",
-        `ร้าน: ${shopName || shopId}\nวันที่: ${date}`,
+        `${m.reserve()} ${m.success()}`,
+        `${m.Restarant()}: ${shopName || shopId}\n${m.Date()}: ${date}`,
         "success"
       );
 
@@ -181,21 +180,20 @@ export default function Reserve() {
         // แยกข้อความจาก error ของ backend เดิม
         const reason = classify409(msg);
         if (reason === "shop-day-taken") {
-          Swal.fire("ถูกจองไปแล้ว", "วันดังกล่าวมีผู้จองร้านนี้แล้ว โปรดเลือกวันอื่น", "info");
+          Swal.fire(m.AlreadyBooked(), m.ShopDayTaken(), "info");
           return;
         }
         if (reason === "user-duplicate") {
           setAlreadyReserved(true);
-          Swal.fire("จองซ้ำวันเดียวกัน", "คุณได้จองร้านนี้ในวันนี้ไว้แล้ว", "info");
+          Swal.fire(m.DuplicateBooking(), m.UserDuplicate(), "info");
           return;
         }
-        Swal.fire("ไม่ว่าง", "วันดังกล่าวไม่ว่าง หรือมีการจองซ้ำ", "info");
+        Swal.fire(m.NotAvailable(), m.NotAvailableDesc(), "info");
       } else if (status === 500) {
-        // ตามที่ขอ: ถ้า backend ส่ง 500 ให้แจ้งว่า "วันนี้คุณจองไปแล้ว"
         setAlreadyReserved(true);
-        Swal.fire("วันนี้คุณจองไปแล้ว", "ระบบตรวจพบการจองวันนี้อยู่แล้ว", "info");
+        Swal.fire(m.AlreadyBookedToday(), m.AlreadyBookedTodayDesc(), "info");
       } else {
-        Swal.fire("จองไม่สำเร็จ", msg || "unknown error", "error");
+        Swal.fire(m.ReserveFail(), msg || "unknown error", "error");
       }
     } finally {
       setSubmitting(false);
@@ -213,13 +211,13 @@ export default function Reserve() {
           padding: 16,
         }}
       >
-        <h2 style={{ marginTop: 0 }}>จองร้าน</h2>
+        <h2 style={{ marginTop: 0 }}>{m.reserve()}</h2>
 
         <div style={{ marginBottom: 12 }}>
           <div>
-            <b>ร้าน:</b>{" "}
+            <b>{m.Restarant()}:</b>{" "}
             {shopName || (
-              <span style={{ color: "#6b7280" }}>(กำลังโหลดหรือไม่พบชื่อร้าน)</span>
+              <span style={{ color: "#6b7280" }}>{m.loading()}</span>
             )}
           </div>
           <div>
@@ -232,7 +230,7 @@ export default function Reserve() {
           <label
             style={{ display: "block", fontWeight: 700, margin: "10px 0 6px" }}
           >
-            เลือกวันที่
+            {m.selectDate()}
           </label>
           <input
             type="date"
@@ -249,18 +247,18 @@ export default function Reserve() {
           />
           {alreadyReserved && (
             <p style={{ marginTop: 8, color: "#b91c1c" }}>
-              * คุณได้จองร้านนี้ในวันที่เลือกไว้แล้ว
+              * {m.systemDateAlready()}
             </p>
           )}
 
           <label
             style={{ display: "block", fontWeight: 700, margin: "14px 0 6px" }}
           >
-            เบอร์ติดต่อ (ถ้ามี)
+            {m.Phone()}
           </label>
           <input
             type="tel"
-            placeholder="เช่น 08x-xxx-xxxx"
+            placeholder="08x-xxx-xxxx"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             style={{
@@ -274,11 +272,11 @@ export default function Reserve() {
           <label
             style={{ display: "block", fontWeight: 700, margin: "14px 0 6px" }}
           >
-            หมายเหตุ
+            {m.Note()}
           </label>
           <textarea
             rows={3}
-            placeholder="เช่น ต้องการรับช่วงบ่าย"
+            placeholder={m.NotePlaceholder()}
             value={note}
             onChange={(e) => setNote(e.target.value)}
             style={{
@@ -291,7 +289,12 @@ export default function Reserve() {
           />
 
           <div
-            style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 16 }}
+            style={{
+              display: "flex",
+              gap: 10,
+              justifyContent: "flex-end",
+              marginTop: 16,
+            }}
           >
             <button
               type="button"
@@ -304,28 +307,32 @@ export default function Reserve() {
                 cursor: "pointer",
               }}
             >
-              ยกเลิก
+              {m.cancel()}
             </button>
             <button
               type="submit"
               disabled={submitting || alreadyReserved}
               style={{
                 border: "none",
-                background: submitting || alreadyReserved ? "#6b7280" : "#111827",
+                background:
+                  submitting || alreadyReserved ? "#6b7280" : "#111827",
                 color: "#fff",
                 borderRadius: 10,
                 padding: "10px 14px",
                 fontWeight: 700,
-                cursor: submitting || alreadyReserved ? "not-allowed" : "pointer",
+                cursor:
+                  submitting || alreadyReserved ? "not-allowed" : "pointer",
                 opacity: submitting ? 0.7 : 1,
               }}
-              title={alreadyReserved ? "คุณจองวันนี้ไว้แล้ว" : "ยืนยันการจอง"}
+              title={
+                alreadyReserved ? m.selectDateAlready() : m.ConfirmReserve()
+              }
             >
               {submitting
-                ? "กำลังจอง..."
+                ? m.processing()
                 : alreadyReserved
-                ? "จองซ้ำไม่ได้"
-                : "ยืนยันการจอง"}
+                ? m.selectDateAlready()
+                : m.ConfirmReserve()}
             </button>
           </div>
         </form>

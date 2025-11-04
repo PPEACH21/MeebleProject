@@ -7,9 +7,9 @@ import "sweetalert2/dist/sweetalert2.min.css";
 import { AuthContext } from "@/context/ProtectRoute";
 import { FaStar } from "react-icons/fa6";
 import "@css/pages/MenuStore.css";
+import { m } from "@/paraglide/messages.js";
 
 /* ----------------- helpers ----------------- */
-
 // หยิบ shopId จากอ็อบเจ็กต์ร้านหลายรูปแบบ
 const getShopId = (shop) =>
   shop?.id || shop?.ID || shop?.shop_id || shop?.shopId || "";
@@ -71,7 +71,7 @@ export default function MenuStore() {
   // ✅ โหลดเมนูจาก shops/{shopId}/menu (ผู้ใช้ทั่วไปเห็นเฉพาะ active)
   const fetchMenusByShop = async (sid) => {
     if (!sid) {
-      setErr("missing shopId");
+      setErr(m.missing_shopid());
       setLoading(false);
       return;
     }
@@ -82,11 +82,11 @@ export default function MenuStore() {
       });
       const raw = res.data?.menus ?? res.data ?? [];
       const normalized = (Array.isArray(raw) ? raw : []).map(normalizeMenu);
-      setMenus(normalized.filter((m) => m.active));
+      setMenus(normalized.filter((a) => a.active));
       setErr("");
     } catch (e) {
       console.error("fetch menus error:", e?.response?.data || e);
-      setErr("ไม่สามารถดึงเมนูได้");
+      setErr(m.menu_fetch_error());
       setMenus([]);
     } finally {
       setLoading(false);
@@ -147,32 +147,32 @@ export default function MenuStore() {
 
   const handleOrder = async (item) => {
     const { value: qty } = await Swal.fire({
-      title: `ใส่จำนวน\n${item.name}`,
+      title: `${m.enter_quantity()} ${item.name}`,
       input: "number",
       inputValue: 1,
       inputAttributes: { min: 1, step: 1 },
-      confirmButtonText: "เพิ่มใส่ตะกร้า",
-      cancelButtonText: "ยกเลิก",
+      confirmButtonText: m.confirm_add_cart(),
+      cancelButtonText: m.cancel(),
       showCancelButton: true,
     });
     if (qty === null || qty === undefined) return;
 
     const qtyNum = Number(qty);
     if (!Number.isFinite(qtyNum) || qtyNum <= 0) {
-      Swal.fire("จำนวนไม่ถูกต้อง", "กรุณาใส่จำนวนตั้งแต่ 1 ขึ้นไป", "error");
+      Swal.fire(m.add_to_cart_invalid_qty(), "", "error");
       return;
     }
 
     const menuIdRaw = item.id || item.ID || item.menuId || item.menu_id || "";
     const menuId = String(menuIdRaw);
     if (!menuId) {
-      Swal.fire("ข้อมูลไม่ครบ", "เมนูนี้ไม่มี ID (menuId)", "error");
+      Swal.fire(m.add_to_cart_missing_id(), "", "error");
       return;
     }
 
     const customerId = auth?.user_id || "";
     if (!customerId) {
-      Swal.fire("ยังไม่ล็อกอิน", "กรุณาล็อกอินก่อน", "error");
+      Swal.fire(m.add_to_cart_not_login(), "", "error");
       return;
     }
 
@@ -232,7 +232,7 @@ export default function MenuStore() {
         console.log("✅ POST /api/cart/add สำเร็จ");
       }
 
-      Swal.fire("สำเร็จ", "เพิ่มลงตะกร้าแล้ว", "success");
+      Swal.fire(m.success(), m.add_to_cart_success(), "success");
 
       window.dispatchEvent(
         new CustomEvent("cart:updated", {
@@ -247,7 +247,7 @@ export default function MenuStore() {
         e?.response?.data?.msg ||
         e?.message ||
         "เพิ่มลงตะกร้าไม่สำเร็จ";
-      Swal.fire("ผิดพลาด", String(msg), "error");
+      Swal.fire(m.add_to_cart_error(), "", "error");
     }
   };
 
@@ -267,7 +267,7 @@ export default function MenuStore() {
           <div className="storeText">
             {/* ⬇️ ตอนนี้จะดึงชื่อได้ทั้งจาก state และจาก /Shop */}
             <h2 className="storeTitle">
-              {shop?.shop_name || shop?.name || "Store"}
+              {shop?.shop_name || shop?.name || m.store_name()}
             </h2>
             <h3
               className="storeRate"
@@ -275,18 +275,15 @@ export default function MenuStore() {
             >
               <FaStar size={20} /> {shop?.rate ?? "-"} / 5
             </h3>
-            <h4 className="storeSubtitle">คำอธิบายร้าน</h4>
+            <h4 className="storeSubtitle">{m.store_description()}</h4>
             <p className="storeDesc">
-              {shop?.description || "No description available"}
-            </p>
-            <p style={{ marginTop: 6, color: "#64748b" }}>
-              <b>Shop ID:</b> <code>{shopId || "—"}</code>
+              {shop?.description || m.menu_not_found()}
             </p>
           </div>
         </div>
 
         <div className="mapBox">
-          <h1>Location</h1>
+          <h1>{m.store_location()}</h1>
           <div className="miniMap">
             <iframe
               src={`https://www.google.com/maps?q=${lat},${lng}&z=17&output=embed`}
@@ -305,11 +302,11 @@ export default function MenuStore() {
             }
             style={btnPrimary}
           >
-            Open in Map
+            {m.store_open_map()}
           </button>
           {lat === 0 && lng === 0 && (
             <div style={{ color: "#b45309", marginTop: 8 }}>
-              พิกัดยังไม่ถูกตั้งค่า (0,0) — โปรดอัปเดตในระบบผู้ขาย
+              {m.store_not_set_location()}
             </div>
           )}
         </div>
@@ -318,12 +315,12 @@ export default function MenuStore() {
       <div className="right">
         <div className="menuScroll">
           <div className="menu">
-            {loading && <div style={{ padding: 12 }}>กำลังโหลดเมนู...</div>}
+            {loading && <div style={{ padding: 12 }}>{m.menu_loading()}.</div>}
             {!loading && err && (
               <div style={{ color: "crimson", padding: 12 }}>{err}</div>
             )}
             {!loading && !err && menus.length === 0 && (
-              <div style={{ padding: 12 }}>ยังไม่มีเมนูให้แสดง</div>
+              <div style={{ padding: 12 }}>{m.menu_not_found()}</div>
             )}
 
             {!loading &&
@@ -352,16 +349,13 @@ export default function MenuStore() {
                       />
                     )}
                     <p>
-                      <b>Name:</b> {item.name}
+                      <b>{m.store_name()}:</b> {item.name}
                     </p>
                     <p>
-                      <b>Price:</b> {item.price} ฿
+                      <b>{m.price()}:</b> {item.price} ฿
                     </p>
                     <p>
-                      <b>Description:</b> {item.description}
-                    </p>
-                    <p style={{ opacity: 0.6, fontSize: 12 }}>
-                      <b>Id:</b> {item.id || index}
+                      <b>{m.description()}:</b> {item.description}
                     </p>
                   </button>
                 </div>

@@ -28,9 +28,9 @@ export const AuthProvider = ({children})=>{
       })
     }catch{
       setAuth(null);
-      }finally{
-        setLoading(false);
-      }
+    }finally{
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -66,7 +66,7 @@ export const ProtectRoute =({ children , role})=>{
   // console.log("ProtectRoute",auth)
 
   if (loading) {
-    return <div></div>;
+    return <></>;
   }
   if (!auth) {
     console.log("NO Auth",auth)

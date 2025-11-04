@@ -1,7 +1,8 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "@/api/axios";
-import "@css/pages/HistoryDetail.css"; // ✅ ใช้ CSS เดิมได้เลย
+import { m } from "@/paraglide/messages";
+import "@css/pages/HistoryDetail.css";
 
 // ---------- helpers ----------
 const toDate = (v) => {
@@ -68,11 +69,9 @@ export default function HistoryDetail() {
     })();
   }, [id]);
 
-  if (loading)
-    return <p className="hisd-loading">กำลังโหลดข้อมูล…</p>;
+  if (loading) return <p className="hisd-loading">{m.loading_data()}</p>;
 
-  if (!data)
-    return <p className="hisd-empty">ไม่พบคำสั่งซื้อ</p>;
+  if (!data) return <p className="hisd-empty">{m.no_order_found()}</p>;
 
   const items =
     Array.isArray(data.raw?.items) || Array.isArray(data.items)
@@ -87,19 +86,20 @@ export default function HistoryDetail() {
     );
 
   // 🔹 ขั้นตอนสถานะ
-  const st = String(data.status || "").trim().toLowerCase();
-  const steps = ["กำลังจัดเตรียม", "กำลังจัดส่ง", "สำเร็จ"];
+  const st = String(data.status || "")
+    .trim()
+    .toLowerCase();
+  const steps = [m.status_preparing(), m.status_shipping(), m.status_done()];
   let currentStep = 0;
   if (["prepare", "preparing"].includes(st)) currentStep = 0;
-  else if (["ongoing", "on-going", "กำลังจัดส่ง"].includes(st))
-    currentStep = 1;
+  else if (["ongoing", "on-going", "กำลังจัดส่ง"].includes(st)) currentStep = 1;
   else if (["success", "completed", "done", "เสร็จสิ้น", "สำเร็จ"].includes(st))
     currentStep = 2;
 
   return (
     <div className="hisd-wrap">
       <div className="hisd-container">
-        <h1 className="hisd-title">รายละเอียดการสั่งซื้อ</h1>
+        <h1 className="hisd-title">{m.order_detail()}</h1>
 
         <div className="status-gif-container">
           <img
@@ -107,7 +107,9 @@ export default function HistoryDetail() {
             alt="order-status"
             className="status-gif"
           />
-          <p className="status-text">สถานะปัจจุบัน: {steps[currentStep]}</p>
+          <p className="status-text">
+            {m.current_status()}: {steps[currentStep]}
+          </p>
         </div>
 
         {/* 🧭 Tracking Progress */}
@@ -127,19 +129,19 @@ export default function HistoryDetail() {
         <div className="hisd-card summary">
           <div className="row">
             <div>
-              <p className="label">รหัสออเดอร์</p>
+              <p className="label">{m.order_id()}</p>
               <p>{data.orderId || data.id}</p>
             </div>
             <div>
-              <p className="label">ร้าน</p>
-              <p>{data.shop_name || "ร้านไม่ระบุ"}</p>
+              <p className="label">{m.Restarant()}</p>
+              <p>{data.shop_name || m.unknown_shop()}</p>
             </div>
             <div>
-              <p className="label">วันที่</p>
+              <p className="label">{m.Date()}</p>
               <p>{formatThaiBuddhist(data.createdAt)}</p>
             </div>
             <div>
-              <p className="label">สถานะ</p>
+              <p className="label">{m.status()}</p>
               <p>{steps[currentStep]}</p>
             </div>
           </div>
@@ -147,34 +149,36 @@ export default function HistoryDetail() {
 
         {/* 🔹 รายการอาหาร */}
         <div className="hisd-card items">
-          <h3>รายการอาหาร</h3>
+          <h3>{m.food_items()}</h3>
           <div className="table">
             <div className="thead">
-              <div>ชื่อเมนู</div>
-              <div>จำนวน</div>
-              <div>ราคา</div>
-              <div>รวม</div>
+              <div>{m.menu_name()}</div>
+              <div>{m.quantity()}</div>
+              <div>{m.price()}</div>
+              <div>{m.total()}</div>
             </div>
             <div className="tbody">
               {items.length ? (
                 items.map((it, idx) => (
                   <div className="tr" key={idx}>
-                    <div>{it.name || it.Name || `เมนูที่ ${idx + 1}`}</div>
+                    <div>{it.name || it.Name || `${m.menu()} ${idx + 1}`}</div>
                     <div>{it.qty || it.Qty}</div>
                     <div>{currency(it.price || it.Price)}</div>
-                    <div>{currency((it.qty || it.Qty) * (it.price || it.Price))}</div>
+                    <div>
+                      {currency((it.qty || it.Qty) * (it.price || it.Price))}
+                    </div>
                   </div>
                 ))
               ) : (
                 <div className="tr">
-                  <div colSpan="4">ไม่มีรายการอาหาร</div>
+                  <div colSpan="4">{m.no_food_items()}</div>
                 </div>
               )}
             </div>
           </div>
 
           <div className="total">
-            <span>ยอดรวมทั้งหมด:</span>
+            <span>{m.total_all()}:</span>
             <strong>{currency(total)}</strong>
           </div>
         </div>
