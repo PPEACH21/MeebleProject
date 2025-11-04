@@ -21,85 +21,12 @@ function formatPriceRange(min, max) {
   return a === b ? fmt(a) : `${fmt(a)}–${fmt(b)}`;
 }
 
-// รองรับหลาย key: address.latitude/longitude, address._lat/_long, หรือ lat/lng
-function extractLatLngFromShop(shop) {
-  const cands = [shop?.address, shop?.location, shop?.geo, shop?.coords];
-  for (const obj of cands) {
-    if (!obj) continue;
-    const lat = obj.latitude ?? obj.lat ?? obj._lat ?? obj.Latitude ?? obj.Lat;
-    const lng =
-      obj.longitude ??
-      obj.lng ??
-      obj._long ??
-      obj.Longitude ??
-      obj.Lng ??
-      obj.lon;
-    if (
-      typeof lat === "number" &&
-      typeof lng === "number" &&
-      !Number.isNaN(lat) &&
-      !Number.isNaN(lng)
-    ) {
-      return { lat, lng };
-    }
-  }
-  return null;
-}
-
-function haversineKm(lat1, lon1, lat2, lon2) {
-  const toRad = (d) => (d * Math.PI) / 180;
-  const R = 6371;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-
-function formatDistanceText(km) {
-  if (km == null || Number.isNaN(km)) return "–";
-  if (km < 1) {
-    const m = Math.round((km * 1000) / 10) * 10;
-    return `${m} m`;
-  }
-  return `${km.toFixed(1)} ${m.km()}`;
-}
-
 // id helpers
 const getShopId = (shop) =>
   shop?.id || shop?.ID || shop?.shop_id || shop?.shopId || "";
 
 const StoreCard = ({ datashow }) => {
   const navigate = useNavigate();
-
-  const goOrder = (shop) => {
-    const shopId = getShopId(shop);
-    if (!shopId) {
-      console.warn("missing shopId on shop item:", shop);
-      return;
-    }
-    if (!shop.status) {
-      Swal.fire({
-        icon: "info",
-        title: "ไม่สามารถสั่งอาหารได้",
-        text: "ร้านนี้ปิดอยู่ในขณะนี้",
-        confirmButtonText: "เข้าใจแล้ว",
-      });
-      return;
-    }
-    if (typeof window !== "undefined") {
-      localStorage.setItem("currentShopId", shopId);
-    }
-    navigate(`/menu/${encodeURIComponent(shopId)}`, {
-      state: { shop, shopId },
-    });
-  };
-
-  const { loading, LoadingPage } = runloadting(1000);
-  if (loading) return <LoadingPage />;
-
 
   const goReserve = (shop) => {
     const shopId = getShopId(shop);
@@ -120,7 +47,6 @@ const StoreCard = ({ datashow }) => {
       state: { shop, shopId },
     });
   };
-
   return (
     <div className="card-grid">
       {datashow.map((item, index) => {
@@ -129,9 +55,6 @@ const StoreCard = ({ datashow }) => {
         const maxP =
           item.max_price ?? item.price_max ?? item.Max_price ?? item.Price_max;
         const priceText = formatPriceRange(minP, maxP);
-
-        let distanceText = "–";
-        const shopLL = extractLatLngFromShop(item);
         const goOrder = (shop) => {
           const shopId = getShopId(shop);
           if (!shopId) {
@@ -154,6 +77,7 @@ const StoreCard = ({ datashow }) => {
             state: { shop, shopId },
           });
         };
+
         const cardKey = item.id || item.ID || index;
 
         return (
@@ -224,16 +148,14 @@ const StoreCard = ({ datashow }) => {
                           </span>
                         </p>
                         <p>
-                          <b>{m.Distance()}:</b> {distanceText}
-                          <b>Price:</b> {priceText}
-                        </p>
-                        <p>
-                          <b>Distance:</b>{" "}
-                          {item.distance
-                            ? item.distance < 1
-                              ? `${Math.round(item.distance * 1000)} m`
-                              : `${item.distance.toFixed(1)} km`
-                            : "–"}
+                          <>
+                            <b>{m.Distance()}:</b>
+                            {item.distance
+                              ? item.distance < 1
+                                ? ` ${Math.round(item.distance * 1000)}m`
+                                : `${item.distance.toFixed(1)} km`
+                              : "–"}
+                          </>
                         </p>
                       </div>
 
