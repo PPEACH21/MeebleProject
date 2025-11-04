@@ -20,10 +20,9 @@ import VendorOrders from "./Vendor/page/vendorOrder";
 import VendorSettings from "./Vendor/page/vendorSetting";
 import HistoryDetail from "@/User/page/HistoryDetail.jsx";
 import Language from "./User/page/Setting/Language";
-import VendorLayout from "./Vendor/component/VendorLayout"
+import VendorLayout from "./Vendor/component/VendorLayout";
 import Reserve from "./User/page/Reserve";
 import CreateShopPage from "./Vendor/page/vendorCreateNewShop";
-
 
 function App() {
   return (
@@ -44,10 +43,10 @@ function App() {
             <Route path="/history" element={<History />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/settings" element={<SettingPage />} />
-            <Route path="/language" element={<Language/>} />
+            <Route path="/language" element={<Language />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/history/:id" element={<HistoryDetail />} />
-             <Route path="/reserve/:id" element={<Reserve/>} />
+            <Route path="/reserve/:id" element={<Reserve />} />
           </Route>
 
           <Route element={<NavLayout focus={true} cart={true} />}>

@@ -1,5 +1,5 @@
 // src/component/Nav.jsx
-import { useContext, useEffect,  useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "@/context/ProtectRoute";
 import axios from "@/api/axios";
 import { FaRegUserCircle, FaHistory } from "react-icons/fa";
@@ -176,7 +176,7 @@ const Navbar = ({ focus = false, cart = false }) => {
   const userId = Profile.User_id;
   // ✅ เติมเงิน (บวกเพิ่ม) ด้วย SweetAlert2 + API topup
   const handleTopUpCoin = async () => {
-    console.log(Profile)
+    console.log(Profile);
     if (!userId) {
       Swal.fire({
         icon: "error",

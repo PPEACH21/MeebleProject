@@ -1,8 +1,9 @@
-import { useState,useRef,useEffect, useContext } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
 import axios from "@/api/axios";
 import { AuthContext } from "@/context/ProtectRoute";
 import { useNavigate } from "react-router-dom";
 import LoadingPage from "./LoadingPage";
+import { m } from "@/paraglide/messages";
 
 export const OTPInput = ({ email = false, state, setState }) => {
   const { auth, setAuth } = useContext(AuthContext);
@@ -70,7 +71,6 @@ export const OTPInput = ({ email = false, state, setState }) => {
   const handleClick = (index) => {
     inputRef.current[index].setSelectionRange(1, 1);
   };
-
   const handleKeydown = (index, e) => {
     if (e.key === "Backspace") {
       if (otp[index] === "" && index > 0) {
@@ -129,12 +129,11 @@ export const OTPInput = ({ email = false, state, setState }) => {
     } catch (err) {
       console.error("Error OTP Not Correct:", err);
       setLoading(false);
+      alert(m.tryagain());
     }
   };
 
   if (Loading) return <LoadingPage />;
-  
-
   return (
     <div>
       {otp.map((value, index) => {
@@ -143,14 +142,11 @@ export const OTPInput = ({ email = false, state, setState }) => {
             className="otpinput"
             key={index}
             ref={(input) => (inputRef.current[index] = input)}
-            type="text"                  // 🔧 was `text="text"`
-            inputMode="numeric"          // 🔧 ให้คีย์บอร์ดตัวเลขในมือถือ
-            pattern="\d*"                // 🔧 ช่วยจำกัดเป็นตัวเลข
+            text="text"
             value={value}
             onChange={(e) => handleChange(index, e)}
             onClick={() => handleClick(index)}
             onKeyDown={(e) => handleKeydown(index, e)}
-            maxLength={1}
           />
         );
       })}
@@ -163,17 +159,15 @@ export const OTPInput = ({ email = false, state, setState }) => {
             sendmessage();
           }}
         >
-          Resend OTP
+          {m.SendOTP()}
         </a>
       </div>
-
       <div className="setcenterNF" style={{ marginTop: "10px" }}>
         <button className="btn" style={{ width: "80%" }} onClick={handleSubmit}>
-          Submit
+          {m.VerifyEmail()}
         </button>
       </div>
     </div>
   );
 };
-
 export default OTPInput;

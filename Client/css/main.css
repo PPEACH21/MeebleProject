@@ -3,7 +3,7 @@
   @import url("layout/container.css");
   @import url("components/textInput.css");
   @import url("base/bgimage.css");
-  @import url(base/aimation.css);
+  @import url(base/animation.css);
 
   html, body {
     margin: 0;
