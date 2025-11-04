@@ -4,11 +4,10 @@ import { useEffect, useState } from "react";
 import LoadingPage, { runloadting } from "./LoadingPage";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
+import { m } from "@/paraglide/messages";
 
 // --- helpers ---
 const toNum = (v) => (typeof v === "number" ? v : Number(v) || 0);
-
-
 
 function formatPriceRange(min, max) {
   if (min == null || max == null) return "–";
@@ -67,7 +66,7 @@ function formatDistanceText(km) {
     const m = Math.round((km * 1000) / 10) * 10;
     return `${m} m`;
   }
-  return `${km.toFixed(1)} km`;
+  return `${km.toFixed(1)} ${m.km()}`;
 }
 
 // id helpers
@@ -88,18 +87,18 @@ const StoreCard = ({ datashow }) => {
     );
   }, []);
 
-  const {loading,LoadingPage} = runloadting(1000);
-  if(loading) return<LoadingPage/>
-  
+  const { loading, LoadingPage } = runloadting(1000);
+  if (loading) return <LoadingPage />;
+
   const goReserve = (shop) => {
     const shopId = getShopId(shop);
     if (!shopId) return;
     if (!shop.status) {
       Swal.fire({
         icon: "info",
-        title: "ไม่สามารถจองได้",
-        text: "ร้านนี้ปิดอยู่ในขณะนี้",
-        confirmButtonText: "เข้าใจแล้ว",
+        title: m.CannotReserve(),
+        text: m.StoreClosed(),
+        confirmButtonText: m.Agree(),
       });
       return;
     }
@@ -131,7 +130,28 @@ const StoreCard = ({ datashow }) => {
           );
           distanceText = formatDistanceText(km);
         }
-
+        const goOrder = (shop) => {
+          const shopId = getShopId(shop);
+          if (!shopId) {
+            console.warn("missing shopId on shop item:", shop);
+            return;
+          }
+          if (!shop.status) {
+            Swal.fire({
+              icon: "info",
+              title: m.cannotOrder(),
+              text: m.close(),
+              confirmButtonText: m.Agree(),
+            });
+            return;
+          }
+          if (typeof window !== "undefined") {
+            localStorage.setItem("currentShopId", shopId);
+          }
+          navigate(`/menu/${encodeURIComponent(shopId)}`, {
+            state: { shop, shopId },
+          });
+        };
         const cardKey = item.id || item.ID || index;
 
         return (
@@ -187,10 +207,10 @@ const StoreCard = ({ datashow }) => {
                     <div className="position2">
                       <div>
                         <p>
-                          <b>Rate:</b> {item.rate}
+                          <b>{m.Rate()}:</b> {item.rate}
                         </p>
                         <p>
-                          <b>Price:</b>{" "}
+                          <b>{m.Price()}:</b>{" "}
                           <span
                             style={{
                               display: "inline-block",
@@ -202,7 +222,7 @@ const StoreCard = ({ datashow }) => {
                           </span>
                         </p>
                         <p>
-                          <b>Distance:</b> {distanceText}
+                          <b>{m.Distance()}:</b> {distanceText}
                         </p>
                       </div>
 
@@ -216,21 +236,21 @@ const StoreCard = ({ datashow }) => {
                             maxWidth: "240px",
                           }}
                         >
-                          <b>Description:</b> {item.description}
+                          <b>{m.description()}:</b> {item.description}
                         </p>
                         <p>
-                          <b>Status : </b>
+                          <b>{m.status()} : </b>
                           <span
                             style={{
                               color: item.status ? "green" : "red",
                               fontWeight: 600,
                             }}
                           >
-                            {item.status ? "Open" : "Close"}
+                            {item.status ? m.open() : m.close()}
                           </span>
                         </p>
                         <p>
-                          <b>Type:</b> {item.type}
+                          <b>{m.type()}:</b> {item.type}
                         </p>
                       </div>
                     </div>
@@ -255,7 +275,7 @@ const StoreCard = ({ datashow }) => {
                     opacity: item.status ? 1 : 0.9,
                   }}
                 >
-                  order
+                  {m.order()}
                 </button>
 
                 <button
@@ -266,7 +286,7 @@ const StoreCard = ({ datashow }) => {
                     opacity: item.status ? 1 : 0.9,
                   }}
                 >
-                  reserve
+                  {m.reserve()}
                 </button>
               </div>
             </div>
