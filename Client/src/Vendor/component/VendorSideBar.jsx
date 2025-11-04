@@ -1,5 +1,6 @@
 import { NavLink, useParams, useLocation, generatePath } from "react-router-dom";
 import "@css/components/vendorSideBar.css";
+import {m} from "@/paraglide/messages"
 
 export default function VendorSidebar() {
   const params = useParams();
@@ -19,11 +20,11 @@ export default function VendorSidebar() {
     : "/vendor/shops"; // <-- เปลี่ยนเป็นหน้าที่มีจริง เช่น /vendor/home
 
   const menu = [
-    { to: "/vendor/home", label: "Dashboard" },
-    { to: "/vendor/orders", label: "Orders" },
-    { to: "/vendor/settings", label: "Settings" },
-    { to: "/vendor/history", label: "History" },
-    { to: menuLink, label: "Menu" }, // ✅ ใช้ลิงก์ที่แทนค่าแล้ว
+    { to: "/vendor/home", label: m.Dashboard() },
+    { to: "/vendor/orders", label: m.allOrder() },
+    { to: "/vendor/settings", label: m.Setting() },
+    { to: "/vendor/history", label: m.history() },
+    { to: menuLink, label: m.menu() }, // ✅ ใช้ลิงก์ที่แทนค่าแล้ว
   ];
 
   return (

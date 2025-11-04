@@ -4,6 +4,9 @@ import axios from "@/api/axios";
 import { AuthContext } from "@/context/ProtectRoute";
 import "@css/pages/VendorHistory.css";
 
+// ✅ i18n
+import { m } from "@/paraglide/messages.js";
+
 /* ---------- helpers ---------- */
 const toDate = (v) => {
   if (!v) return null;
@@ -33,11 +36,15 @@ const currency = (n) =>
     minimumFractionDigits: 0,
   });
 
+// 🔁 ใช้คีย์สถานะจากข้อความ ถ้าไม่มีให้ fallback เป็นไทยเดิม
 const canonicalStatusTH = (s) => {
   const x = String(s || "").toLowerCase();
-  if (["prepare", "preparing", "กำลังจัดเตรียม"].includes(x)) return "กำลังจัดเตรียม";
-  if (["ongoing", "on-going", "shipping", "กำลังจัดส่ง"].includes(x)) return "กำลังจัดส่ง";
-  if (["success", "completed", "done", "เสร็จสิ้น", "สำเร็จ"].includes(x)) return "สำเร็จ";
+  if (["prepare", "preparing", "กำลังจัดเตรียม"].includes(x))
+    return m.status_preparing ? m.status_preparing() : "กำลังจัดเตรียม";
+  if (["ongoing", "on-going", "shipping", "กำลังจัดส่ง"].includes(x))
+    return m.status_shipping ? m.status_shipping() : "กำลังจัดส่ง";
+  if (["success", "completed", "done", "เสร็จสิ้น", "สำเร็จ"].includes(x))
+    return m.status_done ? m.status_done() : "สำเร็จ";
   return s || "-";
 };
 
@@ -65,11 +72,10 @@ export default function VendorHistory() {
 
   // เลือกชื่อจากโพรไฟล์ผู้ใช้
   const pickUserName = (u = {}) =>
-    u.username || u.name || u.fullname || u.displayName || u.email || "ไม่ระบุ";
+    u.username || u.name || u.fullname || u.displayName || u.email || (m.customer ? m.customer() : "ลูกค้า");
 
   // เติม customerName ให้ลิสต์จาก userId/customerId
   const enrichCustomerNames = async (list) => {
-    // รวบรวม userId ที่ยังไม่มี customerName
     const ids = Array.from(
       new Set(
         list
@@ -77,12 +83,8 @@ export default function VendorHistory() {
           .filter(Boolean)
       )
     );
-
     if (ids.length === 0) return list;
 
-    console.log("👤 กำลังดึงชื่อผู้ใช้จำนวน", ids.length, "คน");
-
-    // ยิงแบบขนาน (มี try/catch แยกแต่ละราย)
     const nameMap = {};
     await Promise.all(
       ids.map(async (id) => {
@@ -92,21 +94,17 @@ export default function VendorHistory() {
           });
           nameMap[id] = pickUserName(res.data || {});
         } catch (e) {
-          console.warn("⚠️ ดึงชื่อผู้ใช้ไม่สำเร็จ:", id, e?.response?.data || e.message);
           nameMap[id] = undefined;
         }
       })
     );
 
-    // ผูกชื่อกลับเข้าแถวที่ไม่มี customerName
-    const next = list.map((r) => {
+    return list.map((r) => {
       if (r.customerName) return r;
       const uid = r.userId || r.customerId || r.customerID || r.customer_id;
       const nm = uid ? nameMap[uid] : undefined;
       return nm ? { ...r, customerName: nm } : r;
     });
-
-    return next;
   };
 
   // ดึง shopId จาก user_id เหมือน VendorOrders
@@ -117,12 +115,11 @@ export default function VendorHistory() {
         const local = localStorage.getItem("currentShopId");
         if (local) {
           setShopId(local);
-          console.log("✅ ใช้ shopId จาก localStorage:", local);
           return;
         }
 
         if (!userId) {
-          setErr("ยังไม่พบข้อมูลผู้ใช้");
+          setErr(m.missing_credential ? m.missing_credential() : "ยังไม่พบข้อมูลผู้ใช้");
           return;
         }
 
@@ -140,15 +137,13 @@ export default function VendorHistory() {
         const id =
           resolvedShop?.id || resolvedShop?.ID || resolvedShop?.Id || "";
         if (!id) {
-          setErr("ไม่พบร้านของคุณ");
+          setErr(m.shop_not_found ? m.shop_not_found() : "ไม่พบร้านของคุณ");
           return;
         }
 
         localStorage.setItem("currentShopId", id);
         setShopId(id);
-        console.log("🏪 ตั้งค่า shopId จาก backend:", id);
       } catch (e) {
-        console.error("❌ โหลดร้านไม่สำเร็จ:", e?.response?.data || e.message);
         setErr(e?.response?.data?.error || e.message);
       } finally {
         setLoading(false);
@@ -162,7 +157,6 @@ export default function VendorHistory() {
     setLoading(true);
     try {
       const url = `/api/shops/${shopId}/history`;
-      console.log("📥 โหลดประวัติร้านจาก:", url);
       const res = await axios.get(url, { withCredentials: true });
 
       let list = Array.isArray(res.data) ? res.data : [];
@@ -184,14 +178,10 @@ export default function VendorHistory() {
         return tb - ta;
       });
 
-      // เติม customerName จาก userId/customerId
       const enriched = await enrichCustomerNames(list);
-
       setRows(enriched);
-      console.log("✅ โหลดสำเร็จ:", enriched.length, "รายการ");
     } catch (e) {
-      console.error("❌ โหลดประวัติร้านล้มเหลว:", e);
-      setErr(e?.response?.data?.error || e.message || "load error");
+      setErr(e?.response?.data?.error || e.message || (m.error_occurred ? m.error_occurred() : "เกิดข้อผิดพลาด"));
       setRows([]);
     } finally {
       setLoading(false);
@@ -200,6 +190,7 @@ export default function VendorHistory() {
 
   useEffect(() => {
     if (shopId) loadList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shopId]);
 
   // เปิด popup แสดงรายละเอียด
@@ -207,10 +198,8 @@ export default function VendorHistory() {
     setLoadingOne(true);
     try {
       const url = `/api/shops/${shopId}/history/${row.id}`;
-      console.log("🔎 โหลดรายละเอียด:", url);
       const res = await axios.get(url, { withCredentials: true });
 
-      // ถ้าใน detail มี userId แต่ยังไม่มี customerName ก็เติมทันที (กันกรณี list enrich ไม่ทัน)
       let doc = res.data || row;
       if (!doc.customerName) {
         const uid = doc.userId || doc.customerId || doc.customerID || doc.customer_id;
@@ -221,14 +210,12 @@ export default function VendorHistory() {
             });
             const nm = pickUserName(prof.data || {});
             if (nm) doc = { ...doc, customerName: nm };
-          } catch {[]} { /* เงียบ ๆ ไป */ }
+          } catch {}
         }
       }
 
       setSelected(doc);
-      console.log("✅ รายละเอียด:", doc);
-    } catch (e) {
-      console.warn("⚠️ โหลดรายละเอียดไม่ได้ ใช้ข้อมูลเดิม:", e.message);
+    } catch {
       setSelected(row);
     } finally {
       setLoadingOne(false);
@@ -240,31 +227,32 @@ export default function VendorHistory() {
   return (
     <div className="vh-wrap">
       <div className="vh-head">
-        <h1>ประวัติออเดอร์ร้าน</h1>
+        <h1>{m.history ? m.history() : "ประวัติการสั่งซื้อ"}</h1>
         {shopId && (
           <p className="vh-sub">
-            ดูออเดอร์ที่เสร็จแล้ว (shops/<code>{shopId}</code>/history)
+            {(m.orders_title_shop ? m.orders_title_shop() : "ออเดอร์ทั้งหมดของร้าน")} (
+            shops/<code>{shopId}</code>/history)
           </p>
         )}
         <div style={{ marginTop: 8 }}>
           <button className=".vhis-btn" onClick={loadList} disabled={loading || !shopId}>
-            รีเฟรช
+            {m.loading ? m.loading() : "รีเฟรช"}
           </button>
         </div>
       </div>
 
-      {loading && <p className="vh-status">กำลังโหลดข้อมูล…</p>}
-      {err && !loading && <p className="vh-error">เกิดข้อผิดพลาด: {String(err)}</p>}
-      {empty && <p className="vh-empty">ยังไม่มีรายการประวัติ</p>}
+      {loading && <p className="vh-status">{m.loading_data ? m.loading_data() : "กำลังโหลดข้อมูล…"}</p>}
+      {err && !loading && <p className="vh-error">{(m.error_occurred ? m.error_occurred() : "เกิดข้อผิดพลาด") + ": " + String(err)}</p>}
+      {empty && <p className="vh-empty">{m.notHaveHistory ? m.notHaveHistory() : "ยังไม่มีรายการประวัติ"}</p>}
 
       {!loading && !err && rows.length > 0 && (
         <div className="vh-table">
           <div className="vh-thead">
-            <div>ออเดอร์</div>
-            <div>ลูกค้า</div>
-            <div>สถานะ</div>
-            <div>ยอดรวม</div>
-            <div>เสร็จเมื่อ</div>
+            <div>{m.order_id ? m.order_id() : "ออเดอร์"}</div>
+            <div>{m.customer ? m.customer() : "ลูกค้า"}</div>
+            <div>{m.status ? m.status() : "สถานะ"}</div>
+            <div>{m.total_all ? m.total_all() : "ยอดรวม"}</div>
+            <div>{m.date_label ? m.date_label() : "เสร็จเมื่อ"}</div>
           </div>
           <div className="vh-tbody">
             {rows.map((r, i) => {
@@ -277,9 +265,10 @@ export default function VendorHistory() {
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => e.key === "Enter" && openDetail(r)}
+                  title={m.view_order_detail ? m.view_order_detail() : "ดูรายละเอียดออเดอร์"}
                 >
                   <div className="mono">{shortId(r.id)}</div>
-                  <div>{r.customerName || r.customer || "ไม่ระบุ"}</div>
+                  <div>{r.customerName || r.customer || (m.customer ? m.customer() : "ลูกค้า")}</div>
                   <div className={`badge ${String(r.status).toLowerCase()}`}>
                     {canonicalStatusTH(r.status)}
                   </div>
@@ -300,27 +289,29 @@ export default function VendorHistory() {
         <div className="vh-modal-backdrop" onClick={() => setSelected(null)}>
           <div className="vh-modal" onClick={(e) => e.stopPropagation()}>
             <div className="vh-modal-header">
-              <h3>รายละเอียดออเดอร์ {loadingOne ? "(กำลังโหลด…)" : ""}</h3>
-              <button className="icon-vhis-btn" onClick={() => setSelected(null)}>
+              <h3>
+                {(m.order_detail ? m.order_detail() : "รายละเอียดการสั่งซื้อ")}{loadingOne ? " (…)" : ""}
+              </h3>
+              <button className="icon-vhis-btn" onClick={() => setSelected(null)} aria-label={m.cancel ? m.cancel() : "ปิด"}>
                 ✕
               </button>
             </div>
             <div className="vh-modal-body">
               <div className="vh-grid">
                 <div>
-                  <p className="label">Order ID</p>
+                  <p className="label">{m.order_id ? m.order_id() : "Order ID"}</p>
                   <p className="mono">{selected.id}</p>
                 </div>
                 <div>
-                  <p className="label">ลูกค้า</p>
-                  <p>{selected.customerName || selected.customer || "ไม่ระบุ"}</p>
+                  <p className="label">{m.customer ? m.customer() : "ลูกค้า"}</p>
+                  <p>{selected.customerName || selected.customer || (m.customer ? m.customer() : "ลูกค้า")}</p>
                 </div>
                 <div>
-                  <p className="label">สถานะ</p>
+                  <p className="label">{m.status ? m.status() : "สถานะ"}</p>
                   <p>{canonicalStatusTH(selected.status)}</p>
                 </div>
                 <div>
-                  <p className="label">เสร็จเมื่อ</p>
+                  <p className="label">{m.date_label ? m.date_label() : "เสร็จเมื่อ"}</p>
                   <p>
                     {formatThaiBuddhist(
                       selected.finishedAt ||
@@ -331,23 +322,25 @@ export default function VendorHistory() {
                   </p>
                 </div>
                 <div>
-                  <p className="label">รวมทั้งสิ้น</p>
-                  <p><strong>{currency(computeTotal(selected))}</strong></p>
+                  <p className="label">{m.total_all ? m.total_all() : "รวมทั้งสิ้น"}</p>
+                  <p>
+                    <strong>{currency(computeTotal(selected))}</strong>
+                  </p>
                 </div>
               </div>
 
-              <h4 style={{ marginTop: 16 }}>รายการอาหาร</h4>
+              <h4 style={{ marginTop: 16 }}>{m.food_items ? m.food_items() : "รายการอาหาร"}</h4>
               <div className="vh-items">
                 <div className="vh-items-head">
-                  <div>เมนู</div>
-                  <div>จำนวน</div>
-                  <div>ราคา</div>
-                  <div>รวม</div>
+                  <div>{m.menu_name ? m.menu_name() : "เมนู"}</div>
+                  <div>{m.quantity ? m.quantity() : "จำนวน"}</div>
+                  <div>{m.price ? m.price() : "ราคา"}</div>
+                  <div>{m.total ? m.total() : "รวม"}</div>
                 </div>
                 <div className="vh-items-body">
                   {(Array.isArray(selected.items) ? selected.items : []).map((it, idx) => (
                     <div className="vh-item-row" key={idx}>
-                      <div>{it?.name || `เมนูที่ ${idx + 1}`}</div>
+                      <div>{it?.name || `${(m.menu_name ? m.menu_name() : "เมนู")} ${idx + 1}`}</div>
                       <div>{Number(it?.qty) || 0}</div>
                       <div>{currency(it?.price)}</div>
                       <div>{currency((Number(it?.qty) || 0) * (Number(it?.price) || 0))}</div>
@@ -357,7 +350,9 @@ export default function VendorHistory() {
               </div>
             </div>
             <div className="vh-modal-footer">
-              <button className="vhis-btn" onClick={() => setSelected(null)}>ปิด</button>
+              <button className="vhis-btn" onClick={() => setSelected(null)}>
+                {m.cancel ? m.cancel() : "ปิด"}
+              </button>
             </div>
           </div>
         </div>

@@ -1,7 +1,9 @@
+// src/User/page/VendorOrderDetail.jsx
 import { useParams } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
 import axios from "@/api/axios";
 import "@css/pages/VendorOrderDetail.css";
+import { m } from "@/paraglide/messages.js";
 
 const toDate = (v) => {
   if (!v) return null;
@@ -41,25 +43,19 @@ const getStatusGif = (status) => {
   return "https://media3.giphy.com/media/OaNtfLLzPq4I8/giphy.gif";
 };
 
-// ---------- เพิ่ม: ตัวช่วยทำให้สถานะเป็นรูปแบบเดียวกัน ----------
+// ทำสถานะให้เป็นรูปแบบเดียวกัน
 const canonicalStatus = (raw) => {
-  const s = String(raw || "").trim().toLowerCase();
+  const s = String(raw || "")
+    .trim()
+    .toLowerCase();
   if (["prepare", "preparing", "กำลังจัดเตรียม"].includes(s)) return "prepare";
   if (["ongoing", "on-going", "shipping", "กำลังจัดส่ง"].includes(s))
     return "ongoing";
   if (["success", "completed", "done", "เสร็จสิ้น", "สำเร็จ"].includes(s))
     return "success";
-  // ดีฟอลต์ให้เป็น prepare
   return "prepare";
 };
 
-const statusLabelTH = {
-  prepare: "กำลังจัดเตรียม",
-  ongoing: "กำลังจัดส่ง",
-  success: "สำเร็จ",
-};
-
-// เรียงลำดับสถานะ
 const statusOrder = ["prepare", "ongoing", "success"];
 
 export default function VendorOrderDetail() {
@@ -67,7 +63,6 @@ export default function VendorOrderDetail() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ---------- เพิ่ม: state สำหรับกดอัปเดตสถานะ ----------
   const [updating, setUpdating] = useState(false);
   const currStatus = useMemo(
     () => canonicalStatus(data?.status),
@@ -81,46 +76,39 @@ export default function VendorOrderDetail() {
         const res = await axios.get(`/orders/${id}`, { withCredentials: true });
         setData(res.data);
       } catch (e) {
-        console.error("❌ โหลดรายละเอียดออเดอร์ล้มเหลว:", e);
+        console.error("❌ load order detail failed:", e);
       } finally {
         setLoading(false);
       }
     })();
   }, [id]);
 
-  // ---------- เพิ่ม: ฟังก์ชันอัปเดตสถานะ ----------
   const updateStatus = async (newStatus) => {
     if (!id) return;
     if (newStatus === currStatus) return;
-
     try {
       setUpdating(true);
-
-      // optimistic update
       setData((prev) => (prev ? { ...prev, status: newStatus } : prev));
-
-      // เรียก API อัปเดตสถานะ (ให้แบ็กเอนด์ไปซิงก์ฝั่งลูกค้าด้วย)
       await axios.patch(
         `/orders/${id}/status`,
         { status: newStatus },
         { withCredentials: true }
       );
-
-      // ถ้าอยากรีเฟรชจากเซิร์ฟเวอร์อีกครั้ง (กันกรณีราคา/ฟิลด์อื่นเปลี่ยน)
-      // const fresh = await axios.get(`/orders/${id}`, { withCredentials: true });
-      // setData(fresh.data);
     } catch (e) {
-      console.error("❌ อัปเดตสถานะล้มเหลว:", e);
-      // roll back ถ้าอยาก
+      console.error("❌ update status failed:", e);
       setData((prev) => (prev ? { ...prev, status: currStatus } : prev));
-      alert("อัปเดตสถานะไม่สำเร็จ กรุณาลองใหม่");
+      alert(
+        m.update_status_failed
+          ? m.update_status_failed()
+          : "อัปเดตสถานะไม่สำเร็จ กรุณาลองใหม่"
+      );
     } finally {
       setUpdating(false);
     }
   };
 
-  if (loading) return <p className="v-detail-loading">กำลังโหลดข้อมูล…</p>;
-  if (!data) return <p className="v-detail-empty">ไม่พบออเดอร์นี้</p>;
+  if (loading) return <p className="v-detail-loading">{m.loading_data()}</p>;
+  if (!data) return <p className="v-detail-empty">{m.no_order_found()}</p>;
 
   const items = Array.isArray(data.items) ? data.items : [];
   const total =
@@ -134,12 +122,18 @@ export default function VendorOrderDetail() {
     0,
     statusOrder.indexOf(canonicalStatus(data.status))
   );
-  const stepsTH = statusOrder.map((k) => statusLabelTH[k]);
+  const stepLabel = (k) =>
+    k === "success"
+      ? m.status_done()
+      : k === "ongoing"
+      ? m.status_shipping()
+      : m.status_preparing();
+  const steps = statusOrder.map(stepLabel);
 
   return (
     <div className="v-detail-wrap">
       <div className="v-detail-container">
-        <h1 className="v-detail-title">รายละเอียดออเดอร์ร้าน</h1>
+        <h1 className="v-detail-title">{m.order_detail()}</h1>
 
         <div className="status-gif-container">
           <img
@@ -147,11 +141,13 @@ export default function VendorOrderDetail() {
             alt="order-status"
             className="status-gif"
           />
-          <p className="status-text">สถานะปัจจุบัน: {stepsTH[currentStep]}</p>
+          <p className="status-text">
+            {m.current_status()}: {steps[currentStep]}
+          </p>
         </div>
 
         <div className="tracking-bar">
-          {stepsTH.map((s, idx) => (
+          {steps.map((s, idx) => (
             <div
               key={idx}
               className={`step ${idx <= currentStep ? "active" : ""}`}
@@ -162,84 +158,96 @@ export default function VendorOrderDetail() {
           ))}
         </div>
 
-        {/* ---------- เพิ่ม: ปุ่มอัปเดตสถานะ ---------- */}
+        {/* ปุ่มอัปเดตสถานะ */}
         <div className="v-card status-CP_actions">
-          <h3>อัปเดตสถานะ</h3>
+          <h3>{m.update_status ? m.update_status() : "อัปเดตสถานะ"}</h3>
           <div className="status-buttons">
             <button
-              className={`vdorder-btn-status  ${
+              className={`vdorder-btn-status ${
                 currStatus === "prepare" ? "active" : ""
               }`}
               disabled={updating || currStatus === "prepare"}
               onClick={() => updateStatus("prepare")}
             >
-              {statusLabelTH.prepare}
+              {m.status_preparing()}
             </button>
             <button
-              className={`vdorder-btn-status  ${
+              className={`vdorder-btn-status ${
                 currStatus === "ongoing" ? "active" : ""
               }`}
               disabled={updating || currStatus === "ongoing"}
               onClick={() => updateStatus("ongoing")}
             >
-              {statusLabelTH.ongoing}
+              {m.status_shipping()}
             </button>
             <button
-              className={`vdorder-btn-status  ${
+              className={`vdorder-btn-status ${
                 currStatus === "success" ? "active" : ""
               }`}
               disabled={updating || currStatus === "success"}
               onClick={() => updateStatus("success")}
             >
-              {statusLabelTH.success}
+              {m.status_done()}
             </button>
           </div>
-          {updating && <p className="muted">กำลังอัปเดตสถานะ…</p>}
+          {updating && (
+            <p className="muted">
+              {m.updating_status ? m.updating_status() : "กำลังอัปเดตสถานะ…"}
+            </p>
+          )}
         </div>
 
         <div className="v-card summary">
           <div className="row">
             <div>
-              <p className="label">Order ID</p>
+              <p className="label">{m.order_id()}</p>
               <p>{data.orderId || data.id}</p>
             </div>
             <div>
-              <p className="label">ลูกค้า</p>
-              <p>{data.customerName || "ไม่ระบุ"}{data.customerPhone ? ` (${data.customerPhone})` : ""}</p>
+              <p className="label">
+                {m.customer ? m.customer() : m.costumer()}
+              </p>
+              <p>
+                {data.customerName ||
+                  (m.unknown_value ? m.unknown_value() : "ไม่ระบุ")}
+                {data.customerPhone ? ` (${data.customerPhone})` : ""}
+              </p>
             </div>
             <div>
-              <p className="label">วันที่</p>
+              <p className="label">{m.date_label()}</p>
               <p>{formatThaiBuddhist(data.createdAt)}</p>
             </div>
             <div>
-              <p className="label">สถานะ</p>
-              <p>{stepsTH[currentStep]}</p>
+              <p className="label">{m.status()}</p>
+              <p>{steps[currentStep]}</p>
             </div>
           </div>
         </div>
 
         <div className="v-card items">
-          <h3>รายการอาหาร</h3>
+          <h3>{m.food_items()}</h3>
           <div className="table">
             <div className="thead">
-              <div>ชื่อเมนู</div>
-              <div>จำนวน</div>
-              <div>ราคา</div>
-              <div>รวม</div>
+              <div>{m.menu_name()}</div>
+              <div>{m.quantity()}</div>
+              <div>{m.price()}</div>
+              <div>{m.total()}</div>
             </div>
             <div className="tbody">
               {items.map((it, idx) => (
                 <div className="tr" key={idx}>
-                  <div>{it.name || `เมนูที่ ${idx + 1}`}</div>
+                  <div>{it.name || `${m.menu()} ${idx + 1}`}</div>
                   <div>{it.qty}</div>
                   <div>{currency(it.price)}</div>
-                  <div>{currency((Number(it.qty)||0) * (Number(it.price)||0))}</div>
+                  <div>
+                    {currency((Number(it.qty) || 0) * (Number(it.price) || 0))}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
           <div className="total">
-            <span>ยอดรวมทั้งหมด:</span>
+            <span>{m.total_all()}</span>
             <strong>{currency(total)}</strong>
           </div>
         </div>

@@ -1,7 +1,9 @@
+// src/User/page/VendorMenu.jsx
 import { useEffect, useRef, useState } from "react";
 import axios from "@/api/axios";
 import { useParams, useLocation } from "react-router-dom";
 import "@css/pages/vendorMenu.css";
+import { m } from "@/paraglide/messages.js";
 
 const currencyTH = (n) =>
   (Number(n) || 0).toLocaleString("th-TH", {
@@ -37,13 +39,13 @@ export default function VendorMenu() {
   const [isAddPopupOpen, setIsAddPopupOpen] = useState(false);
 
   // edit form
-  const [editing, setEditing] = useState(null); // object menu
+  const [editing, setEditing] = useState(null);
   const [editName, setEditName] = useState("");
   const [editPrice, setEditPrice] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [editImage, setEditImage] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
-  const [deleting, setDeleting] = useState(false); // ✅ NEW
+  const [deleting, setDeleting] = useState(false);
   const [togglingId, setTogglingId] = useState("");
 
   const menuListRef = useRef(null);
@@ -52,7 +54,7 @@ export default function VendorMenu() {
   // --- fetch menus only ---
   const fetchMenus = async () => {
     if (!shopId) {
-      console.error("❌ ไม่มี shopId (ลองตั้ง localStorage.currentShopId)");
+      console.error("❌ ไม่มี shopId");
       setLoading(false);
       return;
     }
@@ -73,7 +75,7 @@ export default function VendorMenu() {
       setMenus(normalized);
     } catch (err) {
       console.error("❌ โหลดเมนูไม่สำเร็จ:", err?.response?.data || err);
-      alert("โหลดเมนูไม่สำเร็จ");
+      alert(m.menu_fetch_error ? m.menu_fetch_error() : "โหลดเมนูไม่สำเร็จ");
     } finally {
       setLoading(false);
     }
@@ -86,9 +88,9 @@ export default function VendorMenu() {
 
   // --- imgbb upload ---
   const uploadImageToImgbb = async (file) => {
-    if (!IMGBB_KEY) throw new Error("ยังไม่ได้ตั้งค่า VITE_IMGBB_KEY");
+    if (!IMGBB_KEY) throw new Error(m.missing_imgbb_key ? m.missing_imgbb_key() : "ยังไม่ได้ตั้งค่า IMGBB API KEY");
     if (!file?.type?.startsWith("image/"))
-      throw new Error("ไฟล์ต้องเป็นรูปภาพ");
+      throw new Error(m.add_to_cart_error ? m.add_to_cart_error() : "ไฟล์ต้องเป็นรูปภาพ"); // ใช้คีย์เดิมเป็น fallback
 
     const toBase64 = (f) =>
       new Promise((resolve, reject) => {
@@ -115,12 +117,12 @@ export default function VendorMenu() {
       try {
         const j = await resp.json();
         if (j?.error?.message) msg += `: ${j.error.message}`;
-      } catch {[]}
+      } catch {}
       throw new Error(msg);
     }
     const data = await resp.json();
     if (!data?.success)
-      throw new Error(data?.error?.message || "อัปโหลดรูปไม่สำเร็จ");
+      throw new Error(data?.error?.message || (m.upload_failed ? m.upload_failed() : "อัปโหลดรูปไม่สำเร็จ"));
     return data.data.image?.url || data.data.display_url || data.data.url;
   };
 
@@ -139,12 +141,12 @@ export default function VendorMenu() {
   const createMenu = async (e) => {
     e?.preventDefault();
     if (creating || uploadingImg) return;
-    if (!shopId) return alert("ไม่พบ shopId");
+    if (!shopId) return alert(m.missing_shopid ? m.missing_shopid() : "ไม่พบ shopId");
 
-    if (!name.trim()) return alert("กรุณากรอกชื่อเมนู");
-    if (price === "" || isNaN(price)) return alert("กรุณากรอกราคาให้ถูกต้อง");
-    if (!desc.trim()) return alert("กรุณากรอกรายละเอียดเมนู");
-    if (!imageFile) return alert("กรุณาเลือกรูปเมนู");
+    if (!name.trim()) return alert(m.menu_name ? m.menu_name() : "กรุณากรอกชื่อเมนู");
+    if (price === "" || isNaN(price)) return alert(m.price ? m.price() : "กรุณากรอกราคาให้ถูกต้อง");
+    if (!desc.trim()) return alert(m.description ? m.description() : "กรุณากรอกรายละเอียดเมนู");
+    if (!imageFile) return alert(m.add_to_cart_error ? m.add_to_cart_error() : "กรุณาเลือกรูปเมนู");
 
     setCreating(true);
     try {
@@ -173,7 +175,7 @@ export default function VendorMenu() {
       await fetchMenus();
     } catch (err) {
       console.error("❌ createMenu error:", err?.response?.data || err);
-      alert("สร้างเมนูไม่สำเร็จ");
+      alert(m.error_occurred ? m.error_occurred() : "สร้างเมนูไม่สำเร็จ");
     } finally {
       setUploadingImg(false);
       setCreating(false);
@@ -181,20 +183,19 @@ export default function VendorMenu() {
   };
 
   // --- edit menu ---
-  const openEdit = (m) => {
-    console.log("✏️ openEdit", m);
-    setEditing(m);
-    setEditName(m.Name || "");
-    setEditPrice(String(m.Price ?? 0));
-    setEditDesc(m.Description || "");
-    setEditImage(m.Image || "");
+  const openEdit = (mnu) => {
+    setEditing(mnu);
+    setEditName(mnu.Name || "");
+    setEditPrice(String(mnu.Price ?? 0));
+    setEditDesc(mnu.Description || "");
+    setEditImage(mnu.Image || "");
   };
 
   const saveEdit = async () => {
     if (!shopId || !editing?.ID) return;
-    if (!editName.trim()) return alert("กรุณากรอกชื่อเมนู");
+    if (!editName.trim()) return alert(m.menu_name ? m.menu_name() : "กรุณากรอกชื่อเมนู");
     if (editPrice === "" || isNaN(editPrice))
-      return alert("กรุณากรอกราคาให้ถูกต้อง");
+      return alert(m.price ? m.price() : "กรุณากรอกราคาให้ถูกต้อง");
 
     setSavingEdit(true);
     try {
@@ -208,7 +209,6 @@ export default function VendorMenu() {
         },
         { withCredentials: true }
       );
-      // อัปเดตหน้าแบบไม่รีเฟรช
       setMenus((prev) =>
         prev.map((it) =>
           it.ID === editing.ID
@@ -225,61 +225,56 @@ export default function VendorMenu() {
       setEditing(null);
     } catch (e) {
       console.error("แก้ไขเมนูไม่สำเร็จ:", e?.response?.data || e);
-      alert("แก้ไขเมนูไม่สำเร็จ");
+      alert(m.error_occurred ? m.error_occurred() : "แก้ไขเมนูไม่สำเร็จ");
     } finally {
       setSavingEdit(false);
     }
   };
 
-  // --- delete menu (ในโมดัลเดียวกัน) ---
+  // --- delete menu ---
   const deleteMenu = async () => {
     if (!shopId || !editing?.ID) {
-      return alert("ขาด shopId หรือ menuId");
+      return alert(m.missing_shopid ? m.missing_shopid() : "ขาด shopId หรือ menuId");
     }
     const menuId = String(editing.ID).trim();
-    console.log("🗑️ DELETE menu", { shopId, menuId, editing });
 
     setDeleting(true);
     try {
-      await axios.delete(
-        `/shops/${shopId}/menu/${encodeURIComponent(menuId)}`,
-        { withCredentials: true }
-      );
-      // ลบทันทีใน state
+      await axios.delete(`/shops/${shopId}/menu/${encodeURIComponent(menuId)}`, {
+        withCredentials: true,
+      });
       setMenus((prev) => prev.filter((it) => String(it.ID) !== menuId));
       setEditing(null);
     } catch (e) {
       console.error("ลบเมนูไม่สำเร็จ:", e?.response?.data || e);
-      alert(`ลบเมนูไม่สำเร็จ: ${e?.response?.data?.error || e.message}`);
+      alert(`${m.error_occurred ? m.error_occurred() : "ลบเมนูไม่สำเร็จ"}: ${e?.response?.data?.error || e.message}`);
     } finally {
       setDeleting(false);
     }
   };
 
   // --- toggle active ---
-  const toggleActive = async (m) => {
-    if (!shopId || !m?.ID) return;
-    const prevActive = !!m.Active;
+  const toggleActive = async (mnu) => {
+    if (!shopId || !mnu?.ID) return;
+    const prevActive = !!mnu.Active;
 
-    // update UI ทันที
     setMenus((prev) =>
-      prev.map((it) => (it.ID === m.ID ? { ...it, Active: !prevActive } : it))
+      prev.map((it) => (it.ID === mnu.ID ? { ...it, Active: !prevActive } : it))
     );
 
-    setTogglingId(m.ID);
+    setTogglingId(mnu.ID);
     try {
       await axios.patch(
-        `/shops/${shopId}/menu/${m.ID}`,
+        `/shops/${shopId}/menu/${mnu.ID}`,
         { active: !prevActive },
         { withCredentials: true }
       );
     } catch (e) {
-      // ย้อนกลับถ้าพัง
       setMenus((prev) =>
-        prev.map((it) => (it.ID === m.ID ? { ...it, Active: prevActive } : it))
+        prev.map((it) => (it.ID === mnu.ID ? { ...it, Active: prevActive } : it))
       );
       console.error("สลับสถานะไม่สำเร็จ:", e?.response?.data || e);
-      alert("สลับสถานะไม่สำเร็จ");
+      alert(m.error_occurred ? m.error_occurred() : "สลับสถานะไม่สำเร็จ");
     } finally {
       setTogglingId("");
     }
@@ -287,14 +282,14 @@ export default function VendorMenu() {
 
   return (
     <div className="vm-container">
-      <h1 className="vm-title">จัดการเมนูร้าน</h1>
+      <h1 className="vm-title">{m.manageMenu ? m.manageMenu() : "จัดการเมนูร้าน"}</h1>
 
       <div className="vm-CP_actions">
         <button type="button" onClick={() => setIsAddPopupOpen(true)}>
-          ➕ เพิ่มเมนู
+          {/* ➕ */} {m.add_menu ? m.add_menu() : "เพิ่มเมนู"}
         </button>
         <button type="button" onClick={fetchMenus} disabled={loading}>
-          {loading ? "กำลังโหลด..." : "🔄 โหลดเมนู"}
+          {loading ? m.loading_data() : (m.all_menus ? m.all_menus() : "โหลดเมนู")}
         </button>
       </div>
 
@@ -308,62 +303,49 @@ export default function VendorMenu() {
             marginTop: 12,
           }}
         >
-          ยังไม่มีเมนู <strong>กรุณากด “เพิ่มเมนู”</strong>
+          {m.menu_not_found ? m.menu_not_found() : "ยังไม่มีเมนู — กรุณากดเพิ่มเมนู"}
         </div>
       )}
 
-      <div
-        ref={menuListRef}
-        className="vm-table-wrap"
-        style={{ marginTop: 12 }}
-      >
+      <div ref={menuListRef} className="vm-table-wrap" style={{ marginTop: 12 }}>
         {!loading && menus.length > 0 && (
           <table className="vm-table">
             <thead style={{ background: "#f8fafc" }}>
               <tr>
-                <th style={{ textAlign: "left" }}>ชื่อเมนู</th>
-                <th style={{ textAlign: "left" }}>รายละเอียด</th>
-                <th style={{ textAlign: "center" }}>รูป</th>
-                <th style={{ textAlign: "right" }}>ราคา</th>
-                <th style={{ textAlign: "center" }}>สถานะ</th>
-                <th style={{ textAlign: "center" }}>จัดการ</th>
+                <th style={{ textAlign: "left" }}>{m.menu_name ? m.menu_name() : "ชื่อเมนู"}</th>
+                <th style={{ textAlign: "left" }}>{m.description ? m.description() : "รายละเอียด"}</th>
+                <th style={{ textAlign: "center" }}>{m.image ? m.image() : "รูป"}</th>
+                <th style={{ textAlign: "right" }}>{m.price ? m.price() : "ราคา"}</th>
+                <th style={{ textAlign: "center" }}>{m.status ? m.status() : "สถานะ"}</th>
+                <th style={{ textAlign: "center" }}>{m.manageMenu ? m.manageMenu() : "จัดการ"}</th>
               </tr>
             </thead>
             <tbody>
-              {menus.map((m) => (
-                <tr key={m.ID || `${m.Name}-${m.Price}-${Math.random()}`}>
-                  <td>{m.Name}</td>
-                  <td>{m.Description || "-"}</td>
+              {menus.map((mnu) => (
+                <tr key={mnu.ID || `${mnu.Name}-${mnu.Price}-${Math.random()}`}>
+                  <td>{mnu.Name}</td>
+                  <td>{mnu.Description || "-"}</td>
                   <td style={{ textAlign: "center" }}>
-                    {m.Image ? (
-                      <img src={m.Image} alt={m.Name} className="vm-img" />
-                    ) : (
-                      "—"
-                    )}
+                    {mnu.Image ? <img src={mnu.Image} alt={mnu.Name} className="vm-img" /> : "—"}
                   </td>
-                  <td style={{ textAlign: "right" }}>{currencyTH(m.Price)}</td>
+                  <td style={{ textAlign: "right" }}>{currencyTH(mnu.Price)}</td>
                   <td style={{ textAlign: "center" }}>
                     <label
-                      className={`vm-switch ${
-                        togglingId === m.ID ? "is-loading" : ""
-                      }`}
-                      aria-label={`สลับสถานะ ${m.Name}`}
+                      className={`vm-switch ${togglingId === mnu.ID ? "is-loading" : ""}`}
+                      aria-label={`${m.status ? m.status() : "สถานะ"} ${mnu.Name}`}
                     >
                       <input
                         type="checkbox"
-                        checked={!!m.Active}
-                        onChange={() => toggleActive(m)}
-                        disabled={togglingId === m.ID}
+                        checked={!!mnu.Active}
+                        onChange={() => toggleActive(mnu)}
+                        disabled={togglingId === mnu.ID}
                       />
                       <span className="vm-slider"></span>
                     </label>
                   </td>
                   <td style={{ textAlign: "center" }}>
-                    <button
-                      onClick={() => openEdit(m)}
-                      style={{ marginRight: 8 }}
-                    >
-                      ✏️ แก้ไข
+                    <button onClick={() => openEdit(mnu)} style={{ marginRight: 8 }}>
+                      ✏️ {m.editProfile ? m.editProfile() : "แก้ไข"}
                     </button>
                   </td>
                 </tr>
@@ -371,7 +353,7 @@ export default function VendorMenu() {
             </tbody>
           </table>
         )}
-        {loading && <p>กำลังโหลดข้อมูลเมนู...</p>}
+        {loading && <p>{m.menu_loading ? m.menu_loading() : "กำลังโหลดข้อมูลเมนู..."}</p>}
       </div>
 
       {/* Popup: เพิ่มเมนู */}
@@ -379,74 +361,69 @@ export default function VendorMenu() {
         <div className="vm-modal" onClick={() => setIsAddPopupOpen(false)}>
           <div className="vm-modal__panel" onClick={(e) => e.stopPropagation()}>
             <div className="vm-modal__header">
-              <strong>➕ เพิ่มเมนูใหม่</strong>
+              <strong>➕ {m.add_menu ? m.add_menu() : "เพิ่มเมนูใหม่"}</strong>
               <button type="button" onClick={() => setIsAddPopupOpen(false)}>
-                ✖ ปิด
+                ✖ {m.close ? m.close() : "ปิด"}
               </button>
             </div>
             <div className="vm-modal__body">
               <div className="vm-form">
                 <div className="vm-field">
-                  <label style={{ fontWeight: 600 }}>ชื่อเมนู</label>
+                  <label style={{ fontWeight: 600 }}>
+                    {m.menu_name ? m.menu_name() : "ชื่อเมนู"}
+                  </label>
                   <input
                     className="vm-input"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="เช่น ข้าวกะเพรา"
+                    placeholder={m.menu_name ? m.menu_name() : "เช่น ข้าวกะเพรา"}
                   />
                 </div>
                 <div className="vm-field">
-                  <label style={{ fontWeight: 600 }}>ราคา (บาท)</label>
+                  <label style={{ fontWeight: 600 }}>
+                    {m.price ? m.price() : "ราคา"} ({m.thb ? m.thb() : "บาท"})
+                  </label>
                   <input
                     className="vm-input"
                     type="number"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
-                    placeholder="เช่น 69"
+                    placeholder="69"
                   />
                 </div>
                 <div className="vm-field">
-                  <label style={{ fontWeight: 600 }}>รายละเอียดเมนู</label>
+                  <label style={{ fontWeight: 600 }}>
+                    {m.description ? m.description() : "รายละเอียดเมนู"}
+                  </label>
                   <textarea
                     className="vm-textarea"
                     rows="3"
                     value={desc}
                     onChange={(e) => setDesc(e.target.value)}
-                    placeholder="เช่น ข้าวกะเพราหมูกรอบราดไข่ดาว"
+                    placeholder={m.store_description ? m.store_description() : "รายละเอียดเมนู"}
                   />
                 </div>
                 <div className="vm-field">
                   <label style={{ fontWeight: 600 }}>
-                    เลือกรูปเมนู (อัป imgbb)
+                    {m.upload_image ? m.upload_image() : "เลือกรูปเมนู (อัป imgbb)"}
                   </label>
                   <input type="file" accept="image/*" onChange={onPickImage} />
                   {imagePreview && (
                     <div style={{ marginTop: 8 }}>
-                      <img
-                        src={imagePreview}
-                        alt="preview"
-                        className="vm-preview"
-                      />
+                      <img src={imagePreview} alt="preview" className="vm-preview" />
                     </div>
                   )}
                 </div>
                 <div className="vm-buttons">
-                  <button
-                    type="button"
-                    onClick={createMenu}
-                    disabled={creating || uploadingImg}
-                  >
+                  <button type="button" onClick={createMenu} disabled={creating || uploadingImg}>
                     {uploadingImg
-                      ? "📤 กำลังอัปโหลดรูป..."
+                      ? (m.uploading ? m.uploading() : "📤 กำลังอัปโหลดรูป...")
                       : creating
-                      ? "กำลังสร้าง..."
-                      : "✅ สร้างเมนู"}
+                      ? (m.loading_data ? m.loading_data() : "กำลังสร้าง...")
+                      : (m.confirm_add_cart ? m.confirm_add_cart() : "✅ สร้างเมนู")}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsAddPopupOpen(false)}
-                  >
-                    ยกเลิก
+                  <button type="button" onClick={() => setIsAddPopupOpen(false)}>
+                    {m.cancel ? m.cancel() : "ยกเลิก"}
                   </button>
                 </div>
               </div>
@@ -460,15 +437,17 @@ export default function VendorMenu() {
         <div className="vm-modal" onClick={() => setEditing(null)}>
           <div className="vm-modal__panel" onClick={(e) => e.stopPropagation()}>
             <div className="vm-modal__header">
-              <strong>✏️ แก้ไขเมนู</strong>
+              <strong>✏️ {m.editProfile ? m.editProfile() : "แก้ไขเมนู"}</strong>
               <button type="button" onClick={() => setEditing(null)}>
-                ✖ ปิด
+                ✖ {m.close ? m.close() : "ปิด"}
               </button>
             </div>
             <div className="vm-modal__body">
               <div className="vm-form">
                 <div className="vm-field">
-                  <label style={{ fontWeight: 600 }}>ชื่อเมนู</label>
+                  <label style={{ fontWeight: 600 }}>
+                    {m.menu_name ? m.menu_name() : "ชื่อเมนู"}
+                  </label>
                   <input
                     className="vm-input"
                     value={editName}
@@ -476,7 +455,9 @@ export default function VendorMenu() {
                   />
                 </div>
                 <div className="vm-field">
-                  <label style={{ fontWeight: 600 }}>ราคา (บาท)</label>
+                  <label style={{ fontWeight: 600 }}>
+                    {m.price ? m.price() : "ราคา"} ({m.thb ? m.thb() : "บาท"})
+                  </label>
                   <input
                     className="vm-input"
                     type="number"
@@ -485,7 +466,9 @@ export default function VendorMenu() {
                   />
                 </div>
                 <div className="vm-field">
-                  <label style={{ fontWeight: 600 }}>รายละเอียดเมนู</label>
+                  <label style={{ fontWeight: 600 }}>
+                    {m.description ? m.description() : "รายละเอียดเมนู"}
+                  </label>
                   <textarea
                     className="vm-textarea"
                     rows="3"
@@ -494,7 +477,9 @@ export default function VendorMenu() {
                   />
                 </div>
                 <div className="vm-field">
-                  <label style={{ fontWeight: 600 }}>รูป (URL)</label>
+                  <label style={{ fontWeight: 600 }}>
+                    {m.image ? m.image() : "รูป (URL)"}
+                  </label>
                   <input
                     className="vm-input"
                     value={editImage}
@@ -503,36 +488,24 @@ export default function VendorMenu() {
                   />
                   {editImage && (
                     <div style={{ marginTop: 8 }}>
-                      <img
-                        src={editImage}
-                        alt="preview"
-                        className="vm-preview"
-                      />
+                      <img src={editImage} alt="preview" className="vm-preview" />
                     </div>
                   )}
                 </div>
                 <div className="vm-buttons">
-                  <button
-                    type="button"
-                    onClick={saveEdit}
-                    disabled={savingEdit}
-                  >
-                    {savingEdit ? "กำลังบันทึก..." : "💾 บันทึก"}
+                  <button type="button" onClick={saveEdit} disabled={savingEdit}>
+                    {savingEdit ? (m.loading_data ? m.loading_data() : "กำลังบันทึก...") : (m.save ? m.save() : "💾 บันทึก")}
                   </button>
                   <button type="button" onClick={() => setEditing(null)}>
-                    ยกเลิก
+                    {m.cancel ? m.cancel() : "ยกเลิก"}
                   </button>
                   <button
                     type="button"
                     onClick={deleteMenu}
                     disabled={deleting}
-                    style={{
-                      marginLeft: "auto",
-                      background: "#ef4444",
-                      color: "#fff",
-                    }}
+                    style={{ marginLeft: "auto", background: "#ef4444", color: "#fff" }}
                   >
-                    {deleting ? "กำลังลบ..." : "🗑️ ลบเมนู"}
+                    {deleting ? (m.loading_data ? m.loading_data() : "กำลังลบ...") : (m.delete ? m.delete() : "🗑️ ลบเมนู")}
                   </button>
                 </div>
               </div>

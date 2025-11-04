@@ -7,14 +7,7 @@ import "@css/pages/vendorSettings.css";
 import { useNavigate } from "react-router-dom";
 
 import { AuthContext } from "@/context/ProtectRoute";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  useMap,
-  useMapEvents,
-} from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 
 // ✅ Leaflet core + CSS
 import L from "leaflet";
@@ -24,6 +17,9 @@ import "leaflet/dist/leaflet.css";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
+// ✅ i18n (ใช้เฉพาะ m)
+import { m } from "@/paraglide/messages.js";
 
 // 🔧 รีเซ็ต path ปริยาย
 delete L.Icon.Default.prototype._getIconUrl;
@@ -35,7 +31,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-const CATEGORIES = ["Main Course", "Beverage", "Fast Foods", "Appetizer", "Dessert"];
+const CATEGORIES = ["Maincourse", "Beverage", "FastFoods", "Appetizer", "Dessert"];
 const BANGKOK = [13.7563, 100.5018];
 
 /* ---------------- helpers ---------------- */
@@ -71,7 +67,7 @@ function DraggableMarker({ position, onDragEnd }) {
         },
       }}
     >
-      <Popup>ลากเพื่อเปลี่ยนตำแหน่ง</Popup>
+      <Popup>{m.map_drag_tip ? m.map_drag_tip() : "ลากเพื่อเปลี่ยนตำแหน่ง"}</Popup>
     </Marker>
   );
 }
@@ -93,6 +89,10 @@ function MapSearchBox({ onPick }) {
   const [items, setItems] = useState([]);
   const fetchIdRef = useRef(0);
 
+  // ใช้ภาษาจากเบราว์เซอร์ (fallback th,en)
+  const lang =
+    (typeof navigator !== "undefined" && navigator.language) ? `${navigator.language},en` : "th,en";
+
   useEffect(() => {
     const handle = setTimeout(async () => {
       const query = q.trim();
@@ -103,9 +103,10 @@ function MapSearchBox({ onPick }) {
       setLoading(true);
       const myId = ++fetchIdRef.current;
       try {
-        const url =
-          `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=8&q=${encodeURIComponent(query)}`;
-        const res = await fetch(url, { headers: { "Accept-Language": "th,en" } });
+        const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=8&q=${encodeURIComponent(
+          query
+        )}`;
+        const res = await fetch(url, { headers: { "Accept-Language": lang } });
         const data = await res.json();
         if (myId === fetchIdRef.current) {
           setItems(
@@ -124,7 +125,7 @@ function MapSearchBox({ onPick }) {
       }
     }, 350);
     return () => clearTimeout(handle);
-  }, [q]);
+  }, [q, lang]);
 
   return (
     <div className="vs-search">
@@ -132,7 +133,7 @@ function MapSearchBox({ onPick }) {
         <input
           className="vs-search-input"
           type="text"
-          placeholder="ค้นหาสถานที่ (ถนน, ซอย, ตำบล, จังหวัด)"
+          placeholder={m.map_search_placeholder ? m.map_search_placeholder() : "ค้นหาสถานที่ (ถนน, ซอย, ตำบล, จังหวัด)"}
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
@@ -144,6 +145,8 @@ function MapSearchBox({ onPick }) {
               setQ("");
               setItems([]);
             }}
+            aria-label={m.clear ? m.clear() : "ล้าง"}
+            title={m.clear ? m.clear() : "ล้าง"}
           >
             ✕
           </button>
@@ -160,19 +163,20 @@ function MapSearchBox({ onPick }) {
                 setQ(it.name);
                 setItems([]);
               }}
+              title={it.name}
             >
               {it.name}
             </li>
           ))}
         </ul>
       )}
-      {loading && <div className="vs-search-loading">กำลังค้นหา…</div>}
+      {loading && <div className="vs-search-loading">{m.searching ? m.searching() : "กำลังค้นหา…"}</div>}
     </div>
   );
 }
 
 export default function CreateShopWithMap() {
-  const navigate = useNavigate(); // ✅ เรียก hook ภายใน component เท่านั้น
+  const navigate = useNavigate();
   const { auth } = useContext(AuthContext);
   const vendorId = auth?.user_id || "";
 
@@ -201,27 +205,39 @@ export default function CreateShopWithMap() {
   }, [lat, lng]);
 
   const validate = () => {
-    if (!shopName.trim()) return "กรุณากรอกชื่อร้าน";
-    if (!description.trim()) return "กรุณากรอกคำอธิบายร้าน";
-    if (!type.trim()) return "กรุณาเลือกประเภทร้าน";
-    if (!vendorId) return "ไม่พบ vendor_id (กรุณาเข้าสู่ระบบใหม่)";
+    if (!shopName.trim()) return m.store_name ? m.store_name() : "กรุณากรอกชื่อร้าน";
+    if (!description.trim()) return m.store_description ? m.store_description() : "กรุณากรอกคำอธิบายร้าน";
+    if (!type.trim()) return m.Typefood ? m.Typefood() : "กรุณาเลือกประเภทร้าน";
+    if (!vendorId) return m.missing_credential ? m.missing_credential() : "ไม่พบ vendor_id (กรุณาเข้าสู่ระบบใหม่)";
     if (!Number.isFinite(toNum(lat)) || !Number.isFinite(toNum(lng)))
-      return "กรุณาเลือกตำแหน่งร้านบนแผนที่";
+      return m.store_not_set_location ? m.store_not_set_location() : "กรุณาเลือกตำแหน่งร้านบนแผนที่";
     return null;
   };
 
   const useMyLocation = () => {
     if (!("geolocation" in navigator)) {
-      return Swal.fire("ไม่รองรับ", "เบราว์เซอร์ไม่รองรับ Geolocation", "warning");
+      return Swal.fire(
+        m.not_supported ? m.not_supported() : "ไม่รองรับ",
+        m.browser_no_geolocation ? m.browser_no_geolocation() : "เบราว์เซอร์ไม่รองรับ Geolocation",
+        "warning"
+      );
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setLat(pos.coords.latitude);
         setLng(pos.coords.longitude);
-        Swal.fire("สำเร็จ", "ตั้งตำแหน่งจากอุปกรณ์แล้ว", "success");
+        Swal.fire(
+          m.success_save ? m.success_save() : "บันทึกสำเร็จ",
+          m.set_position_from_device ? m.set_position_from_device() : "ตั้งตำแหน่งจากอุปกรณ์แล้ว",
+          "success"
+        );
       },
       (err) => {
-        Swal.fire("ไม่สำเร็จ", err.message || "ไม่สามารถอ่านตำแหน่งได้", "error");
+        Swal.fire(
+          m.save_failed ? m.save_failed() : "ไม่สำเร็จ",
+          err.message || (m.cannot_read_position ? m.cannot_read_position() : "ไม่สามารถอ่านตำแหน่งได้"),
+          "error"
+        );
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
@@ -235,17 +251,30 @@ export default function CreateShopWithMap() {
   };
 
   const uploadImage = async () => {
-    if (!file) return Swal.fire("ยังไม่ได้เลือกไฟล์", "กรุณาเลือกไฟล์รูปก่อน", "info");
+    if (!file)
+      return Swal.fire(
+        m.no_file ? m.no_file() : "ยังไม่ได้เลือกไฟล์",
+        m.please_choose_file ? m.please_choose_file() : "กรุณาเลือกไฟล์รูปก่อน",
+        "info"
+      );
 
     const MAX_MB = 5;
     if (file.size > MAX_MB * 1024 * 1024) {
-      return Swal.fire("ไฟล์ใหญ่เกินไป", `จำกัด ${MAX_MB}MB`, "warning");
+      return Swal.fire(
+        m.image_too_large ? m.image_too_large() : "ไฟล์ใหญ่เกินไป",
+        (m.max_file_size ? m.max_file_size() : "จำกัด") + ` ${MAX_MB}MB`,
+        "warning"
+      );
     }
 
     try {
       const apiKey = import.meta.env.VITE_IMGBB_API_KEY;
       if (!apiKey) {
-        return Swal.fire("ยังไม่ได้ตั้งค่า", "กรุณาตั้งค่า VITE_IMGBB_API_KEY ใน .env", "warning");
+        return Swal.fire(
+          m.missing_key ? m.missing_key() : "ยังไม่ได้ตั้งค่า",
+          m.missing_imgbb_key ? m.missing_imgbb_key() : "กรุณาตั้งค่า VITE_IMGBB_API_KEY ใน .env",
+          "warning"
+        );
       }
 
       setUploading(true);
@@ -261,15 +290,23 @@ export default function CreateShopWithMap() {
       const data = await res.json();
 
       if (!data?.success || !data?.data?.url) {
-        return Swal.fire("อัปโหลดไม่สำเร็จ", "ไม่สามารถอัปโหลดไป imgbb", "error");
+        return Swal.fire(
+          m.upload_failed ? m.upload_failed() : "อัปโหลดไม่สำเร็จ",
+          m.upload_failed_detail ? m.upload_failed_detail() : "ไม่สามารถอัปโหลดไป imgbb",
+          "error"
+        );
       }
 
       setImageUrl(data.data.url);
       setFile(null);
       setPreview("");
-      Swal.fire("สำเร็จ", "อัปโหลดรูปแล้ว! ระบบใส่ URL ให้เรียบร้อย", "success");
+      Swal.fire(
+        m.uploaded ? m.uploaded() : "อัปโหลดแล้ว",
+        m.uploaded_success ? m.uploaded_success() : "ระบบใส่ URL ให้เรียบร้อย",
+        "success"
+      );
     } catch (e) {
-      Swal.fire("อัปโหลดไม่สำเร็จ", e.message || "เกิดข้อผิดพลาด", "error");
+      Swal.fire(m.upload_failed ? m.upload_failed() : "อัปโหลดไม่สำเร็จ", e.message || (m.error_occurred ? m.error_occurred() : "เกิดข้อผิดพลาด"), "error");
     } finally {
       setUploading(false);
     }
@@ -279,7 +316,7 @@ export default function CreateShopWithMap() {
   const submit = async (e) => {
     e.preventDefault();
     const msg = validate();
-    if (msg) return Swal.fire("กรอกไม่ครบ", msg, "warning");
+    if (msg) return Swal.fire(m.Agree ? m.Agree() : "กรอกไม่ครบ", msg, "warning");
 
     const payload = {
       shop_name: shopName.trim(),
@@ -295,15 +332,17 @@ export default function CreateShopWithMap() {
 
     try {
       setSubmitting(true);
-      // ❗ ปรับ path ให้ตรงกับ BE ของคุณ: ถ้า baseURL = http://localhost:8080/api ใช้ "/shops"
       await axios.post("/shop", payload, { withCredentials: true });
-      await Swal.fire("สำเร็จ", "สร้างร้านเรียบร้อยแล้ว", "success");
-      navigate("/vendor/home"); // ✅ กลับหน้า dashboard
-      // (ถ้าจะเคลียร์ฟอร์มต่อก็ทำได้ แต่ navigate แล้วไม่จำเป็น)
+      await Swal.fire(
+        m.success_save ? m.success_save() : "สำเร็จ",
+        m.saved ? m.saved() : "สร้างร้านเรียบร้อยแล้ว",
+        "success"
+      );
+      navigate("/vendor/home");
     } catch (e) {
       Swal.fire(
-        "ไม่สำเร็จ",
-        e?.response?.data?.error || e?.response?.data?.message || "สร้างร้านไม่สำเร็จ",
+        m.save_failed ? m.save_failed() : "ไม่สำเร็จ",
+        e?.response?.data?.error || e?.response?.data?.message || (m.error_occurred ? m.error_occurred() : "สร้างร้านไม่สำเร็จ"),
         "error"
       );
     } finally {
@@ -313,66 +352,71 @@ export default function CreateShopWithMap() {
 
   return (
     <div className="vs-container">
-      <h1 className="vs-title">Create Shop</h1>
-      <p className="vs-subtitle">กรอกข้อมูลให้ครบถ้วนและปักหมุดตำแหน่งร้านบนแผนที่</p>
+      <h1 className="vs-title">{m.create_shop_title ? m.create_shop_title() : "Create Shop"}</h1>
+      <p className="vs-subtitle">
+        {m.create_shop_subtitle ? m.create_shop_subtitle() : "กรอกข้อมูลให้ครบถ้วนและปักหมุดตำแหน่งร้านบนแผนที่"}
+      </p>
 
       <form className="vs-layout" onSubmit={submit}>
         {/* LEFT: รายละเอียดร้าน */}
         <div className="vs-left">
           <div className="vs-section">
-            <h3>ข้อมูลร้าน</h3>
+            <h3>{m.shop_info ? m.shop_info() : "ข้อมูลร้าน"}</h3>
 
             <label>
-              ชื่อร้าน <span className="req">*</span>
+              {m.store_name ? m.store_name() : "ชื่อร้าน"} <span className="req">*</span>
             </label>
             <input
               value={shopName}
               onChange={(e) => setShopName(e.target.value)}
-              placeholder="เช่น Fin CAFEEE"
+              placeholder={m.store_name ? m.store_name() : "เช่น Fin CAFEEE"}
             />
 
             <label>
-              คำอธิบาย <span className="req">*</span>
+              {m.store_description ? m.store_description() : "คำอธิบาย"} <span className="req">*</span>
             </label>
             <textarea
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="จุดเด่น / เมนูแนะนำ / เวลาเปิด-ปิด"
+              placeholder={m.store_description ? m.store_description() : "จุดเด่น / เมนูแนะนำ / เวลาเปิด-ปิด"}
             />
 
             <label>
-              ประเภท <span className="req">*</span>
+              {m.Typefood ? m.Typefood() : "ประเภท"} <span className="req">*</span>
             </label>
             <select value={type} onChange={(e) => setType(e.target.value)}>
-              <option value="">— เลือกประเภท —</option>
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
+              <option value="">{m.select_category ? m.select_category() : "— เลือกประเภท —"}</option>
+              {CATEGORIES.map((key) => (
+                <option key={key} value={key}>
+                  {/* แสดงป้ายแปลจาก key ที่มีใน messages */}
+                  {key === "Maincourse"
+                    ? (m.Maincourse ? m.Maincourse() : "อาหารหลัก")
+                    : key === "Beverage"
+                    ? (m.Beverage ? m.Beverage() : "เครื่องดื่ม")
+                    : key === "FastFoods"
+                    ? (m.FastFoods ? m.FastFoods() : "อาหารจานด่วน")
+                    : key === "Appetizer"
+                    ? (m.Appetizer ? m.Appetizer() : "ของกินเล่น")
+                    : (m.Dessert ? m.Dessert() : "ของหวาน")}
                 </option>
               ))}
             </select>
 
             {/* อัปโหลดรูปภาพ */}
-            <label>รูปภาพหน้าร้าน</label>
+            <label>{m.shop_image ? m.shop_image() : "รูปภาพหน้าร้าน"}</label>
             <div className="vs-image-box" style={{ alignItems: "center" }}>
               <img
                 src={preview || imageUrl || "https://via.placeholder.com/200x200?text=No+Image"}
                 alt="preview"
                 className="vs-image"
-                style={{
-                  width: 200,
-                  height: 200,
-                  objectFit: "cover",
-                  borderRadius: 12,
-                  border: "1px solid #ddd",
-                }}
+                style={{ width: 200, height: 200, objectFit: "cover", borderRadius: 12, border: "1px solid #ddd" }}
               />
               <div className="vs-image-controls">
                 <input type="file" accept="image/*" onChange={onFileChange} />
                 <div className="vs-row">
                   <button type="button" onClick={uploadImage} disabled={!file || uploading}>
-                    {uploading ? "กำลังอัปโหลด..." : "Upload รูป"}
+                    {uploading ? (m.uploading ? m.uploading() : "กำลังอัปโหลด...") : (m.upload_image ? m.upload_image() : "Upload รูป")}
                   </button>
                   <button
                     type="button"
@@ -381,10 +425,10 @@ export default function CreateShopWithMap() {
                       setPreview("");
                     }}
                   >
-                    ล้างไฟล์
+                    {m.clear ? m.clear() : "ล้างไฟล์"}
                   </button>
                 </div>
-                <small>หรือวาง URL เอง:</small>
+                <small>{m.or_paste_image_url ? m.or_paste_image_url() : "หรือวาง URL เอง:"}</small>
                 <input
                   type="url"
                   placeholder="https://..."
@@ -400,13 +444,8 @@ export default function CreateShopWithMap() {
         <div className="vs-right">
           <div className="vs-map-card">
             <div className="vs-map-header">
-              <h3>แผนที่ร้าน — คลิกเพื่อวางหมุด / ลากเพื่อเปลี่ยนตำแหน่ง</h3>
-              <MapSearchBox
-                onPick={([la, ln]) => {
-                  setLat(la);
-                  setLng(ln);
-                }}
-              />
+              <h3>{m.map_header_title ? m.map_header_title() : "แผนที่ร้าน — คลิกเพื่อวางหมุด / ลากเพื่อเปลี่ยนตำแหน่ง"}</h3>
+              <MapSearchBox onPick={([la, ln]) => { setLat(la); setLng(ln); }} />
             </div>
 
             <div className="vs-map-wrap">
@@ -416,51 +455,35 @@ export default function CreateShopWithMap() {
                   attribution="&copy; OpenStreetMap"
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                <ClickToPlace
-                  onPlace={([la, ln]) => {
-                    setLat(la);
-                    setLng(ln);
-                  }}
-                />
+                <ClickToPlace onPlace={([la, ln]) => { setLat(la); setLng(ln); }} />
                 {Number.isFinite(toNum(lat)) && Number.isFinite(toNum(lng)) && (
                   <DraggableMarker
                     position={[toNum(lat), toNum(lng)]}
-                    onDragEnd={([la, ln]) => {
-                      setLat(la);
-                      setLng(ln);
-                    }}
+                    onDragEnd={([la, ln]) => { setLat(la); setLng(ln); }}
                   />
                 )}
               </MapContainer>
             </div>
 
             <div className="vs-map-footer">
-              <small>คลิกแผนที่เพื่อวางหมุด หรือ ลากหมุดเพื่อเปลี่ยนตำแหน่ง</small>
+              <small>{m.map_footer_tip ? m.map_footer_tip() : "คลิกแผนที่เพื่อวางหมุด หรือ ลากหมุดเพื่อเปลี่ยนตำแหน่ง"}</small>
               <div className="vs-map-coords">
                 <div className="vs-map-coord">
-                  <label>Lat</label>
-                  <input
-                    type="text"
-                    readOnly
-                    value={Number.isFinite(Number(lat)) ? Number(lat).toFixed(6) : ""}
-                  />
+                  <label>{m.lat ? m.lat() : "Lat"}</label>
+                  <input type="text" readOnly value={Number.isFinite(Number(lat)) ? Number(lat).toFixed(6) : ""} />
                 </div>
                 <div className="vs-map-coord">
-                  <label>Lng</label>
-                  <input
-                    type="text"
-                    readOnly
-                    value={Number.isFinite(Number(lng)) ? Number(lng).toFixed(6) : ""}
-                  />
+                  <label>{m.lng ? m.lng() : "Lng"}</label>
+                  <input type="text" readOnly value={Number.isFinite(Number(lng)) ? Number(lng).toFixed(6) : ""} />
                 </div>
               </div>
 
               <div className="vs-row" style={{ marginTop: ".25rem" }}>
                 <button type="button" onClick={useMyLocation}>
-                  ใช้ตำแหน่งฉันตอนนี้
+                  {m.use_my_location ? m.use_my_location() : "ใช้ตำแหน่งฉันตอนนี้"}
                 </button>
                 <button type="submit" className="vs-primary" disabled={submitting}>
-                  {submitting ? "กำลังสร้าง..." : "สร้างร้าน"}
+                  {submitting ? (m.loading_data ? m.loading_data() : "กำลังสร้าง...") : (m.create_shop ? m.create_shop() : "สร้างร้าน")}
                 </button>
               </div>
             </div>
