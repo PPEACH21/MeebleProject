@@ -102,7 +102,7 @@
 }
 
 /* small button in qty box */
-.btn1 {
+.Cbtn1 {
   width: 32px;
   height: 32px;
   border: none;
@@ -117,8 +117,8 @@
   box-shadow: var(--cp-shadow);
   transition: background .15s ease, transform .06s ease;
 }
-.btn1:hover { background: #f0f0f0; }
-.btn1:active { transform: translateY(1px); }
+.Cbtn1:hover { background: #f0f0f0; }
+.Cbtn1:active { transform: translateY(1px); }
 
 /* input number */
 .CP_qtyInput {

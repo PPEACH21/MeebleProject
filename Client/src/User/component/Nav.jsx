@@ -72,7 +72,7 @@ const DropdownProfile = ({ logout, avatar, username, email }) => {
           style={{
             position: "absolute",
             right: 0,
-            top: "calc(100% + 8px)",
+            top: 0,
             background: "#fff",
             color: "#111827",
             borderRadius: 12,
@@ -83,7 +83,6 @@ const DropdownProfile = ({ logout, avatar, username, email }) => {
         >
           <div
             style={{
-              width: "100%",
               height: "100px",
               display: "flex",
               flexDirection: "column",

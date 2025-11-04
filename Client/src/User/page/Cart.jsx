@@ -224,7 +224,7 @@ export default function Cart() {
                     <div className="CP_qtyBox">
                       {/* − : ยิง API ทุกครั้ง */}
                       <button
-                        className="btn1"
+                        className="Cbtn1"
                         style={{ padding: "2px 10px" }}
                         onClick={() => updateQty(it.id, toNum(it.qty) - 1)} // ★
                       >
@@ -259,7 +259,7 @@ export default function Cart() {
 
                       {/* + : ยิง API ทุกครั้ง */}
                       <button
-                        className="btn1"
+                        className="Cbtn1"
                         style={{ padding: "2px 10px" }}
                         onClick={() => updateQty(it.id, toNum(it.qty) + 1)} // ★
                       >
