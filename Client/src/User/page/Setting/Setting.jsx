@@ -64,9 +64,6 @@ const SettingPage = ()=>{
                 <button className="boxsetting" style={{justifyContent:"center",color:"red"}} onClick={()=>logout()}> 
                     <p>{m.logout()}</p>
                 </button>
-                <button className="boxsetting" style={{justifyContent:"center",textAlign:'center',color:"red"}} onClick={()=>Navigation("/Delete Account")}> 
-                    <p>{m.delete()} {m.account()}</p>
-                </button>
             </div>
         </div>
     )

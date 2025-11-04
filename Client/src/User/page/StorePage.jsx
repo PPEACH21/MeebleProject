@@ -248,7 +248,7 @@ export default function StorePage() {
                   alignItems: "center",
                 }}
               >
-                <p>{m.sort()}</p>
+                <h3>{m.sort()}</h3>
 
                 <button
                   className="btn1"
@@ -256,7 +256,7 @@ export default function StorePage() {
                     setSortActive(sortactive === "open" ? "" : "open")
                   }
                   style={{
-                    padding: "0px 40px",
+                    padding: "20px 80px",
                     backgroundColor: sortactive === "open" ? "#FFA467" : "#fff",
                     color: sortactive === "open" ? "#fff" : "#FFA467",
                   }}
@@ -270,7 +270,7 @@ export default function StorePage() {
                     setSortActive(sortactive === "rate" ? "" : "rate")
                   }
                   style={{
-                    padding: "0px 40px",
+                    padding: "20px 80px",
                     backgroundColor: sortactive === "rate" ? "#FFA467" : "#fff",
                     color: sortactive === "rate" ? "#fff" : "#FFA467",
                   }}
@@ -284,16 +284,12 @@ export default function StorePage() {
                     setSortActive(sortactive === "near" ? "" : "near")
                   }
                   style={{
-                    padding: "0px 40px",
+                    padding: "20px 80px",
                     backgroundColor: sortactive === "near" ? "#FFA467" : "#fff",
                     color: sortactive === "near" ? "#fff" : "#FFA467",
                   }}
                 >
                   {m.near()}
-                </button>
-
-                <button className="btn1" style={{ width: "30%" }}>
-                  {m.pirce()} V
                 </button>
               </div>
             </div>
