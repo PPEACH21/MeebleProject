@@ -870,11 +870,11 @@ func getUserNameByID(ctx context.Context, db *firestore.Client, userId string) (
 }
 
 var allowedTypes = map[string]bool{
-	"Main Course": true,
-	"Beverage":    true,
-	"Fast Foods":  true,
-	"Appetizer":   true,
-	"Dessert":     true,
+	"MainCourse": true,
+	"Beverage":   true,
+	"FastFoods":  true,
+	"Appetizer":  true,
+	"Dessert":    true,
 }
 
 // PUT /api/shops/:id
@@ -967,10 +967,16 @@ func UpdateShopSettings(c *fiber.Ctx) error {
 func normalizeType(s string) string {
 	s = strings.TrimSpace(s)
 	switch s {
-	case "Main Course", "maincourse", "Main course", "main course":
-		return "Main course"
-	case "FastFoods", "fastfoods", "Fast food", "Fastfood", "fast food":
-		return "Fast food"
+	case "Main Course", "maincourse", "Main course", "main course", "อาหารหลัก":
+		return "MainCourse"
+	case "FastFoods", "fastfoods", "Fast food", "Fastfood", "fast food", "อาหารจานด่วน":
+		return "FastFoods"
+	case "น้้ำดื่ม":
+		return "Beverage"
+	case "ของหวาน":
+		return "Dessert"
+	case "ของกินเล่น":
+		return "Appetizer"
 	}
 	// คืนค่าตามเดิมสำหรับค่าอื่น ๆ เพื่อเช็ค allowedTypes ต่อ
 	// หรือจะแม็พเพิ่มตาม category จริงในระบบคุณ
