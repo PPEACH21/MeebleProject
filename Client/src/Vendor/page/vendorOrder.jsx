@@ -1,8 +1,10 @@
+// src/User/page/VendorOrders.jsx
 import { useEffect, useMemo, useState, useContext } from "react";
 import axios from "@/api/axios";
 import { useNavigate } from "react-router-dom";
 import "@css/pages/VendorOrders.css";
 import { AuthContext } from "@/context/ProtectRoute";
+import { m } from "@/paraglide/messages.js";
 
 /* ---------- helpers ---------- */
 const toDate = (v) => {
@@ -46,9 +48,7 @@ export default function VendorOrders() {
 
   const vendorId = useMemo(() => auth?.user_id || auth?.id || "", [auth]);
 
-  // 1) หา shopId แบบเดียวกับ VHomePage:
-  //    - เอาจาก localStorage.currentShopId ก่อน
-  //    - ถ้าไม่เจอ: ยิง /shops/by-vendor/:vendorId แล้วตั้ง currentShopId
+  // 1) หา shopId
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -56,7 +56,6 @@ export default function VendorOrders() {
         setLoading(true);
         setErr("");
 
-        // A. จาก localStorage ก่อน
         const fromLocal = localStorage.getItem("currentShopId");
         if (fromLocal) {
           if (!alive) return;
@@ -64,9 +63,8 @@ export default function VendorOrders() {
           return;
         }
 
-        // B. ถ้าไม่มีใน localStorage และเรารู้ vendorId → ไปดึงจาก backend
         if (!vendorId) {
-          setErr("ยังไม่พบข้อมูลผู้ใช้ (vendorId)");
+          setErr(m.not_found_shopid_hint());
           return;
         }
 
@@ -74,7 +72,6 @@ export default function VendorOrders() {
           withCredentials: true,
         });
 
-        // รองรับสองรูปแบบที่ VHomePage รองรับ
         let resolvedShop = null;
         if (res.data?.hasShop && res.data.shop) {
           resolvedShop = res.data.shop;
@@ -82,11 +79,9 @@ export default function VendorOrders() {
           resolvedShop = res.data.shops[0];
         }
 
-        const id =
-          resolvedShop?.id || resolvedShop?.ID || resolvedShop?.Id || "";
-
+        const id = resolvedShop?.id || resolvedShop?.ID || resolvedShop?.Id || "";
         if (!id) {
-          setErr("ไม่พบร้านที่คุณเป็นเจ้าของ");
+          setErr(m.not_found_shopid_hint());
           return;
         }
 
@@ -94,8 +89,8 @@ export default function VendorOrders() {
         if (!alive) return;
         setShopId(id);
       } catch (e) {
-        console.error("❌ [VendorOrders] ค้นหาร้านจาก vendor ล้มเหลว:", e?.response?.data || e.message);
-        setErr(e?.response?.data?.error || e.message || "load shop error");
+        console.error("❌ [VendorOrders] load shop error:", e?.response?.data || e.message);
+        setErr(e?.response?.data?.error || e.message || m.load_orders_error());
       } finally {
         if (alive) setLoading(false);
       }
@@ -105,7 +100,7 @@ export default function VendorOrders() {
     };
   }, [vendorId]);
 
-  // 2) เมื่อมี shopId แล้ว ค่อยโหลดออเดอร์ของร้าน
+  // 2) โหลดออเดอร์ของร้าน
   useEffect(() => {
     if (!shopId) return;
     let alive = true;
@@ -120,14 +115,11 @@ export default function VendorOrders() {
         });
 
         const data = Array.isArray(res.data) ? res.data : [];
-
-        // เผื่อฝั่ง BE ส่งสถานะหลุดมา กรองเฉพาะ prepare/ongoing
         const filtered = data.filter((o) => {
           const st = canonicalStatus(o?.status);
           return st === "prepare" || st === "ongoing";
         });
 
-        // เรียงล่าสุดก่อน
         filtered.sort((a, b) => {
           const ta = toDate(a.createdAt) || toDate(a.raw?.createdAt) || new Date(0);
           const tb = toDate(b.createdAt) || toDate(b.raw?.createdAt) || new Date(0);
@@ -137,9 +129,9 @@ export default function VendorOrders() {
         if (!alive) return;
         setOrders(filtered);
       } catch (e) {
-        console.error("❌ [VendorOrders] โหลดออเดอร์ร้านล้มเหลว:", e?.response?.data || e.message);
+        console.error("❌ [VendorOrders] load orders error:", e?.response?.data || e.message);
         if (!alive) return;
-        setErr(e?.response?.data?.error || e.message || "load orders error");
+        setErr(e?.response?.data?.error || e.message || m.load_orders_error());
         setOrders([]);
       } finally {
         if (alive) setLoading(false);
@@ -163,34 +155,39 @@ export default function VendorOrders() {
       ? "v-chip--ongoing"
       : "v-chip--prepare";
 
-    const chipText = isSuccess ? "สำเร็จ" : isOngoing ? "กำลังจัดส่ง" : "กำลังเตรียม";
+    const chipText = isSuccess
+      ? m.status_done()
+      : isOngoing
+      ? m.status_shipping()
+      : m.status_preparing();
 
-    const created = order?.createdAt || order?.raw?.createdAt || order?.updatedAt || order?.raw?.updatedAt;
+    const created =
+      order?.createdAt || order?.raw?.createdAt || order?.updatedAt || order?.raw?.updatedAt;
     const customer =
       order?.raw?.customerName ||
       order?.customerName ||
       order?.raw?.username ||
       order?.username ||
-      "ไม่ระบุ";
+      m.unknown_shop(); // ถ้าอยากแยกคีย์เฉพาะ "ไม่ระบุ" ให้เพิ่ม m.unknown_value()
 
     return (
       <div
         className="v-card"
         role="button"
         onClick={() => navigate(`/vendor/orders/${encodeURIComponent(order.id)}`)}
-        title="ดูรายละเอียดออเดอร์"
+        title={m.view_order_detail()}
       >
         <div className="v-card__left">
           <div className="v-field">
-            <div className="v-label">Order ID</div>
+            <div className="v-label">{m.order_id()}</div>
             <div className="v-value">{order.orderId || order.id}</div>
           </div>
           <div className="v-field">
-            <div className="v-label">ลูกค้า</div>
+            <div className="v-label">{m.customer()}</div>
             <div className="v-value">{customer}</div>
           </div>
           <div className="v-field">
-            <div className="v-label">วันที่</div>
+            <div className="v-label">{m.date_label()}</div>
             <div className="v-value">{formatThaiBuddhist(created)}</div>
           </div>
         </div>
@@ -202,20 +199,22 @@ export default function VendorOrders() {
   return (
     <div className="v-wrap">
       <div className="v-container">
-        <h1 className="v-title">ออเดอร์ทั้งหมดของร้าน</h1>
+        <h1 className="v-title">{m.orders_title_shop()}</h1>
 
         {!shopId && !loading && (
-          <p className="v-empty">
-            ยังไม่พบ <code>shopId</code> — กรุณาเข้าไปที่หน้า “หน้าหลักร้าน” เพื่อเลือกร้านก่อน
+          <p className="v-empty">{m.not_found_shopid_hint()}</p>
+        )}
+
+        {loading && <p className="v-loading">{m.loading_data()}</p>}
+
+        {!loading && err && (
+          <p className="v-error">
+            {m.error_occurred()}: {String(err)}
           </p>
         )}
 
-        {loading && <p className="v-loading">กำลังโหลดข้อมูล…</p>}
-
-        {!loading && err && <p className="v-error">เกิดข้อผิดพลาด: {String(err)}</p>}
-
         {!loading && !err && shopId && orders.length === 0 && (
-          <p className="v-empty">ยังไม่มีออเดอร์ในคิว</p>
+          <p className="v-empty">{m.orders_empty_queue()}</p>
         )}
 
         {!loading && !err && orders.length > 0 && (

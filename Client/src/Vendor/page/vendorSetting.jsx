@@ -1,3 +1,4 @@
+// src/User/page/VendorSettings.jsx
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import axios from "@/api/axios";
 import Swal from "sweetalert2";
@@ -13,46 +14,37 @@ import {
   useMap,
   useMapEvents,
 } from "react-leaflet";
-
-// ✅ Leaflet core + CSS (สำคัญมาก)
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// ✅ ให้ Vite จัดการ asset ไอคอนแล้วอ้าง path ที่ถูกต้อง
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
-// 🔧 รีเซ็ต method เก่า (กันไปดึง path ปริยายที่ผิด)
-delete L.Icon.Default.prototype._getIconUrl;
+// ✅ i18n
+import { m } from "@/paraglide/messages.js";
 
-// ✅ ตั้ง default icon ให้ Marker ทั้งแอป
+// reset leaflet icon path
+delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
   iconUrl: markerIcon,
   shadowUrl: markerShadow,
 });
 
-// หมวดหมู่ตัวอย่าง
+// หมวดหมู่
 const CATEGORIES = [
-  "Main Course",
-  "Beverage",
-  "Fast Foods",
-  "Appetizer",
-  "Dessert",
+  { key: "Maincourse", label: () => m.Maincourse() },
+  { key: "Beverage", label: () => m.Beverage() },
+  { key: "FastFoods", label: () => m.FastFoods() },
+  { key: "Appetizer", label: () => m.Appetizer() },
+  { key: "Dessert", label: () => m.Dessert() },
 ];
 
-// ค่ากรุงเทพเป็น fallback/ค่าเริ่มต้น
 const BANGKOK = [13.7563, 100.5018];
-
-/* ---------------- helpers ---------------- */
 const pickId = (obj) => obj?.id || obj?.ID || obj?.Id || "";
-const toNum = (v, d = NaN) => {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : d;
-};
+const toNum = (v, d = NaN) => (Number.isFinite(Number(v)) ? Number(v) : d);
 
-// คลิกแผนที่เพื่อวางหมุด
 function ClickToPlace({ onPlace }) {
   useMapEvents({
     click(e) {
@@ -62,7 +54,6 @@ function ClickToPlace({ onPlace }) {
   return null;
 }
 
-// ลากหมุดเพื่อเปลี่ยนพิกัด
 function DraggableMarker({ position, onDragEnd }) {
   const [pos, setPos] = useState(position);
   useEffect(() => setPos(position), [position]);
@@ -79,12 +70,11 @@ function DraggableMarker({ position, onDragEnd }) {
         },
       }}
     >
-      <Popup>ลากเพื่อเปลี่ยนตำแหน่ง</Popup>
+      <Popup>{m.map_drag_tip()}</Popup>
     </Marker>
   );
 }
 
-// ควบคุมแผนที่ให้เลื่อนไปยังพิกัดล่าสุด (เช่นหลังค้นหา/เลือกสถานที่)
 function MapFlyTo({ center, zoom = 15 }) {
   const map = useMap();
   useEffect(() => {
@@ -99,14 +89,18 @@ function MapFlyTo({ center, zoom = 15 }) {
   return null;
 }
 
-// ช่องค้นหา (ใช้ OSM Nominatim)
 function MapSearchBox({ onPick }) {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState([]);
   const fetchIdRef = useRef(0);
 
-  // debounce เล็ก ๆ
+  // ✅ ใช้ navigator.language แทน
+  const lang =
+    typeof navigator !== "undefined" && navigator.language
+      ? `${navigator.language},en`
+      : "th,en";
+
   useEffect(() => {
     const handle = setTimeout(async () => {
       const query = q.trim();
@@ -117,16 +111,10 @@ function MapSearchBox({ onPick }) {
       setLoading(true);
       const myId = ++fetchIdRef.current;
       try {
-        // Nominatim: ไม่ต้องใช้ key (ระวัง rate limit)
         const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=8&q=${encodeURIComponent(
           query
         )}`;
-        const res = await fetch(url, {
-          headers: {
-            // แนะนำให้ตั้ง user-agent ของโปรเจกต์คุณเองใน production
-            "Accept-Language": "th,en",
-          },
-        });
+        const res = await fetch(url, { headers: { "Accept-Language": lang } });
         const data = await res.json();
         if (myId === fetchIdRef.current) {
           setItems(
@@ -138,14 +126,13 @@ function MapSearchBox({ onPick }) {
             }))
           );
         }
-      } catch (e) {
-        // เงียบ ๆ พอ
+      } catch {
       } finally {
         if (myId === fetchIdRef.current) setLoading(false);
       }
     }, 350);
     return () => clearTimeout(handle);
-  }, [q]);
+  }, [q, lang]);
 
   return (
     <div className="vs-search">
@@ -153,7 +140,7 @@ function MapSearchBox({ onPick }) {
         <input
           className="vs-search-input"
           type="text"
-          placeholder="ค้นหาสถานที่ (ถนน, ตรอก, ตำบล, เขต ฯลฯ)"
+          placeholder={m.map_search_placeholder()}
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
@@ -164,6 +151,8 @@ function MapSearchBox({ onPick }) {
               setQ("");
               setItems([]);
             }}
+            aria-label={m.clear()}
+            title={m.clear()}
           >
             ✕
           </button>
@@ -187,7 +176,7 @@ function MapSearchBox({ onPick }) {
           ))}
         </ul>
       )}
-      {loading && <div className="vs-search-loading">กำลังค้นหา…</div>}
+      {loading && <div className="vs-search-loading">{m.searching()}</div>}
     </div>
   );
 }
@@ -200,22 +189,17 @@ export default function VendorSettings() {
   );
   const [loading, setLoading] = useState(true);
 
-  // form states
   const [placeholderName, setPlaceholderName] = useState("");
   const [shopName, setShopName] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState("");
   const [imageUrl, setImageUrl] = useState("");
 
-  // geo states
   const [lat, setLat] = useState(null);
   const [lng, setLng] = useState(null);
-
-  // image
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState("");
 
-  // ===== โหลดร้านจาก by-vendor =====
   useEffect(() => {
     const load = async () => {
       if (!userId) return setLoading(false);
@@ -234,50 +218,39 @@ export default function VendorSettings() {
         }
 
         const target = shops.find((s) => pickId(s) === currentId) || shops[0];
-        const id = pickId(target);
-
         const name = target.shop_name || target.name || "";
         const desc = target.description || "";
         const t = target.type || "";
         const img = target.image || "";
-
-        // รองรับหลายรูปแบบ field ที่เก็บพิกัด
         const _lat =
           target.lat ??
           target.latitude ??
           target?.location?.lat ??
-          target?.geopoint?.lat ??
-          null;
+          target?.geopoint?.lat;
         const _lng =
           target.lng ??
           target.longitude ??
           target?.location?.lng ??
-          target?.geopoint?.lng ??
-          null;
+          target?.geopoint?.lng;
 
         setPlaceholderName(name);
-        setShopName("");
         setDescription(desc);
         setType(t);
         setImageUrl(img);
         setLat(_lat);
         setLng(_lng);
-      } catch (e) {
-        // เงียบพอ
+      } catch {
       } finally {
         setLoading(false);
       }
     };
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
-  
   const mapCenter = useMemo(() => {
-    if (Number.isFinite(toNum(lat)) && Number.isFinite(toNum(lng))) {
+    if (Number.isFinite(toNum(lat)) && Number.isFinite(toNum(lng)))
       return [toNum(lat), toNum(lng)];
-    }
-    return BANGKOK; 
+    return BANGKOK;
   }, [lat, lng]);
 
   const onFileChange = (e) => {
@@ -286,127 +259,99 @@ export default function VendorSettings() {
     setPreview(f ? URL.createObjectURL(f) : "");
   };
 
-  // ⭐ อัปโหลดรูปขึ้น imgbb โดยตรง (ไม่เรียก backend)
   const uploadImage = async () => {
-    if (!file) return Swal.fire("No file", "กรุณาเลือกไฟล์รูปก่อน", "info");
+    if (!file) return Swal.fire(m.no_file(), m.please_choose_file(), "info");
     try {
       const apiKey = import.meta.env.VITE_IMGBB_API_KEY;
-      if (!apiKey) {
-        return Swal.fire(
-          "Missing key",
-          "ยังไม่ได้ตั้งค่า VITE_IMGBB_API_KEY ใน frontend",
-          "warning"
-        );
-      }
-
+      if (!apiKey)
+        return Swal.fire(m.missing_key(), m.missing_imgbb_key(), "warning");
       const form = new FormData();
       form.append("key", apiKey);
       form.append("image", file);
-
       const res = await fetch("https://api.imgbb.com/1/upload", {
         method: "POST",
         body: form,
       });
       const data = await res.json();
-
-      if (!data?.success || !data?.data?.url) {
-        return Swal.fire(
-          "Upload failed",
-          "ไม่สามารถอัปโหลดรูปไป imgbb ได้",
-          "error"
-        );
-      }
-
-      const url = data.data.url;
-      setImageUrl(url);
+      if (!data?.success || !data?.data?.url)
+        return Swal.fire(m.upload_failed(), m.upload_failed_detail(), "error");
+      setImageUrl(data.data.url);
       setFile(null);
       setPreview("");
-      Swal.fire("Uploaded", "อัปโหลดรูปเรียบร้อย", "success");
+      Swal.fire(m.uploaded(), m.uploaded_success(), "success");
     } catch (e) {
-      Swal.fire("Upload failed", e.message || "เกิดข้อผิดพลาด", "error");
+      Swal.fire(m.upload_failed(), e.message || m.error_occurred(), "error");
     }
   };
 
   const useMyLocation = () => {
-    if (!("geolocation" in navigator)) {
+    if (!("geolocation" in navigator))
       return Swal.fire(
-        "ไม่รองรับ",
-        "เบราว์เซอร์ไม่รองรับ Geolocation",
+        m.not_supported(),
+        m.browser_no_geolocation(),
         "warning"
       );
-    }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setLat(pos.coords.latitude);
         setLng(pos.coords.longitude);
-        Swal.fire("สำเร็จ", "ตั้งตำแหน่งจากอุปกรณ์แล้ว", "success");
+        Swal.fire(m.success_save(), m.set_position_from_device(), "success");
       },
-      (err) => {
+      (err) =>
         Swal.fire(
-          "ไม่สำเร็จ",
-          err.message || "ไม่สามารถอ่านตำแหน่งได้",
+          m.save_failed(),
+          err.message || m.cannot_read_position(),
           "error"
-        );
-      },
+        ),
       { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
   const saveSettings = async () => {
     if (!shopId)
-      return Swal.fire("ไม่พบร้าน", "ยังไม่ได้เลือกหรือโหลดร้าน", "warning");
-
+      return Swal.fire(m.shop_not_found(), m.please_select_shop(), "warning");
     const payload = {
       shop_name: shopName || placeholderName,
       description,
       type,
       image: imageUrl || undefined,
     };
-
-    // แนบพิกัดหากมี
     const _lat = toNum(lat, NaN);
     const _lng = toNum(lng, NaN);
     if (Number.isFinite(_lat) && Number.isFinite(_lng)) {
       payload.location = { lat: _lat, lng: _lng };
-      payload.address = {
-        latitude: _lat,
-        longitude: _lng,
-      };
+      payload.address = { latitude: _lat, longitude: _lng };
     }
-
     try {
       await axios.put(`/shops/${shopId}`, payload, { withCredentials: true });
-      Swal.fire("Saved", "บันทึกการตั้งค่าร้าน + ตำแหน่ง เรียบร้อย", "success");
-      console.log(payload);
+      Swal.fire(m.saved(), m.saved_shop_settings(), "success");
       setPlaceholderName(shopName || placeholderName);
       setShopName("");
     } catch (e) {
       Swal.fire(
-        "Save failed",
-        e?.response?.data?.error || "เกิดข้อผิดพลาด",
+        m.save_failed(),
+        e?.response?.data?.error || m.error_occurred(),
         "error"
       );
     }
   };
 
-  if (loading) return <div className="vs-loading">Loading...</div>;
+  if (loading) return <div className="vs-loading">{m.loading_data()}</div>;
 
   return (
     <div className="vs-container">
-      <h1 className="vs-title">Shop Settings</h1>
-      <p className="vs-subtitle">หน้าตั้งค่าร้านอาหารของคุณ</p>
+      <h1 className="vs-title">{m.shop_settings_title()}</h1>
+      <p className="vs-subtitle">{m.shop_settings_subtitle()}</p>
 
       {!shopId ? (
         <div className="vs-no-shop">
-          <p>ยังไม่มีร้าน กรุณาเข้าสู่ระบบหรือสร้างร้านก่อน</p>
+          <p>{m.no_shop_message()}</p>
         </div>
       ) : (
         <div className="vs-layout">
-          {/* LEFT: รายละเอียดร้าน */}
           <div className="vs-left">
-            {/* รูปร้าน */}
             <div className="vs-section">
-              <h3>รูปภาพร้าน</h3>
+              <h3>{m.shop_image()}</h3>
               <div className="vs-image-box">
                 <img
                   src={
@@ -421,7 +366,7 @@ export default function VendorSettings() {
                   <input type="file" accept="image/*" onChange={onFileChange} />
                   <div className="vs-row">
                     <button onClick={uploadImage} disabled={!file}>
-                      Upload รูป
+                      {m.upload_image()}
                     </button>
                     <button
                       onClick={() => {
@@ -429,10 +374,10 @@ export default function VendorSettings() {
                         setPreview("");
                       }}
                     >
-                      ยกเลิก
+                      {m.cancel()}
                     </button>
                   </div>
-                  <small>หรือวาง URL รูปเอง:</small>
+                  <small>{m.or_paste_image_url()}</small>
                   <input
                     type="url"
                     placeholder="https://..."
@@ -443,46 +388,37 @@ export default function VendorSettings() {
               </div>
             </div>
 
-            {/* ข้อมูลร้าน */}
             <div className="vs-section">
-              <h3>ข้อมูลร้าน</h3>
-
-              <label>ชื่อร้าน</label>
+              <h3>{m.shop_info()}</h3>
+              <label>{m.store_name()}</label>
               <input
                 value={shopName}
-                placeholder={placeholderName || "ชื่อร้าน"}
+                placeholder={placeholderName || m.store_name()}
                 onChange={(e) => setShopName(e.target.value)}
               />
-
-              <label>คำอธิบาย</label>
+              <label>{m.description()}</label>
               <textarea
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="รายละเอียดร้านของคุณ..."
+                placeholder={m.store_description()}
               />
-
-              <label>ประเภทอาหาร</label>
+              <label>{m.Typefood()}</label>
               <select value={type} onChange={(e) => setType(e.target.value)}>
-                <option value="">— เลือกประเภท —</option>
+                <option value="">{m.select_category()}</option>
                 {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
+                  <option key={c.key} value={c.label()}>
+                    {c.label()}
                   </option>
                 ))}
               </select>
             </div>
           </div>
 
-          {/* RIGHT: แผนที่ปักหมุด */}
           <div className="vs-right">
             <div className="vs-map-card">
               <div className="vs-map-header">
-                <h3>
-                  แผนที่ร้าน (OpenStreetMap) — คลิกเพื่อวางหมุด /
-                  ลากเพื่อเปลี่ยนตำแหน่ง
-                </h3>
-                {/* 🔎 กล่องค้นหา */}
+                <h3>{m.map_header_title()}</h3>
                 <MapSearchBox
                   onPick={([la, ln]) => {
                     setLat(la);
@@ -498,10 +434,7 @@ export default function VendorSettings() {
                   scrollWheelZoom
                   className="vs-map"
                 >
-                  {/* ย้าย/บินไปยังพิกัดล่าสุดเมื่อ lat/lng เปลี่ยน */}
                   <MapFlyTo center={mapCenter} zoom={15} />
-
-                  {/* ✅ OpenStreetMap TileLayer */}
                   <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -525,15 +458,11 @@ export default function VendorSettings() {
                 </MapContainer>
               </div>
 
-              {/* Lat/Lng ใต้แผนที่ + ปุ่มใช้งาน */}
               <div className="vs-map-footer">
-                <small>
-                  คลิกแผนที่เพื่อวางหมุด หรือ ลากหมุดเพื่อเปลี่ยนตำแหน่ง
-                </small>
-
+                <small>{m.map_footer_tip()}</small>
                 <div className="vs-map-coords">
                   <div className="vs-map-coord">
-                    <label>Lat</label>
+                    <label>{m.lat()}</label>
                     <input
                       type="text"
                       readOnly
@@ -544,9 +473,8 @@ export default function VendorSettings() {
                       }
                     />
                   </div>
-
                   <div className="vs-map-coord">
-                    <label>Lng</label>
+                    <label>{m.lng()}</label>
                     <input
                       type="text"
                       readOnly
@@ -560,9 +488,9 @@ export default function VendorSettings() {
                 </div>
 
                 <div className="vs-row" style={{ marginTop: ".25rem" }}>
-                  <button onClick={useMyLocation}>ใช้ตำแหน่งฉันตอนนี้</button>
+                  <button onClick={useMyLocation}>{m.use_my_location()}</button>
                   <button className="vs-primary" onClick={saveSettings}>
-                    บันทึกการตั้งค่า
+                    {m.save_settings()}
                   </button>
                 </div>
               </div>

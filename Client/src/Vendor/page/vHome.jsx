@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "@/api/axios";
 import { AuthContext } from "@/context/ProtectRoute";
 import "@css/pages/vendorHome.css";
+import {m} from "@/paraglide/messages"
 
 /* ---------- helper: ล็อก/ปลดล็อก sidebar ---------- */
 const lockSidebar = (on) => {
@@ -357,27 +358,27 @@ export default function VHomePage() {
     <div className="dashboard-main">
       <div className="content">
         <div className="header-row">
-          <h1>{shop.shop_name}</h1>
+          <h1 style={{paddingLeft:"110px"}}>{shop.shop_name}</h1>
           <div className="btn-group">
             <button
               className={`status-btn ${shop.status ? "open" : "closed"}`}
               onClick={toggleShopStatus}
               disabled={updating}
             >
-              {shop.status ? "🔓 ร้านเปิดอยู่" : "🔒 ร้านปิดอยู่"}
+              {shop.status ? `🔓 ${m.storeOpen()}` : `🔒 ${m.StoreClosed()} `}
             </button>
             <button
               className={`reserve-btn ${shop.reserve_active ? "on" : "off"}`}
               onClick={toggleReserve}
               disabled={updatingReserve}
             >
-              {shop.reserve_active ? "📅 เปิดรับการจอง" : "🚫 ปิดรับการจอง"}
+              {shop.reserve_active ? `📅 ${m.reserveOpen()}` : `🚫 ${m.reserveClose()}`}
             </button>
             <button
               className="menu-btn"
               onClick={() => navigate(`/vendor/shops/${shop.id}/menu`)}
             >
-              🍽️ จัดการเมนู
+              🍽️ {m.manageMenu()}
             </button>
           </div>
         </div>
@@ -385,23 +386,23 @@ export default function VHomePage() {
         {/* Summary */}
         <div className="dashboard-cards">
           <div className="card summary">
-            <h3>ยอดขายวันนี้</h3>
+            <h3>{m.todaySale()}</h3>
             <p className="amount">
               {todaySalesCalc.toLocaleString("th-TH", {
                 style: "currency",
                 currency: "THB",
               })}
             </p>
-            <p className="subtext">จำนวนออเดอร์: {todayOrderCount}</p>
+            <p className="subtext">{m.orderAmount()} : {todayOrderCount}</p>
           </div>
 
           <div className="card summary">
-            <h3>จำนวนออเดอร์ทั้งหมด</h3>
+            <h3>{m.allOrder()}</h3>
             <p className="amount">{totalOrderCountAll}</p>
           </div>
 
           <div className="card summary">
-            <h3>จำนวนการจอง</h3>
+            <h3>{m.allReserve()}</h3>
             <p className="amount">{stats.reserves}</p>
           </div>
 
@@ -409,21 +410,21 @@ export default function VHomePage() {
             className="card summary clickable"
             onClick={() => setShowDailyModal(true)}
           >
-            <h3>ยอดขายรวมทั้งหมด</h3>
+            <h3>{m.allSales()}</h3>
             <p className="amount">
               {totalSalesAll.toLocaleString("th-TH", {
                 style: "currency",
                 currency: "THB",
               })}
             </p>
-            <span className="hint">คลิกเพื่อดูสรุปรายวัน</span>
+            <span className="hint">{m.saleDetail()}</span>
           </button>
         </div>
 
         {/* Calendar + Recent Orders */}
         <div className="dashboard-lower">
           <div className="calendar-box">
-            <h3>📅 ปฏิทินการจอง</h3>
+            <h3>📅 {m.reserveCalendar()}</h3>
             <ReservationCalendar
               loading={reservationsLoading}
               reservations={reservations}
@@ -431,19 +432,19 @@ export default function VHomePage() {
           </div>
 
           <div className="recent-orders">
-            <h3>🧾 ออเดอร์ล่าสุด</h3>
+            <h3>🧾 {m.lastedOrder()}</h3>
             {ordersLoading ? (
-              <p>กำลังโหลด...</p>
+              <p>{m.loading()}</p>
             ) : orders.length === 0 ? (
-              <p>ยังไม่มีออเดอร์ที่กำลังดำเนินการ</p>
+              <p>{m.lastedOrder()}</p>
             ) : (
               <table className="order-table">
                 <thead>
                   <tr>
-                    <th>เวลา</th>
-                    <th>รหัสออเดอร์</th>
-                    <th>ลูกค้า</th>
-                    <th>สถานะ</th>
+                    <th>{m.time()}</th>
+                    <th>{m.order_id()}</th>
+                    <th>{m.costumer()}</th>
+                    <th>{m.status()}</th>
                   </tr>
                 </thead>
                 <tbody>
