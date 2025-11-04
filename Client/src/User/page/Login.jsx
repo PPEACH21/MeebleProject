@@ -17,7 +17,7 @@ const LoginPage = () => {
       if (auth.verified) {
         navigate("/vendor/home", { replace: true });
       } else {
-        navigate("/vendor/verifyemail", { replace: true });
+        navigate("/verifyemail", { replace: true });
       }
       return;
     }

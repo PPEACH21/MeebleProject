@@ -48,45 +48,80 @@ func GetShop(c *fiber.Ctx) error {
 
 func VerifiedUser(c *fiber.Ctx) error {
 	userId := c.Params("id")
-	// fmt.Println("User: ", userId)
-
-	data := config.User.Doc(userId)
-	docRef, err := data.Get(config.Ctx)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).SendString("Not user ID")
+	if userId == "" {
+		return c.Status(fiber.StatusBadRequest).SendString("missing id")
 	}
 
-	_, err = docRef.Ref.Update(config.Ctx, []firestore.Update{
-		{
-			Path:  "verified",
-			Value: true,
-		},
-	})
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).SendString("Update data Error")
+	accountType := strings.ToLower(c.Query("type", "")) // "user", "vendor", หรือ ""
+	var (
+		docRef  *firestore.DocumentSnapshot
+		role    string
+		err     error
+		dataRef *firestore.DocumentRef
+	)
+
+	// ✅ helper ฟังก์ชันอัปเดต verified
+	updateVerified := func(ref *firestore.DocumentRef) (*firestore.DocumentSnapshot, error) {
+		snap, err := ref.Get(config.Ctx)
+		if err != nil || !snap.Exists() {
+			return nil, fiber.ErrNotFound
+		}
+		if _, err := ref.Update(config.Ctx, []firestore.Update{
+			{Path: "verified", Value: true},
+		}); err != nil {
+			return nil, err
+		}
+		return ref.Get(config.Ctx)
 	}
 
+	// ✅ ตรวจประเภทบัญชี
+	switch accountType {
+	case "vendor":
+		dataRef = config.Vendor.Doc(userId)
+		docRef, err = updateVerified(dataRef)
+		role = "vendor"
+
+	case "user":
+		dataRef = config.User.Doc(userId)
+		docRef, err = updateVerified(dataRef)
+		role = "user"
+
+	default:
+		// auto detect
+		if snap, e := config.User.Doc(userId).Get(config.Ctx); e == nil && snap.Exists() {
+			dataRef = config.User.Doc(userId)
+			docRef, err = updateVerified(dataRef)
+			role = "user"
+		} else if snap, e := config.Vendor.Doc(userId).Get(config.Ctx); e == nil && snap.Exists() {
+			dataRef = config.Vendor.Doc(userId)
+			docRef, err = updateVerified(dataRef)
+			role = "vendor"
+		} else {
+			return c.Status(404).SendString("Account not found in users or vendors")
+		}
+	}
+
+	if err != nil {
+		return c.Status(400).SendString(fmt.Sprintf("Update error: %v", err))
+	}
+
+	// ✅ แปลงข้อมูล
 	var member models.User
 	if err := docRef.DataTo(&member); err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString("Error parsing user data")
 	}
 
-	userData, err := docRef.Ref.Get(config.Ctx)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString("Failed to fetch updated user")
-	}
-
+	// ✅ เคลียร์ cookie เดิม
 	c.ClearCookie("token")
-	var updatedUser models.User
-	userData.DataTo(&updatedUser)
 
+	// ✅ สร้าง JWT ใหม่
 	claims := jwt.MapClaims{
-		"user_id":  userData.Ref.ID,
-		"email":    updatedUser.Email,
-		"username": updatedUser.Username,
-		"verified": updatedUser.Verified,
-		"role":     "user",
-		"exp":      time.Now().Add(time.Minute * 60).Unix(),
+		"user_id":  docRef.Ref.ID,
+		"email":    member.Email,
+		"username": member.Username,
+		"verified": member.Verified,
+		"role":     role,
+		"exp":      time.Now().Add(60 * time.Minute).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -96,16 +131,22 @@ func VerifiedUser(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
+	// ✅ ตั้ง cookie ใหม่
 	c.Cookie(&fiber.Cookie{
 		Name:     "token",
 		Value:    t,
-		Expires:  time.Now().Add(time.Minute * 60),
+		Expires:  time.Now().Add(60 * time.Minute),
 		HTTPOnly: false,
-		// Secure:   false,
-		// SameSite: "Strict",
 	})
 
-	return c.Status(fiber.StatusAccepted).SendString("Update data Success")
+	return c.Status(fiber.StatusAccepted).JSON(fiber.Map{
+		"success":  true,
+		"message":  "Verified successfully",
+		"role":     role,
+		"user_id":  docRef.Ref.ID,
+		"email":    member.Email,
+		"username": member.Username,
+	})
 }
 
 func GetUserHistory(c *fiber.Ctx) error {
