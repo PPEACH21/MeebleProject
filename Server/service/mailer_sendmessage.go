@@ -106,7 +106,10 @@ func CheckEmail(c *fiber.Ctx)error{
 
 	_,err := config.User.Where("email", "==", user.Email).Limit(1).Documents(config.Ctx).Next()
 	if err != nil{
-		return c.Status(fiber.StatusNotFound).SendString("Email or Username Not Found")
+		_,err := config.Vendor.Where("email", "==", user.Email).Limit(1).Documents(config.Ctx).Next()
+			if err != nil{
+				return c.Status(fiber.StatusNotFound).SendString("Email or Username Not Found")
+		}
     }
 	return c.JSON(fiber.Map{
 			"status":  "success",
