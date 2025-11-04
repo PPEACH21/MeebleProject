@@ -5,6 +5,82 @@ import axios from "@/api/axios";
 import { AuthContext } from "@/context/ProtectRoute";
 import "@css/pages/vendorHome.css";
 
+/* ---------- helper: ล็อก/ปลดล็อก sidebar ---------- */
+const lockSidebar = (on) => {
+  const body = document?.body;
+  if (!body) return;
+  const cls = "sidebar-lock";
+  if (on) body.classList.add(cls);
+  else body.classList.remove(cls);
+};
+
+/* ---------- helper: format & calc ---------- */
+const getOrderTotal = (o) => {
+  const num = (v) => (typeof v === "number" ? v : Number(v) || 0);
+  const direct =
+    o?.total ?? o?.amount ?? o?.price ??
+    o?.raw?.total ?? o?.raw?.amount ?? o?.raw?.price;
+  if (direct != null) return num(direct);
+
+  const items = Array.isArray(o?.items)
+    ? o.items
+    : Array.isArray(o?.raw?.items)
+    ? o.raw.items
+    : [];
+  return items.reduce((s, it) => {
+    const p = num(it?.price ?? it?.Price);
+    const q = num(it?.qty ?? it?.Qty ?? 1);
+    return s + p * q;
+  }, 0);
+};
+
+const dayKey = (v) => {
+  const d = new Date(v);
+  if (isNaN(d)) return "";
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+const normalizeReservationList = (resData) => {
+  const toMillis = (t) => {
+    if (!t) return null;
+    if (typeof t === "number") return t;
+    if (typeof t === "string") return Date.parse(t) || null;
+    const s = t.seconds ?? t._seconds;
+    const ns = t.nanos ?? t._nanoseconds;
+    if (typeof s === "number") return s * 1000 + Math.round((ns || 0) / 1e6);
+    return null;
+  };
+
+  const list = Array.isArray(resData)
+    ? resData
+    : Array.isArray(resData?.data)
+    ? resData.data
+    : Array.isArray(resData?.reservations)
+    ? resData.reservations
+    : [];
+
+  return list
+    .map((r) => ({
+      id: r.id || r.ID,
+      date: r.date, // YYYY-MM-DD
+      userId: r.userId,
+      customerId: r.customerId,
+      shopId: r.shopId,
+      shop_name: r.shop_name,
+      note: r.note || "",
+      phone: r.phone || "",
+      createdAt:
+        toMillis(r.createdAt) ??
+        toMillis(r.raw?.createdAt) ??
+        r.createdAt ??
+        r.raw?.createdAt,
+    }))
+    .filter((r) => typeof r.date === "string" && r.date.length === 10);
+};
+
 export default function VHomePage() {
   const { auth } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -33,100 +109,64 @@ export default function VHomePage() {
 
   const userId = auth?.user_id;
 
-  /* ---------- helpers ---------- */
-  const getOrderTotal = (o) => {
-    const num = (v) => (typeof v === "number" ? v : Number(v) || 0);
-    const direct =
-      o.total ?? o.amount ?? o.price ??
-      o.raw?.total ?? o.raw?.amount ?? o.raw?.price;
-    if (direct != null) return num(direct);
-
-    const items = Array.isArray(o.items) ? o.items :
-                  Array.isArray(o.raw?.items) ? o.raw.items : [];
-    return items.reduce((s, it) => {
-      const p = num(it?.price ?? it?.Price);
-      const q = num(it?.qty ?? it?.Qty ?? 1);
-      return s + p * q;
-    }, 0);
-  };
-
-  const dayKey = (v) => {
-    const d = new Date(v);
-    if (isNaN(d)) return "";
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-  };
-
-  const normalizeReservationList = (resData) => {
-    const toMillis = (t) => {
-      if (!t) return null;
-      if (typeof t === "number") return t;
-      if (typeof t === "string") return Date.parse(t) || null;
-      const s = t.seconds ?? t._seconds;
-      const ns = t.nanos ?? t._nanoseconds;
-      if (typeof s === "number") return (s * 1000) + Math.round((ns || 0) / 1e6);
-      return null;
-    };
-
-    const list = Array.isArray(resData)
-      ? resData
-      : Array.isArray(resData?.data)
-        ? resData.data
-        : Array.isArray(resData?.reservations)
-          ? resData.reservations
-          : [];
-
-    return list
-      .map((r) => ({
-        id: r.id || r.ID,
-        date: r.date, // YYYY-MM-DD (local date string)
-        userId: r.userId,
-        customerId: r.customerId,
-        shopId: r.shopId,
-        shop_name: r.shop_name,
-        note: r.note || "",
-        phone: r.phone || "",
-        createdAt: toMillis(r.createdAt) ?? toMillis(r.raw?.createdAt) ?? r.createdAt ?? r.raw?.createdAt,
-      }))
-      .filter((r) => typeof r.date === "string" && r.date.length === 10);
-  };
-
   /* ---------- โหลดร้าน ---------- */
   useEffect(() => {
+    let alive = true;
+
     const fetchShop = async () => {
       try {
-        const res = await axios.get(`/shops/by-vendor/${userId}`, { withCredentials: true });
+        const res = await axios.get(`/shops/by-vendor/${userId}`, {
+          withCredentials: true,
+        });
+
         let resolvedShop = null;
         if (res.data?.hasShop && res.data.shop) resolvedShop = res.data.shop;
-        else if (Array.isArray(res.data?.shops) && res.data.shops.length > 0) resolvedShop = res.data.shops[0];
+        else if (Array.isArray(res.data?.shops) && res.data.shops.length > 0)
+          resolvedShop = res.data.shops[0];
 
         if (resolvedShop) {
           const id = resolvedShop.id || resolvedShop.ID || resolvedShop.Id;
           localStorage.setItem("currentShopId", id);
+          if (!alive) return;
           setShop({
             id,
             shop_name: resolvedShop.shop_name || resolvedShop.name,
             status: !!resolvedShop.status,
             reserve_active: !!resolvedShop.reserve_active,
           });
+          lockSidebar(false); // มีร้านแล้ว ปลดล็อก
+        } else {
+          // ไม่มีร้าน → ล็อก sidebar + ไปสร้างร้าน
+          lockSidebar(true);
+          navigate("/vendor/create", { replace: true });
         }
       } catch (err) {
         console.error("Error fetching shop:", err);
+        if (!shop) {
+          lockSidebar(true);
+          navigate("/vendor/create", { replace: true });
+        }
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     };
+
     if (userId) fetchShop();
-  }, [userId]);
+
+    return () => {
+      alive = false;
+      lockSidebar(false);
+    };
+  }, [userId, navigate]); // include navigate
 
   /* ---------- สถิติ (ถ้ามี endpoint) ---------- */
   useEffect(() => {
     const fetchStats = async () => {
       if (!shop?.id) return;
       try {
-        const res = await axios.get(`/api/shops/${shop.id}/stats`, { withCredentials: true });
+        const res = await axios.get(`/api/shops/${shop.id}/stats`, {
+          withCredentials: true,
+        });
         setStats(res.data || { todaySales: 0, orders: 0, reserves: 0 });
       } catch (err) {
         console.warn("โหลดสถิติไม่สำเร็จ", err?.response?.data || err.message);
@@ -139,20 +179,26 @@ export default function VHomePage() {
   useEffect(() => {
     const fetchOrders = async () => {
       if (!shop?.id) return;
+      setOrdersLoading(true);
       try {
         const res = await axios.get("/orders/shop", {
           params: { shopId: shop.id },
           withCredentials: true,
         });
         const data = Array.isArray(res.data) ? res.data : [];
-        const filtered = data.filter((o) =>
-          ["prepare", "ongoing"].includes(String(o.status || "").toLowerCase())
-        );
-        filtered.sort(
-          (a, b) =>
-            new Date(b.createdAt || b.raw?.createdAt || 0) -
-            new Date(a.createdAt || a.raw?.createdAt || 0)
-        );
+
+        const filtered = data
+          .filter((o) =>
+            ["prepare", "ongoing"].includes(
+              String(o.status || "").toLowerCase()
+            )
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.createdAt || b.raw?.createdAt || 0) -
+              new Date(a.createdAt || a.raw?.createdAt || 0)
+          );
+
         setOrders(filtered);
       } catch (err) {
         console.warn("โหลดออเดอร์ไม่สำเร็จ", err?.response?.data || err.message);
@@ -169,8 +215,10 @@ export default function VHomePage() {
     const loadHistory = async () => {
       if (!shop?.id) return;
       try {
-        const res = await axios.get(`/api/shops/${shop.id}/history`, { withCredentials: true });
-        const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+        const res = await axios.get(`/api/shops/${shop.id}/history`, {
+          withCredentials: true,
+        });
+        const list = Array.isArray(res.data) ? res.data : res.data?.data || [];
         const successOnly = list.filter((o) => {
           const t = String(o?.status || o?.raw?.status || "").toLowerCase();
           return t.includes("success") || t.includes("done");
@@ -213,27 +261,46 @@ export default function VHomePage() {
     loadHistory();
   }, [shop?.id]);
 
-  /* ---------- การจอง (calendar) ---------- */
+  /* ---------- การจอง (Calendar) โหลดตลอด + รีเฟรชอัตโนมัติ ---------- */
   useEffect(() => {
-    const loadReservations = async () => {
-      if (!shop?.id) return;
-      setReservationsLoading(true);
+    if (!shop?.id) return;
+
+    let alive = true;
+    let timer = null;
+
+    const fetchReservations = async () => {
       try {
-        const res = await axios.get(`/shops/${shop.id}/reservations`, { withCredentials: true });
+        // รอบแรกโชว์กำลังโหลด ถ้าก่อนหน้าไม่มีข้อมูล
+        setReservationsLoading((prev) => prev === true || reservations.length === 0);
+
+        const res = await axios.get(`/shops/${shop.id}/reservations`, {
+          withCredentials: true,
+        });
+
         const normalized = normalizeReservationList(res.data);
+        if (!alive) return;
+
         setReservations(normalized);
-        setStats(prev => ({ ...prev, reserves: normalized.length }));
+        setStats((prev) => ({ ...prev, reserves: normalized.length }));
       } catch (err) {
-        const status = err?.response?.status;
-        const data = err?.response?.data;
-        console.warn("[reservations] load failed", { status, data, message: err?.message });
+        if (!alive) return;
+        console.warn("[reservations] load failed", err?.response?.data || err.message);
         setReservations([]);
-        setStats(prev => ({ ...prev, reserves: 0 }));
+        setStats((prev) => ({ ...prev, reserves: 0 }));
       } finally {
-        setReservationsLoading(false);
+        if (alive) setReservationsLoading(false);
       }
     };
-    loadReservations();
+
+    // โหลดทันทีที่เข้าหน้า
+    fetchReservations();
+    // รีเฟรชทุก 20 วินาที
+    timer = setInterval(fetchReservations, 20000);
+
+    return () => {
+      alive = false;
+      if (timer) clearInterval(timer);
+    };
   }, [shop?.id]);
 
   /* ---------- ปุ่มเปิด/ปิด ---------- */
@@ -242,7 +309,11 @@ export default function VHomePage() {
     try {
       setUpdating(true);
       const newStatus = !shop.status;
-      await axios.put(`/shops/${shop.id}/status`, { status: newStatus }, { withCredentials: true });
+      await axios.put(
+        `/shops/${shop.id}/status`,
+        { status: newStatus },
+        { withCredentials: true }
+      );
       setShop((p) => ({ ...p, status: newStatus }));
     } finally {
       setUpdating(false);
@@ -254,15 +325,33 @@ export default function VHomePage() {
     try {
       setUpdatingReserve(true);
       const newReserve = !shop.reserve_active;
-      await axios.put(`/shops/${shop.id}/reserve`, { reserve_active: newReserve }, { withCredentials: true });
+      await axios.put(
+        `/shops/${shop.id}/reserve`,
+        { reserve_active: newReserve },
+        { withCredentials: true }
+      );
       setShop((p) => ({ ...p, reserve_active: newReserve }));
     } finally {
       setUpdatingReserve(false);
     }
   };
 
-  if (loading) return <div className="dashboard-main"><h2>กำลังโหลดข้อมูล...</h2></div>;
-  if (!shop) return <div className="dashboard-main"><h2>ยังไม่มีร้านในระบบ</h2></div>;
+  if (loading) {
+    return (
+      <div className="dashboard-main">
+        <h2>กำลังโหลดข้อมูล...</h2>
+      </div>
+    );
+  }
+
+  // ไม่มีร้าน: ปกติจะถูก redirect ไปแล้ว — เผื่อกรณี render ทับ ให้โชว์ข้อความกันว่าง
+  if (!shop) {
+    return (
+      <div className="dashboard-main">
+        <h2>กำลังตรวจสอบร้าน…</h2>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-main">
@@ -270,13 +359,24 @@ export default function VHomePage() {
         <div className="header-row">
           <h1>{shop.shop_name}</h1>
           <div className="btn-group">
-            <button className={`status-btn ${shop.status ? "open" : "closed"}`} onClick={toggleShopStatus} disabled={updating}>
+            <button
+              className={`status-btn ${shop.status ? "open" : "closed"}`}
+              onClick={toggleShopStatus}
+              disabled={updating}
+            >
               {shop.status ? "🔓 ร้านเปิดอยู่" : "🔒 ร้านปิดอยู่"}
             </button>
-            <button className={`reserve-btn ${shop.reserve_active ? "on" : "off"}`} onClick={toggleReserve} disabled={updatingReserve}>
+            <button
+              className={`reserve-btn ${shop.reserve_active ? "on" : "off"}`}
+              onClick={toggleReserve}
+              disabled={updatingReserve}
+            >
               {shop.reserve_active ? "📅 เปิดรับการจอง" : "🚫 ปิดรับการจอง"}
             </button>
-            <button className="menu-btn" onClick={() => navigate(`/vendor/shops/${shop.id}/menu`)}>
+            <button
+              className="menu-btn"
+              onClick={() => navigate(`/vendor/shops/${shop.id}/menu`)}
+            >
               🍽️ จัดการเมนู
             </button>
           </div>
@@ -287,7 +387,10 @@ export default function VHomePage() {
           <div className="card summary">
             <h3>ยอดขายวันนี้</h3>
             <p className="amount">
-              {todaySalesCalc.toLocaleString("th-TH", { style: "currency", currency: "THB" })}
+              {todaySalesCalc.toLocaleString("th-TH", {
+                style: "currency",
+                currency: "THB",
+              })}
             </p>
             <p className="subtext">จำนวนออเดอร์: {todayOrderCount}</p>
           </div>
@@ -302,10 +405,16 @@ export default function VHomePage() {
             <p className="amount">{stats.reserves}</p>
           </div>
 
-          <button className="card summary clickable" onClick={() => setShowDailyModal(true)}>
+          <button
+            className="card summary clickable"
+            onClick={() => setShowDailyModal(true)}
+          >
             <h3>ยอดขายรวมทั้งหมด</h3>
             <p className="amount">
-              {totalSalesAll.toLocaleString("th-TH", { style: "currency", currency: "THB" })}
+              {totalSalesAll.toLocaleString("th-TH", {
+                style: "currency",
+                currency: "THB",
+              })}
             </p>
             <span className="hint">คลิกเพื่อดูสรุปรายวัน</span>
           </button>
@@ -321,7 +430,7 @@ export default function VHomePage() {
             />
           </div>
 
-          <div className="recent-orders" >
+          <div className="recent-orders">
             <h3>🧾 ออเดอร์ล่าสุด</h3>
             {ordersLoading ? (
               <p>กำลังโหลด...</p>
@@ -340,7 +449,11 @@ export default function VHomePage() {
                 <tbody>
                   {orders.map((o) => (
                     <tr key={o.id || o.historyId || o.orderId}>
-                      <td>{new Date(o.createdAt || o.raw?.createdAt).toLocaleString("th-TH")}</td>
+                      <td>
+                        {new Date(
+                          o.createdAt || o.raw?.createdAt
+                        ).toLocaleString("th-TH")}
+                      </td>
                       <td>{o.id || o.historyId || o.orderId}</td>
                       <td>{o.customerName || o.raw?.customerName || "—"}</td>
                       {/* จุดสีเท่านั้น */}
@@ -360,7 +473,12 @@ export default function VHomePage() {
           <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
             <div className="modal-head">
               <h3>สรุปยอดขายรายวัน</h3>
-              <button className="close-btn" onClick={() => setShowDailyModal(false)}>✕</button>
+              <button
+                className="close-btn"
+                onClick={() => setShowDailyModal(false)}
+              >
+                ✕
+              </button>
             </div>
             {dailySales.length === 0 ? (
               <div className="modal-body">ยังไม่มีข้อมูลยอดขาย</div>
@@ -377,9 +495,16 @@ export default function VHomePage() {
                   <tbody>
                     {dailySales.map((d) => (
                       <tr key={d.date}>
-                        <td>{new Date(d.date).toLocaleDateString("th-TH")}</td>
+                        <td>
+                          {new Date(d.date).toLocaleDateString("th-TH")}
+                        </td>
                         <td>{d.orders}</td>
-                        <td>{d.amount.toLocaleString("th-TH", { style: "currency", currency: "THB" })}</td>
+                        <td>
+                          {d.amount.toLocaleString("th-TH", {
+                            style: "currency",
+                            currency: "THB",
+                          })}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -387,7 +512,9 @@ export default function VHomePage() {
               </div>
             )}
             <div className="modal-foot">
-              <button className="primary" onClick={() => setShowDailyModal(false)}>ปิด</button>
+              <button className="primary" onClick={() => setShowDailyModal(false)}>
+                ปิด
+              </button>
             </div>
           </div>
         </div>
@@ -405,14 +532,14 @@ function ReservationCalendar({ loading, reservations }) {
     return `${yy}-${mm}-${dd}`;
   };
 
-  // ✅ ใช้ Firestore docId ปกติ และโชว์เป็น 5 ตัวท้าย + วันที่
+  // ใช้ Firestore docId ปกติ และโชว์เป็น 5 ตัวท้าย + วันที่
   const reservationCode = (id, date) => {
     if (!id) return "—";
     const frag = (id.length >= 5 ? id.slice(-5) : id).toUpperCase();
     return `${frag}-${date || ""}`;
   };
 
-  // ✅ (แก้แล้ว) ดึงชื่อจากหลังบ้าน /api/users/:id/name และ cache กันยิงซ้ำ
+  // ดึงชื่อจากหลังบ้าน /api/users/:id/name และ cache กันยิงซ้ำ
   const [nameCache, setNameCache] = useState(new Map());
   const inflight = useMemo(() => new Map(), []);
   const getDisplayName = async (uid) => {
@@ -422,7 +549,9 @@ function ReservationCalendar({ loading, reservations }) {
 
     const p = (async () => {
       try {
-        const res = await axios.get(`/api/users/${uid}/name`, { withCredentials: true });
+        const res = await axios.get(`/api/users/${uid}/name`, {
+          withCredentials: true,
+        });
         const name = res?.data?.name || uid;
         setNameCache((prev) => {
           const m = new Map(prev);
@@ -515,9 +644,9 @@ function ReservationCalendar({ loading, reservations }) {
             return (
               <button
                 key={ymd}
-                className={`cal-cell day ${
-                  ymd === todayYMD ? "today" : ""
-                } ${count ? "has" : ""}`}
+                className={`cal-cell day ${ymd === todayYMD ? "today" : ""} ${
+                  count ? "has" : ""
+                }`}
                 onClick={() => {
                   setSelectedDate(ymd);
                   setDayOpen(true);
@@ -541,7 +670,14 @@ function ReservationCalendar({ loading, reservations }) {
                 {(() => {
                   if (!selectedDate) return "—";
                   const [Y, M, D] = selectedDate.split("-");
-                  const dt = new Date(Number(Y), Number(M) - 1, Number(D), 12, 0, 0);
+                  const dt = new Date(
+                    Number(Y),
+                    Number(M) - 1,
+                    Number(D),
+                    12,
+                    0,
+                    0
+                  );
                   return dt.toLocaleDateString("th-TH");
                 })()}
               </h3>
@@ -570,15 +706,16 @@ function ReservationCalendar({ loading, reservations }) {
                         .slice()
                         .sort(
                           (a, b) =>
-                            Number(a.createdAt || 0) - Number(b.createdAt || 0)
+                            Number(a.createdAt || 0) -
+                            Number(b.createdAt || 0)
                         )
                         .map((r) => (
                           <tr key={r.id}>
                             <td>
                               {r.createdAt
-                                ? new Date(r.createdAt).toLocaleTimeString(
-                                    "th-TH"
-                                  )
+                                ? new Date(
+                                    r.createdAt
+                                  ).toLocaleTimeString("th-TH")
                                 : "—"}
                             </td>
                             <td>
@@ -601,10 +738,7 @@ function ReservationCalendar({ loading, reservations }) {
             </div>
 
             <div className="modal-foot">
-              <button
-                className="primary"
-                onClick={() => setDayOpen(false)}
-              >
+              <button className="primary" onClick={() => setDayOpen(false)}>
                 ปิด
               </button>
             </div>

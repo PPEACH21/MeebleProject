@@ -60,7 +60,7 @@ const Forgotpassword = ()=>{
                         <>
                             <h1>{m.forgot_password()}</h1>
                             <div>
-                                <p>Enter Your email to reset your password</p>
+                                <p style={{textAlign:"center"}}>{m.resetPass()}</p>
                                 <input
                                     className="textInput"
                                     type="email"

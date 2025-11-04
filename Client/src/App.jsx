@@ -54,10 +54,11 @@ function App() {
           </Route>
         </Route>
 
-        <Route element={<ProtectedLayout role="vendor" />}>
-          <Route element={<NavLayout />}>
-            <Route element={<VendorLayout />}>
-              <Route path="/vendor/home" element={<VHomePage />} />
+        <Route element={<ProtectedLayout role="vendor" />}> 
+          <Route element={<NavLayout />}> 
+           <Route path="/vendor/create" element={<CreateShopPage/>} />
+            <Route element={<VendorLayout/>}>
+              <Route path="/vendor/home" element={<VHomePage />} />            
               <Route path="/vendor/orders" element={<VendorOrders />} />
               <Route
                 path="/vendor/orders/:id"
@@ -68,8 +69,7 @@ function App() {
               <Route
                 path="/vendor/shops/:shopId/menu"
                 element={<VendorMenu />}
-              />
-              <Route path="/vendor/create" element={<CreateShopPage />} />
+              />       
             </Route>
           </Route>
         </Route>

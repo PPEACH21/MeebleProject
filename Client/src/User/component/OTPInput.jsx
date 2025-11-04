@@ -18,7 +18,7 @@ export const OTPInput = ({ email = false, state, setState }) => {
 
   const sendmessage = () => {
     if (!email) {
-      SendOTP(auth);
+      SendOTP();
     } else {
       SendOTPRepassword(email);
     }
@@ -26,11 +26,10 @@ export const OTPInput = ({ email = false, state, setState }) => {
       inputRef.current[0].focus();
     }
   };
+
   const SendOTPRepassword = async (email) => {
     try {
-      const res = await axios.post("/sendotp_repassword", {
-        email: email,
-      });
+      const res = await axios.post("/sendotp_repassword", { email });
       console.log("OTP sent successfully:", res.data);
     } catch (err) {
       console.error("Error sending OTP:", err);
@@ -42,8 +41,8 @@ export const OTPInput = ({ email = false, state, setState }) => {
       const res = await axios.post(
         "/sendotp",
         {
-          username: auth.username,
-          email: auth.email,
+          username: auth?.username,
+          email: auth?.email,
         },
         {
           headers: { "Content-Type": "application/json" },
@@ -86,36 +85,46 @@ export const OTPInput = ({ email = false, state, setState }) => {
     setLoading(true);
     try {
       if (!email) {
-        const checkOTP = await axios.post(`/checkotp`, {
-          otp: otpCode,
-          email: auth.email,
-        });
-        console.log("checkOTP Success", checkOTP.status);
+        // ✅ Verify signup/login email flow
+        const checkOTP = await axios.post(`/checkotp`, { otp: otpCode, email: auth?.email });
+        console.log("checkOTP Success", checkOTP?.status);
+
         const updatadata = await axios.put(
-          `/verifiedEmail/${auth.user_id}`,
+          `/verifiedEmail/${auth?.user_id}`,
           {},
           {
             headers: { "Content-Type": "application/json" },
-            withCredentials: true,
+            withCredentials: true, // จะได้ cookie token ใหม่ที่ฝั่ง server ใส่ role มาให้
           }
         );
-        console.log("Verified success:", updatadata.data);
+        console.log("Verified success:", updatadata?.data);
 
-        const updatedAuth = { ...auth, verified: true };
+        // อัปเดต context ให้ verified = true
+        // (พยายามรักษา role จาก server response ถ้ามี; ถ้าไม่มี ใช้ของเดิมใน auth)
+        const roleFromServer =
+          updatadata?.data?.role ||
+          updatadata?.data?.data?.role || // กันกรณี response ห่ออีกชั้น
+          auth?.role;
+
+        const updatedAuth = { ...auth, verified: true, role: roleFromServer };
         setAuth(updatedAuth);
-        setLoading(false);
         console.log("Updated Auth:", updatedAuth);
-        navigate("/home");
-        alert(m.success());
+
+        // ✅ นำทางตาม role
+        if (roleFromServer === "vendor" || updatedAuth?.role === "vendor" || updatedAuth?.isVendor || updatedAuth?.vendorId) {
+          navigate("/vendor/home");
+        } else {
+          navigate("/home");
+        }
+
+        setLoading(false);
       } else {
-        const checkOTP = await axios.post(`/checkotp`, {
-          otp: otpCode,
-          email: email,
-        });
-        console.log("checkOTP Success", checkOTP.status);
+        // ✅ Forgot password flow
+        const checkOTP = await axios.post(`/checkotp`, { otp: otpCode, email });
+        console.log("checkOTP Success", checkOTP?.status);
         console.log("Changepassword Page");
         setState(state + 1);
-        alert(m.success());
+        setLoading(false);
       }
     } catch (err) {
       console.error("Error OTP Not Correct:", err);
