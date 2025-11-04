@@ -24,7 +24,7 @@ const SidebarType = ({type,TypeClick})=>{
                         <div style={{scale:2,display:'flex',alignSelf:'center',justifyContent:'center'}}>
                             {item.icon}
                         </div>
-                        {m[item.name]()||item.name}
+                        {m[item.name]?.() ?? item.name}
                     </button>
                 )
                 })}

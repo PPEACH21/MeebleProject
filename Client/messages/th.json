@@ -57,8 +57,8 @@
   "favoritesRestarant": "ร้านอาหารที่ชื่นชอบ",
   "Maincourse": "อาหารหลัก",
   "Dessert": "ของหวาน",
-  "Appetizer": "ของกินเล่น",
-  "Beverage": "น้ำดื่ม",
+  "Appetizer": "ของทานเล่น",
+  "Beverage": "เครื่องดื่ม",
   "loading": "กำลังโหลด",
   "Fastfood": "อาหารจานด่วน",
   "FastFoods": "อาหารจานด่วน",
@@ -88,7 +88,6 @@
   "time": "เวลา",
   "amount": "จำนวน",
   "menu": "เมนู",
-  "resetPass": "ใส่อีเมลของคุณเพื่อรีเซ็ตรหัสผ่าน",
   "menu_loading": "กำลังโหลดเมนู...",
   "menu_not_found": "ยังไม่มีเมนูให้แสดง",
   "menu_fetch_error": "ไม่สามารถดึงเมนูได้",
@@ -229,5 +228,6 @@
   "not_supported": "ไม่รองรับ",
   "browser_no_geolocation": "เบราว์เซอร์ไม่รองรับ Geolocation",
   "set_position_from_device": "ตั้งตำแหน่งจากอุปกรณ์แล้ว",
-  "cannot_read_position": "ไม่สามารถอ่านตำแหน่งได้"
+  "cannot_read_position": "ไม่สามารถอ่านตำแหน่งได้",
+  "MainCourse": "อาหารหลัก"
 }

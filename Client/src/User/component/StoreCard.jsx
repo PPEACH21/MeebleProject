@@ -183,7 +183,7 @@ const StoreCard = ({ datashow }) => {
                           </span>
                         </p>
                         <p>
-                          <b>{m.type()}:</b> {item.type}
+                          <b>{m.type()}:</b> {m[item.type]()}
                         </p>
                       </div>
                     </div>
