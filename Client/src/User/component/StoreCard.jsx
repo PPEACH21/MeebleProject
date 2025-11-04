@@ -197,7 +197,6 @@ const StoreCard = ({ datashow }) => {
                   flexDirection: "column",
                   gap: "20px",
                   width: "20%",
-                  flex: "0 0 180px",
                 }}
               >
                 <button
@@ -205,6 +204,7 @@ const StoreCard = ({ datashow }) => {
                   onClick={() => goOrder(item)}
                   title={item.status ? "สั่งอาหาร" : "ร้านปิดอยู่"}
                   style={{
+                    backgroundColor: item.status ? "#ffa360" : "#bbb",
                     opacity: item.status ? 1 : 0.9,
                   }}
                 >
@@ -216,6 +216,7 @@ const StoreCard = ({ datashow }) => {
                   onClick={() => goReserve(item)}
                   title={item.status ? "จองวันที่รับออเดอร์" : "ร้านปิดอยู่"}
                   style={{
+                    backgroundColor: item.status ? "#322a04ff" : "#bbb",
                     opacity: item.status ? 1 : 0.9,
                   }}
                 >
