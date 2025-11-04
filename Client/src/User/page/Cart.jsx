@@ -8,6 +8,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "@css/pages/CartPage.css";
 import { MdDelete } from "react-icons/md";
 import LoadingPage from "../component/LoadingPage";
+import {m} from "@/paraglide/messages"
 
 const currency = (n) =>
   (Number(n) || 0).toLocaleString("th-TH", { style: "currency", currency: "THB" });
@@ -191,8 +192,8 @@ export default function Cart() {
 
   return (
     <div className="CP_cartPage">
-      <h2>ชื่อร้าน : {cart.items?.length < 1 ? `ไม่มีร้านที่เลือกขณะนี้` : cart.shop_name}</h2>
-      <h2>ตะกร้าสินค้า</h2>
+      <h2>{m.storeName()}: {cart.items?.length < 1 ? `ไม่มีร้านที่เลือกขณะนี้` : cart.shop_name}</h2>
+      <h2>{m.cart()}</h2>
 
       {loading ? (
         <LoadingPage/>
@@ -211,13 +212,13 @@ export default function Cart() {
                 <img
                   src={it.image || "https://placehold.co/80x80"}
                   alt={it.name}
-                  className="CP_cartItem"
+                  className="CP_thumb"
                 />
                 <div className="CP_info">
                   <div className="name">{it.name}</div>
                   <div className="desc line-clamp-2">{it.description}</div>
                   <div className="meta">
-                    <span className="CP_price">{currency(it.CP_price)}</span>
+                    <span className="CP_price">{currency(it.price)}</span>
                     <span className="x">x</span>
 
                     <div className="CP_qtyBox">
@@ -281,15 +282,15 @@ export default function Cart() {
 
           <div className="CP_cartSummary">
             <div className="row">
-              <span>ยอดรวม</span>
+              <span>{m.total()}</span>
               <strong>{currency(cart.total)}</strong>
             </div>
             <div className="CP_actions">
               <button className="CP_btn ghost" onClick={goBackToShop}>
-                เลือกซื้อสินค้าต่อ
+                {m.shopping()}
               </button>
               <button className="CP_btn primary" disabled={!canCheckout} onClick={onCheckout}>
-                ชำระเงิน
+                {m.checkout()}
               </button>
             </div>
           </div>

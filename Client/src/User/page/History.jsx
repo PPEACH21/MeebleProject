@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";            // ✅ เพิ่�
 import { AuthContext } from "@/context/ProtectRoute";
 import axios from "@/api/axios";
 import "@css/pages/History.css";
+import {m} from "@/paraglide/messages"
 
 /* ---------- helpers ---------- */
 const toDate = (v) => {
@@ -209,7 +210,7 @@ export default function History() {
   return (
     <div className="his-wrap">
       <div className="his-container">
-        <h1 className="his-title">History</h1>
+        <h1 className="his-title">{m.history()}</h1>
 
         {loading ? (
           <p className="his-loading">กำลังโหลด…</p>
@@ -217,7 +218,7 @@ export default function History() {
           <div className="his-sections">
             {/* PROCESS */}
             <section>
-              <h2 className="his-section-title his-section-title--process">กำลังดำเนินการ</h2>
+              <h2 className="his-section-title his-section-title--process">{m.ongoing()}</h2>
               {processOrders.length ? (
                 <div className="his-grid">
                   {processOrders.map((o) => (
@@ -225,13 +226,13 @@ export default function History() {
                   ))}
                 </div>
               ) : (
-                <div className="his-empty">ไม่มีคำสั่งซื้อที่กำลังดำเนินการ</div>
+                <div className="his-empty">{m.notHaveHistory()}</div>
               )}
             </section>
 
             {/* SUCCESS */}
             <section>
-              <h2 className="his-section-title his-section-title--success">สำเร็จแล้ว</h2>
+              <h2 className="his-section-title his-section-title--success">{m.success()}</h2>
               {successOrders.length ? (
                 <div className="his-grid">
                   {successOrders.map((o) => (
@@ -264,15 +265,15 @@ export default function History() {
                   <p className="mono">{getOrderId(selected)}</p>
                 </div>
                 <div>
-                  <p className="label">ร้านค้า</p>
+                  <p className="label">{m.store()}</p>
                   <p>{getStoreName(selected)}</p>
                 </div>
                 <div>
-                  <p className="label">สถานะ</p>
+                  <p className="label">{m.status()}</p>
                   <p>{canonicalStatusTH(selected.status)}</p>
                 </div>
                 <div>
-                  <p className="label">เวลา</p>
+                  <p className="label">{m.time()}</p>
                   <p>
                     {formatThaiBuddhist(
                       selected.finishedAt ||
@@ -291,10 +292,10 @@ export default function History() {
               <h4 style={{ marginTop: 16 }}>รายการอาหาร</h4>
               <div className="his-items">
                 <div className="his-items-head">
-                  <div>เมนู</div>
-                  <div>จำนวน</div>
-                  <div>ราคา</div>
-                  <div>รวม</div>
+                  <div>{m.menu()}</div>
+                  <div>{m.amount()}</div>
+                  <div>{m.Price()}</div>
+                  <div>{m.total()}</div>
                 </div>
                 <div className="his-items-body">
                   {(Array.isArray(selected.items) ? selected.items : []).map((it, idx) => {
