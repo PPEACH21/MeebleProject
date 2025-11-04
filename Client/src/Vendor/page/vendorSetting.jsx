@@ -35,7 +35,7 @@ L.Icon.Default.mergeOptions({
 
 // หมวดหมู่ตัวอย่าง
 const CATEGORIES = [
-  "MainCourse",
+  "Main Course",
   "Beverage",
   "Fast Foods",
   "Appetizer",
@@ -272,12 +272,12 @@ export default function VendorSettings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
-  // ❗เริ่มต้นที่กรุงเทพเป็นหลัก: ถ้าไม่มี lat/lng จากร้าน ให้ใช้ BANGKOK
+  
   const mapCenter = useMemo(() => {
     if (Number.isFinite(toNum(lat)) && Number.isFinite(toNum(lng))) {
       return [toNum(lat), toNum(lng)];
     }
-    return BANGKOK; // เริ่มต้นกรุงเทพ
+    return BANGKOK; 
   }, [lat, lng]);
 
   const onFileChange = (e) => {

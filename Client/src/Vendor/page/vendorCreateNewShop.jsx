@@ -1,9 +1,10 @@
 // src/User/page/CreateShopWithMap.jsx
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import axios from "@/api/axios";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
-import "@css/pages/vendorSettings.css"; // ใช้สไตล์เดิม (คลาส vs-*)
+import "@css/pages/vendorSettings.css";
+import { useNavigate } from "react-router-dom";
 
 import { AuthContext } from "@/context/ProtectRoute";
 import {
@@ -34,7 +35,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-const CATEGORIES = ["restaurant", "cafe", "dessert", "drink", "street"];
+const CATEGORIES = ["Main Course", "Beverage", "Fast Foods", "Appetizer", "Dessert"];
 const BANGKOK = [13.7563, 100.5018];
 
 /* ---------------- helpers ---------------- */
@@ -102,9 +103,8 @@ function MapSearchBox({ onPick }) {
       setLoading(true);
       const myId = ++fetchIdRef.current;
       try {
-        const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=8&q=${encodeURIComponent(
-          query
-        )}`;
+        const url =
+          `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=8&q=${encodeURIComponent(query)}`;
         const res = await fetch(url, { headers: { "Accept-Language": "th,en" } });
         const data = await res.json();
         if (myId === fetchIdRef.current) {
@@ -172,6 +172,7 @@ function MapSearchBox({ onPick }) {
 }
 
 export default function CreateShopWithMap() {
+  const navigate = useNavigate(); // ✅ เรียก hook ภายใน component เท่านั้น
   const { auth } = useContext(AuthContext);
   const vendorId = auth?.user_id || "";
 
@@ -236,7 +237,6 @@ export default function CreateShopWithMap() {
   const uploadImage = async () => {
     if (!file) return Swal.fire("ยังไม่ได้เลือกไฟล์", "กรุณาเลือกไฟล์รูปก่อน", "info");
 
-    // เช็คขนาดไฟล์ (เช่น <= 5MB)
     const MAX_MB = 5;
     if (file.size > MAX_MB * 1024 * 1024) {
       return Swal.fire("ไฟล์ใหญ่เกินไป", `จำกัด ${MAX_MB}MB`, "warning");
@@ -245,11 +245,7 @@ export default function CreateShopWithMap() {
     try {
       const apiKey = import.meta.env.VITE_IMGBB_API_KEY;
       if (!apiKey) {
-        return Swal.fire(
-          "ยังไม่ได้ตั้งค่า",
-          "กรุณาตั้งค่า VITE_IMGBB_API_KEY ใน .env",
-          "warning"
-        );
+        return Swal.fire("ยังไม่ได้ตั้งค่า", "กรุณาตั้งค่า VITE_IMGBB_API_KEY ใน .env", "warning");
       }
 
       setUploading(true);
@@ -258,7 +254,10 @@ export default function CreateShopWithMap() {
       form.append("key", apiKey);
       form.append("image", file);
 
-      const res = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: form });
+      const res = await fetch("https://api.imgbb.com/1/upload", {
+        method: "POST",
+        body: form,
+      });
       const data = await res.json();
 
       if (!data?.success || !data?.data?.url) {
@@ -286,7 +285,7 @@ export default function CreateShopWithMap() {
       shop_name: shopName.trim(),
       description: description.trim(),
       type: type.trim(),
-      image: imageUrl.trim(), // ✅ ได้จากอัปโหลดหรือกรอกเอง
+      image: imageUrl.trim(),
       vendor_id: vendorId,
       address: { latitude: toNum(lat), longitude: toNum(lng) },
       order_active: false,
@@ -296,11 +295,11 @@ export default function CreateShopWithMap() {
 
     try {
       setSubmitting(true);
-      await axios.post("/Shops", payload, { withCredentials: true });
-      Swal.fire("สำเร็จ", "สร้างร้านเรียบร้อยแล้ว", "success");
-      // เคลียร์ฟอร์ม
-      setShopName(""); setDescription(""); setType(""); setImageUrl("");
-      setLat(null); setLng(null); setFile(null); setPreview("");
+      // ❗ ปรับ path ให้ตรงกับ BE ของคุณ: ถ้า baseURL = http://localhost:8080/api ใช้ "/shops"
+      await axios.post("/shop", payload, { withCredentials: true });
+      await Swal.fire("สำเร็จ", "สร้างร้านเรียบร้อยแล้ว", "success");
+      navigate("/vendor/home"); // ✅ กลับหน้า dashboard
+      // (ถ้าจะเคลียร์ฟอร์มต่อก็ทำได้ แต่ navigate แล้วไม่จำเป็น)
     } catch (e) {
       Swal.fire(
         "ไม่สำเร็จ",
@@ -323,14 +322,18 @@ export default function CreateShopWithMap() {
           <div className="vs-section">
             <h3>ข้อมูลร้าน</h3>
 
-            <label>ชื่อร้าน <span className="req">*</span></label>
+            <label>
+              ชื่อร้าน <span className="req">*</span>
+            </label>
             <input
               value={shopName}
               onChange={(e) => setShopName(e.target.value)}
               placeholder="เช่น Fin CAFEEE"
             />
 
-            <label>คำอธิบาย <span className="req">*</span></label>
+            <label>
+              คำอธิบาย <span className="req">*</span>
+            </label>
             <textarea
               rows={3}
               value={description}
@@ -338,22 +341,32 @@ export default function CreateShopWithMap() {
               placeholder="จุดเด่น / เมนูแนะนำ / เวลาเปิด-ปิด"
             />
 
-            <label>ประเภท <span className="req">*</span></label>
+            <label>
+              ประเภท <span className="req">*</span>
+            </label>
             <select value={type} onChange={(e) => setType(e.target.value)}>
               <option value="">— เลือกประเภท —</option>
               {CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
 
             {/* อัปโหลดรูปภาพ */}
             <label>รูปภาพหน้าร้าน</label>
-            <div className="vs-image-box" style={{alignItems:"center"}}>
+            <div className="vs-image-box" style={{ alignItems: "center" }}>
               <img
                 src={preview || imageUrl || "https://via.placeholder.com/200x200?text=No+Image"}
                 alt="preview"
                 className="vs-image"
-                style={{ width: 200, height: 200, objectFit: "cover", borderRadius: 12, border: "1px solid #ddd" }}
+                style={{
+                  width: 200,
+                  height: 200,
+                  objectFit: "cover",
+                  borderRadius: 12,
+                  border: "1px solid #ddd",
+                }}
               />
               <div className="vs-image-controls">
                 <input type="file" accept="image/*" onChange={onFileChange} />
@@ -400,14 +413,22 @@ export default function CreateShopWithMap() {
               <MapContainer center={mapCenter} zoom={13} scrollWheelZoom className="vs-map">
                 <MapFlyTo center={mapCenter} zoom={15} />
                 <TileLayer
-                  attribution='&copy; OpenStreetMap'
+                  attribution="&copy; OpenStreetMap"
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                <ClickToPlace onPlace={([la, ln]) => { setLat(la); setLng(ln); }} />
+                <ClickToPlace
+                  onPlace={([la, ln]) => {
+                    setLat(la);
+                    setLng(ln);
+                  }}
+                />
                 {Number.isFinite(toNum(lat)) && Number.isFinite(toNum(lng)) && (
                   <DraggableMarker
                     position={[toNum(lat), toNum(lng)]}
-                    onDragEnd={([la, ln]) => { setLat(la); setLng(ln); }}
+                    onDragEnd={([la, ln]) => {
+                      setLat(la);
+                      setLng(ln);
+                    }}
                   />
                 )}
               </MapContainer>
@@ -418,16 +439,26 @@ export default function CreateShopWithMap() {
               <div className="vs-map-coords">
                 <div className="vs-map-coord">
                   <label>Lat</label>
-                  <input type="text" readOnly value={Number.isFinite(Number(lat)) ? Number(lat).toFixed(6) : ""} />
+                  <input
+                    type="text"
+                    readOnly
+                    value={Number.isFinite(Number(lat)) ? Number(lat).toFixed(6) : ""}
+                  />
                 </div>
                 <div className="vs-map-coord">
                   <label>Lng</label>
-                  <input type="text" readOnly value={Number.isFinite(Number(lng)) ? Number(lng).toFixed(6) : ""} />
+                  <input
+                    type="text"
+                    readOnly
+                    value={Number.isFinite(Number(lng)) ? Number(lng).toFixed(6) : ""}
+                  />
                 </div>
               </div>
 
               <div className="vs-row" style={{ marginTop: ".25rem" }}>
-                <button type="button" onClick={useMyLocation}>ใช้ตำแหน่งฉันตอนนี้</button>
+                <button type="button" onClick={useMyLocation}>
+                  ใช้ตำแหน่งฉันตอนนี้
+                </button>
                 <button type="submit" className="vs-primary" disabled={submitting}>
                   {submitting ? "กำลังสร้าง..." : "สร้างร้าน"}
                 </button>
