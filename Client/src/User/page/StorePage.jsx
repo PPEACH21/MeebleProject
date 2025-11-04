@@ -35,7 +35,7 @@ export default function StorePage() {
   const [loading, setLoading] = useState(true);
 
   const [type, setType] = useState([
-    { name: "Maincourse", active: false, icon: <IoRestaurantOutline /> },
+    { name: "MainCourse", active: false, icon: <IoRestaurantOutline /> },
     { name: "FastFoods", active: false, icon: <IoFastFoodOutline /> },
     { name: "Appetizer", active: false, icon: <RiCake3Fill /> },
     { name: "Dessert", active: false, icon: <MdOutlineCookie /> },

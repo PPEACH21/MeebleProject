@@ -56,7 +56,7 @@
   "Dessert": "Dessert",
   "Appetizer": "Appetizer",
   "Beverage": "Beverage",
-  "FastFoods": "Fast food",
+  "FastFoods": "FastFoods",
   "price": "Price",
   "loading": "Loading",
   "status": "Status",
@@ -76,9 +76,6 @@
   "time": "Time",
   "amount": "Amount",
   "menu": "Menu",
-  "amount": "Amount",
-  "resetPass": "Enter your email to reset your password",
-  "loading": "Loading",
   "menu_loading": "Loading menu...",
   "menu_not_found": "No menu to display",
   "menu_fetch_error": "Unable to fetch menu",
@@ -232,5 +229,6 @@
   "not_supported": "Not supported",
   "browser_no_geolocation": "Your browser does not support Geolocation",
   "set_position_from_device": "Position set from your device",
-  "cannot_read_position": "Unable to read location"
+  "cannot_read_position": "Unable to read location",
+  "MainCourse": "MainCourse"
 }
