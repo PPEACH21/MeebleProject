@@ -1,7 +1,5 @@
 // src/User/component/StoreCard.jsx
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import LoadingPage, { runloadting } from "./LoadingPage";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 import { m } from "@/paraglide/messages";
@@ -75,20 +73,33 @@ const getShopId = (shop) =>
 
 const StoreCard = ({ datashow }) => {
   const navigate = useNavigate();
-  const [userPos, setUserPos] = useState(null);
 
-  useEffect(() => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) =>
-        setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => setUserPos(null),
-      { enableHighAccuracy: true, maximumAge: 60000, timeout: 10000 }
-    );
-  }, []);
+  const goOrder = (shop) => {
+    const shopId = getShopId(shop);
+    if (!shopId) {
+      console.warn("missing shopId on shop item:", shop);
+      return;
+    }
+    if (!shop.status) {
+      Swal.fire({
+        icon: "info",
+        title: "ไม่สามารถสั่งอาหารได้",
+        text: "ร้านนี้ปิดอยู่ในขณะนี้",
+        confirmButtonText: "เข้าใจแล้ว",
+      });
+      return;
+    }
+    if (typeof window !== "undefined") {
+      localStorage.setItem("currentShopId", shopId);
+    }
+    navigate(`/menu/${encodeURIComponent(shopId)}`, {
+      state: { shop, shopId },
+    });
+  };
 
   const { loading, LoadingPage } = runloadting(1000);
   if (loading) return <LoadingPage />;
+
 
   const goReserve = (shop) => {
     const shopId = getShopId(shop);
@@ -121,15 +132,6 @@ const StoreCard = ({ datashow }) => {
 
         let distanceText = "–";
         const shopLL = extractLatLngFromShop(item);
-        if (userPos && shopLL) {
-          const km = haversineKm(
-            userPos.lat,
-            userPos.lng,
-            shopLL.lat,
-            shopLL.lng
-          );
-          distanceText = formatDistanceText(km);
-        }
         const goOrder = (shop) => {
           const shopId = getShopId(shop);
           if (!shopId) {
@@ -156,7 +158,7 @@ const StoreCard = ({ datashow }) => {
 
         return (
           <div
-            className="card"
+            className="card fade-slideDown"
             key={cardKey}
             style={{ margin: "10px", padding: "10px" }}
           >
@@ -223,6 +225,15 @@ const StoreCard = ({ datashow }) => {
                         </p>
                         <p>
                           <b>{m.Distance()}:</b> {distanceText}
+                          <b>Price:</b> {priceText}
+                        </p>
+                        <p>
+                          <b>Distance:</b>{" "}
+                          {item.distance
+                            ? item.distance < 1
+                              ? `${Math.round(item.distance * 1000)} m`
+                              : `${item.distance.toFixed(1)} km`
+                            : "–"}
                         </p>
                       </div>
 
