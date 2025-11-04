@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "@/api/axios";
+import { m } from "@/paraglide/messages";
 
 export default function MenuManager() {
   const [open, setOpen] = useState(false);
@@ -64,7 +65,7 @@ export default function MenuManager() {
       setOpen(false);
       setForm({ name: "", description: "", price: "", image: null });
 
-      fetchMenus(); 
+      fetchMenus();
     } catch (err) {
       console.error(err);
       alert("เกิดข้อผิดพลาด ❌");
@@ -73,47 +74,46 @@ export default function MenuManager() {
 
   return (
     <div style={{ padding: "20px" }}>
-   
-      <button onClick={() => setOpen(true)}>➕ เพิ่มเมนู</button>
-
+      <button onClick={() => setOpen(true)}>{m.add_menu()}</button>
 
       {open && (
         <div className="popup">
           <div className="popup-inner">
-            <h2>เพิ่มเมนู</h2>
+            <h2>{m.all_menus()}</h2>
             <form onSubmit={handleSubmit}>
               <input
                 type="text"
                 name="name"
-                placeholder="ชื่อเมนู"
+                placeholder={m.menu_name()}
                 value={form.name}
                 onChange={handleChange}
                 required
               />
               <textarea
                 name="description"
-                placeholder="รายละเอียด"
+                placeholder={m.description()}
                 value={form.description}
                 onChange={handleChange}
               />
               <input
                 type="number"
                 name="price"
-                placeholder="ราคา"
+                placeholder={m.price()}
                 value={form.price}
                 onChange={handleChange}
                 required
               />
               <input type="file" accept="image/*" onChange={handleFileChange} />
               <div className="button-group">
-                <button type="submit">บันทึก</button>
-                <button type="button" onClick={() => setOpen(false)}>ยกเลิก</button>
+                <button type="submit">{m.save()}</button>
+                <button type="button" onClick={() => setOpen(false)}>
+                  {m.cancel()}
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
 
       <h2 style={{ marginTop: "20px" }}>📋 เมนูทั้งหมด</h2>
       <div
@@ -139,17 +139,22 @@ export default function MenuManager() {
               <img
                 src={menu.image}
                 alt={menu.name}
-                style={{ width: "100%", borderRadius: "6px", marginBottom: "10px" }}
+                style={{
+                  width: "100%",
+                  borderRadius: "6px",
+                  marginBottom: "10px",
+                }}
               />
             )}
             <h3>{menu.name}</h3>
-            <p style={{ fontSize: "14px", color: "#555" }}>{menu.description}</p>
+            <p style={{ fontSize: "14px", color: "#555" }}>
+              {menu.description}
+            </p>
             <strong>{menu.price} บาท</strong>
           </div>
         ))}
       </div>
 
-    
       <style>{`
         .popup {
           position: fixed;

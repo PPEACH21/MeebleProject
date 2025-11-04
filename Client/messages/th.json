@@ -34,7 +34,7 @@
   "pirce": "ราคา",
   "restarant_name": "ชื่อร้านอาหาร",
   "star": "ดาว",
-  "description": "คำอธิบาย",
+  "description": "รายละเอียด",
   "distant": "ระยะ",
   "order": "สั่ง",
   "reserve": "จอง",
@@ -138,5 +138,10 @@
   "quantity": "จำนวน",
   "total": "รวม",
   "no_food_items": "ไม่มีรายการอาหาร",
-  "total_all": "ยอดรวมทั้งหมด"
+  "total_all": "ยอดรวมทั้งหมด",
+  "add_menu": "เพิ่มเมนู",
+  "save": "บันทึก",
+  "all_menus": "เมนูทั้งหมด",
+  "success_save": "บันทึกสำเร็จ",
+  "error_occurred": "เกิดข้อผิดพลาด"
 }

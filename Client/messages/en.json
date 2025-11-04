@@ -138,5 +138,10 @@
   "quantity": "Quantity",
   "total": "Total",
   "no_food_items": "No food items",
-  "total_all": "Grand Total"
+  "total_all": "Grand Total",
+  "add_menu": "Add Menu",
+  "save": "Save",
+  "all_menus": "All Menus",
+  "success_save": "Saved successfully",
+  "error_occurred": "An error occurred"
 }
