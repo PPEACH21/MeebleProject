@@ -133,6 +133,7 @@ export const OTPInput = ({ email = false, state, setState }) => {
   };
 
   if (Loading) return <LoadingPage />;
+  
 
   return (
     <div>
