@@ -127,10 +127,13 @@ func OTPrepassword()fiber.Handler{
 	if body.Email == "" {
 		return c.Status(fiber.StatusBadRequest).SendString("Email is required");
 	}
-	
+
 	_,err := config.User.Where("email", "==", body.Email).Limit(1).Documents(config.Ctx).Next()
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).SendString("Email or Username Not Found")
+		_,err := config.Vendor.Where("email", "==", body.Email).Limit(1).Documents(config.Ctx).Next()
+			if err != nil {
+			return c.Status(fiber.StatusNotFound).SendString("Email or Username Not Found")
+    	}
     }
 
 	otp, err := generateNumericOTP(6)
