@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { Outlet } from "react-router-dom";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
+import {m} from "@/paraglide/messages"
 
 export const NavLayout = ({ focus, cart }) => {
   return (
@@ -126,7 +127,7 @@ const DropdownProfile = ({ logout, avatar, username, email }) => {
             onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
             style={{ padding: 12, cursor: "pointer" }}
           >
-            แก้ไขโปรไฟล์
+            {m.editProfile()}
           </div>
           <div
             onClick={() => navigate("/settings")}
@@ -135,7 +136,7 @@ const DropdownProfile = ({ logout, avatar, username, email }) => {
             onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
             style={{ padding: 12, cursor: "pointer" }}
           >
-            ตั้งค่า
+            {m.Setting()}
           </div>
           <div
             onClick={handleLogout}
@@ -148,7 +149,7 @@ const DropdownProfile = ({ logout, avatar, username, email }) => {
               borderTop: "1px solid #f3f4f6",
             }}
           >
-            ออกจากระบบ
+            {m.logout()}
           </div>
         </div>
       )}
@@ -374,7 +375,7 @@ const Navbar = ({ focus = false, cart = false }) => {
                 userSelect: "none",
               }}
             >
-              <p style={{whiteSpace:"nowrap"}}>Coin: {fmtInt(coin)} .-</p>
+              <p style={{whiteSpace:"nowrap"}}>{m.Coin()}: {fmtInt(coin)} .-</p>
             </div>
 
             <div style={{ gap: 10, alignItems: "center", cursor: "pointer" }}>

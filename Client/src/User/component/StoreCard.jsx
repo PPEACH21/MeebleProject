@@ -2,6 +2,8 @@
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
+import { m } from "@/paraglide/messages";
+
 // --- helpers ---
 const toNum = (v) => (typeof v === "number" ? v : Number(v) || 0);
 
@@ -17,6 +19,52 @@ function formatPriceRange(min, max) {
   const a = toNum(min);
   const b = toNum(max);
   return a === b ? fmt(a) : `${fmt(a)}–${fmt(b)}`;
+}
+
+// รองรับหลาย key: address.latitude/longitude, address._lat/_long, หรือ lat/lng
+function extractLatLngFromShop(shop) {
+  const cands = [shop?.address, shop?.location, shop?.geo, shop?.coords];
+  for (const obj of cands) {
+    if (!obj) continue;
+    const lat = obj.latitude ?? obj.lat ?? obj._lat ?? obj.Latitude ?? obj.Lat;
+    const lng =
+      obj.longitude ??
+      obj.lng ??
+      obj._long ??
+      obj.Longitude ??
+      obj.Lng ??
+      obj.lon;
+    if (
+      typeof lat === "number" &&
+      typeof lng === "number" &&
+      !Number.isNaN(lat) &&
+      !Number.isNaN(lng)
+    ) {
+      return { lat, lng };
+    }
+  }
+  return null;
+}
+
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const toRad = (d) => (d * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function formatDistanceText(km) {
+  if (km == null || Number.isNaN(km)) return "–";
+  if (km < 1) {
+    const m = Math.round((km * 1000) / 10) * 10;
+    return `${m} m`;
+  }
+  return `${km.toFixed(1)} ${m.km()}`;
 }
 
 // id helpers
@@ -49,15 +97,19 @@ const StoreCard = ({ datashow }) => {
     });
   };
 
+  const { loading, LoadingPage } = runloadting(1000);
+  if (loading) return <LoadingPage />;
+
+
   const goReserve = (shop) => {
     const shopId = getShopId(shop);
     if (!shopId) return;
     if (!shop.status) {
       Swal.fire({
         icon: "info",
-        title: "ไม่สามารถจองได้",
-        text: "ร้านนี้ปิดอยู่ในขณะนี้",
-        confirmButtonText: "เข้าใจแล้ว",
+        title: m.CannotReserve(),
+        text: m.StoreClosed(),
+        confirmButtonText: m.Agree(),
       });
       return;
     }
@@ -78,6 +130,30 @@ const StoreCard = ({ datashow }) => {
           item.max_price ?? item.price_max ?? item.Max_price ?? item.Price_max;
         const priceText = formatPriceRange(minP, maxP);
 
+        let distanceText = "–";
+        const shopLL = extractLatLngFromShop(item);
+        const goOrder = (shop) => {
+          const shopId = getShopId(shop);
+          if (!shopId) {
+            console.warn("missing shopId on shop item:", shop);
+            return;
+          }
+          if (!shop.status) {
+            Swal.fire({
+              icon: "info",
+              title: m.cannotOrder(),
+              text: m.close(),
+              confirmButtonText: m.Agree(),
+            });
+            return;
+          }
+          if (typeof window !== "undefined") {
+            localStorage.setItem("currentShopId", shopId);
+          }
+          navigate(`/menu/${encodeURIComponent(shopId)}`, {
+            state: { shop, shopId },
+          });
+        };
         const cardKey = item.id || item.ID || index;
 
         return (
@@ -133,9 +209,22 @@ const StoreCard = ({ datashow }) => {
                     <div className="position2">
                       <div>
                         <p>
-                          <b>Rate:</b> {item.rate}
+                          <b>{m.Rate()}:</b> {item.rate}
                         </p>
                         <p>
+                          <b>{m.Price()}:</b>{" "}
+                          <span
+                            style={{
+                              display: "inline-block",
+                              minWidth: 90,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {priceText}
+                          </span>
+                        </p>
+                        <p>
+                          <b>{m.Distance()}:</b> {distanceText}
                           <b>Price:</b> {priceText}
                         </p>
                         <p>
@@ -158,21 +247,21 @@ const StoreCard = ({ datashow }) => {
                             maxWidth: "240px",
                           }}
                         >
-                          <b>Description:</b> {item.description}
+                          <b>{m.description()}:</b> {item.description}
                         </p>
                         <p>
-                          <b>Status : </b>
+                          <b>{m.status()} : </b>
                           <span
                             style={{
                               color: item.status ? "green" : "red",
                               fontWeight: 600,
                             }}
                           >
-                            {item.status ? "Open" : "Close"}
+                            {item.status ? m.open() : m.close()}
                           </span>
                         </p>
                         <p>
-                          <b>Type:</b> {item.type}
+                          <b>{m.type()}:</b> {item.type}
                         </p>
                       </div>
                     </div>
@@ -197,7 +286,7 @@ const StoreCard = ({ datashow }) => {
                     opacity: item.status ? 1 : 0.9,
                   }}
                 >
-                  order
+                  {m.order()}
                 </button>
 
                 <button
@@ -208,7 +297,7 @@ const StoreCard = ({ datashow }) => {
                     opacity: item.status ? 1 : 0.9,
                   }}
                 >
-                  reserve
+                  {m.reserve()}
                 </button>
               </div>
             </div>
